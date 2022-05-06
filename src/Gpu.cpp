@@ -7,9 +7,10 @@
 // #include <SDL2/SDL_timer.h>
 
 
-GPU::GPU(Registers *registers, MemoryBus* memory){
+GPU::GPU(Registers *registers, Interrupts* interrupts, MemoryBus* memory){
     this->registers = registers;
     this->memory = memory;
+    this->interrupts = interrupts; 
 }
 
 void GPU::step(){
@@ -26,8 +27,9 @@ void GPU::step(){
                 memory->gpu.scanline++;
 
                 if(memory->gpu.scanline == 143){
-                    if(memory->interruptFlags.IE & (1 << 0)) // TODO: CHECK THIS LATER
-                        memory->interruptFlags.IF |= (1 << 0);
+                    if(this->interrupts->is_interrupt_enabled(INTERRUPT_VBLANK)){
+                        this->interrupts->set_interrupt_flag(INTERRUPT_VBLANK);
+                    }
                     mode = 1;
                 }else{
                     mode = 2;

@@ -112,11 +112,11 @@ void Renderer::draw_text(int x_pos, int y_pos, std::string text){
     SDL_DestroyTexture(textTexture);
 }
 
-std::string Renderer::num_to_hex(int n){
-    std::stringstream stream;
-    stream << std::hex << +registers->a;
-    return stream.str();
-}
+// std::string Renderer::num_to_hex(int n){
+//     std::stringstream stream;
+//     stream << std::hex << +registers->a;
+//     return stream.str();
+// }
 
 void Renderer::render_status(){
     // draw_text(viewport_width + 30,  0, "A: " + num_to_hex(+registers->a));

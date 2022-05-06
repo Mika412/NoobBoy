@@ -52,6 +52,6 @@ void Timer::step(){
     if(memory->timer.tima > 255){
         memory->timer.tima = memory->timer.tma;
         
-        memory->interruptFlags.IF |= 4;
+        // memory->interruptFlags.IF |= 4;
     }
 }

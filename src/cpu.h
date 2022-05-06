@@ -1,13 +1,15 @@
 #pragma once
 
-#include "instructions.h"
 #include "Registers.h"
 #include "Memory.h"
+#include "interrupt.h"
+#include "instructions.h"
 
 class CPU {
     private:
-        InstructionSet *instructions;
+        InstructionSet* instructions;
         MemoryBus *memory;
+        Interrupts *interrupts;
 
     public:
         Registers *registers;
@@ -21,7 +23,7 @@ class CPU {
             unsigned long t = 0; // Total full clock
         } clock;
 
-        CPU(Registers *registers, MemoryBus* cmemory);
+        CPU(Registers *registers, Interrupts* interrupts, MemoryBus* memory);
 
         void reset();
         bool step();

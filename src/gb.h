@@ -10,7 +10,7 @@ class GB{
         MemoryBus *memory;
         CPU *cpu;
         GPU *gpu;
-        Interrupt *interrupt;
+        Interrupts *interrupts;
         Timer *timer;
         Renderer *renderer;
 

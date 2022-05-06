@@ -2,6 +2,7 @@
 
 #include "Registers.h"
 #include "Memory.h"
+#include "interrupt.h"
 
 struct rgb {
     unsigned char r, g, b, a;
@@ -25,6 +26,7 @@ class GPU{
     public:
         Registers* registers;
         MemoryBus* memory;
+        Interrupts *interrupts;
 
         COLOUR framebuffer[160 * 144];
         unsigned short background[2000];
@@ -33,7 +35,7 @@ class GPU{
         int mode = 0;
         int modeclock = 0;
 
-    GPU(Registers *registers, MemoryBus *memory);
+    GPU(Registers *registers, Interrupts* interrupts, MemoryBus *memory);
     void step(); 
     void render_scan_lines(); 
 };

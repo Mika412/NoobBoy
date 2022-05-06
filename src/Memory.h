@@ -5,12 +5,6 @@
 
 #include "Registers.h"
 
-struct InterruptFlags{
-    uint8_t IME = 0; // Interrupt Master Enable  
-    uint8_t IE = 0; // Interrupt Enable
-    uint8_t IF = 0; // Interrupt Flag
-};
-
 class MemoryBus {
     private:
         uint8_t memory[0xFFFF];
@@ -42,7 +36,6 @@ class MemoryBus {
         uint8_t ROMbanks[0x7F][0x4000];
         uint8_t banksLoaded;
         
-        InterruptFlags interruptFlags;
         Registers *registers;
 
         struct renderFlag {
@@ -93,7 +86,8 @@ class MemoryBus {
         void write_short(uint16_t address, uint16_t value);
         uint16_t read_short(uint16_t address);
 
-        void updateTile(unsigned short address, unsigned char value);
         void write_short_stack(uint16_t value);
         uint16_t read_short_stack();
+
+        void updateTile(unsigned short address, unsigned char value);
 };

@@ -6,9 +6,10 @@
 
 using namespace std;
 
-InstructionSet::InstructionSet(Registers *registers,  MemoryBus *memory, bool *stopped){
+InstructionSet::InstructionSet(Registers *registers, Interrupts* interrupts,  MemoryBus *memory, bool *stopped){
     this->registers = registers;
     this->memory = memory;
+    this->interrupts = interrupts;
     this->stopped = stopped;
 }
 void InstructionSet::execute(uint8_t opcode) {
@@ -522,9 +523,9 @@ void InstructionSet::execute(uint8_t opcode) {
             memory->write_byte(registers->hl, registers->l);
             break;
         case 0x76: // HALT TODO: Check this
-            if(!memory->interruptFlags.IME){
-                registers += 1;
-            }
+            // if(!memory->interruptFlags.IME){
+            //     registers += 1;
+            // }
             break;
         case 0x77: // LD (HL), A
             memory->write_byte(registers->hl, registers->a);
@@ -898,7 +899,8 @@ void InstructionSet::execute(uint8_t opcode) {
             }
             break;
         case 0xD9: // RETI // TODO: CHECK THIS INTERRUPT
-            memory->interruptFlags.IME = 1;
+            // memory->interruptFlags.IME = 1;
+            interrupts->set_master_flag(true);
             registers->pc = memory->read_short_stack();
             break;
         case 0xDA: // JP C, nn
@@ -1000,7 +1002,7 @@ void InstructionSet::execute(uint8_t opcode) {
             registers->a = memory->read_byte(0xFF00 + registers->c);
             break;
         case 0xF3: // DI
-            memory->interruptFlags.IME = 0;
+            interrupts->set_master_flag(false);
             break;
         case 0xF5: // PUSH AF
             memory->write_short_stack(registers->af);
@@ -1040,7 +1042,7 @@ void InstructionSet::execute(uint8_t opcode) {
             registers->pc+=2;
             break;
         case 0xFB: // EI
-            memory->interruptFlags.IME = 1;
+            interrupts->set_master_flag(true);
             break;
         case 0xFE:
             cp_n(memory->read_byte(registers->pc++));

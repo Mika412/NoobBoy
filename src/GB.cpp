@@ -9,9 +9,9 @@
 
 void GB::init(){
     memory = new MemoryBus(&registers);
-    cpu = new CPU(&registers, memory);
-    gpu = new GPU(&registers, memory);
-    interrupt = new Interrupt(&registers, memory);
+    interrupts = new Interrupts(&registers, memory);
+    cpu = new CPU(&registers, interrupts, memory);
+    gpu = new GPU(&registers, interrupts, memory);
     timer = new Timer(&registers, memory);
 
     if(render)
@@ -44,6 +44,7 @@ void GB::init(){
 std::set<int> myset;
 std::set<int>::iterator it;
 bool isTracking = false;
+int counter = 0;
 void GB::run(){
     int close = 0;
     int stopped = 0;
@@ -51,20 +52,24 @@ void GB::run(){
         bool isstop = cpu->step();    
         gpu->step();
 
-        timer->inc();
+        // timer->inc();
 
         registers.m = 0;
         registers.t = 0;
 
-        interrupt->step();
+        interrupts->check();
 
         registers.m = registers.t / 4;
         memory->clock.m += registers.m;
         memory->clock.t += registers.t;
 
         timer->inc();
+        if(counter>=10000){
         if(render)
             renderer->render();
+        counter=0;
+        }
+        counter++;
         
         // long mtime, seconds, useconds;
         

@@ -4,10 +4,12 @@
 
 using namespace std;
 
-CPU::CPU(Registers *registers, MemoryBus* memory){
+CPU::CPU(Registers *registers, Interrupts* interrupts, MemoryBus* memory){
     this->memory = memory;
+    this->interrupts = interrupts;
     this->registers = registers;
-    this->instructions = new InstructionSet(registers, memory, &this->stopped);
+    this->instructions = new InstructionSet(registers, interrupts, memory, &this->stopped);
+    // this->instructions = new InstructionSet(registers, interrupts, memory, &this->stopped);
     /* this->registers->a = 0x01;
     this->registers->f = 0xF0;
     this->registers->b = 0x00;

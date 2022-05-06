@@ -2,12 +2,14 @@
 
 #include "Registers.h"
 #include "Memory.h"
+#include "interrupt.h"
 
 
 class InstructionSet{
     private:
         Registers *registers;
         MemoryBus *memory;
+        Interrupts *interrupts;
         bool *stopped;
 
     public:
@@ -68,7 +70,7 @@ class InstructionSet{
             8, 8, 8, 8, 8,  8, 16, 8,  8, 8, 8, 8, 8, 8, 16, 8  // 0xf_
         };
 
-        InstructionSet(Registers* registers, MemoryBus* memory, bool *stopped);
+        InstructionSet(Registers* registers, Interrupts* interrupts, MemoryBus* memory, bool *stopped);
         void execute(uint8_t opcode);
         void add(uint8_t* destination, uint8_t value);
         void sub(uint8_t value);

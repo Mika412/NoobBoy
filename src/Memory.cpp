@@ -88,8 +88,8 @@ uint8_t MemoryBus::read_byte(uint16_t address) {
     else if(address == 0xff40) return gpu.control;
     else if(address == 0xff43) return gpu.scrollX;
     else if(address == 0xff44) return gpu.scanline;
-    else if(address == 0xff0f) return interruptFlags.IF;
-    else if(address == 0xffff) return interruptFlags.IE;
+    // else if(address == 0xff0f) return interruptFlags.IF;
+    // else if(address == 0xffff) return interruptFlags.IE;
     //Timers
     // else if(address == 0xff04) return timer.div;
     else if(address == 0xff04) return (unsigned char) rand();
@@ -149,8 +149,9 @@ void MemoryBus::write_byte(uint16_t address, uint8_t value) {
     if(address == 0xff42) gpu.scrollY = value;
     else if(address == 0xff40) { // Screen enable
         gpu.control = value;
-    }else if(address == 0xff0f)  interruptFlags.IF = value;
-    else if(address == 0xffff)  interruptFlags.IE = value;
+    }
+    // else if(address == 0xff0f)  interruptFlags.IF = value;
+    // else if(address == 0xffff)  interruptFlags.IE = value;
     //Timers
     else if(address == 0xff04) timer.div = 0;
     else if(address == 0xff05) timer.tima = value;
