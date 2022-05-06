@@ -1,4 +1,4 @@
-#include "Memory.h"
+#include "mmu.h"
 #include "gpu.h"
 #include "cpu.h"
 
@@ -20,7 +20,7 @@ class Renderer{
         CPU *cpu;
         GPU *gpu;
         Registers *registers;
-        MemoryBus *memory;
+        MMU *memory;
 
         int viewport_width = 160;
         int viewport_height = 144;
@@ -49,6 +49,6 @@ class Renderer{
         void draw_text(int x_pop, int y_pos, std::string text);
 
     public:
-        Renderer(CPU *cpu, GPU *gpu, Registers *registers, MemoryBus *memory);
+        Renderer(CPU *cpu, GPU *gpu, Registers *registers, MMU *memory);
         void render();
 };

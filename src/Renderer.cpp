@@ -7,7 +7,7 @@
 #include <string>
 #include <iomanip>
 
-Renderer::Renderer(CPU *cpu, GPU *gpu, Registers *registers, MemoryBus *memory){
+Renderer::Renderer(CPU *cpu, GPU *gpu, Registers *registers, MMU *memory){
     this->cpu = cpu;
     this->gpu = gpu;
     this->registers = registers;
@@ -70,9 +70,9 @@ void Renderer::render(){
         int overflow = ((tmpScrollY + viewport_height / 2) % background_height) * ((tmpScrollY + viewport_height / 2) / background_height) ;
         // std::cout << "OVERFLOW " << overflow << std::endl;
         SDL_Rect rect;
-        rect.x = memory->gpu.scrollX;
+        rect.x = *gpu->scrollX;
         // rect.y = viewport_height + tmpScrollY;
-        rect.y = viewport_height + memory->gpu.scrollY;
+        rect.y = viewport_height + *gpu->scrollY;
         rect.w = viewport_width;
         rect.h = viewport_height;
         SDL_RenderDrawRect(renderer, &rect);

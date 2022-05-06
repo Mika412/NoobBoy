@@ -1,13 +1,13 @@
 #pragma once
 
 // #include "cpu.h"
-#include "Memory.h"
+#include "mmu.h"
 
 enum InterruptFlags { INTERRUPT_VBLANK = (1 << 0), INTERRUPT_LCD = (1 << 1), INTERRUPT_TIMER = (1 << 2), INTERRUPT_SERIAL = (1 << 3), INTERRUPT_JOYPAD = (1 << 4)};
 
 class Interrupts {
     Registers *registers;
-    MemoryBus *mmu;
+    MMU *mmu;
 
     public:
         bool IME;
@@ -17,7 +17,7 @@ class Interrupts {
         bool jump_timer = false;
         bool jump_joypad = false;
 
-        Interrupts(Registers* registers, MemoryBus* mmu);
+        Interrupts(Registers* registers, MMU* mmu);
 
         void check();
         void set_master_flag(bool state);

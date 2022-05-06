@@ -8,35 +8,35 @@
 #include <thread>
 
 void GB::init(){
-    memory = new MemoryBus(&registers);
-    interrupts = new Interrupts(&registers, memory);
-    cpu = new CPU(&registers, interrupts, memory);
-    gpu = new GPU(&registers, interrupts, memory);
-    timer = new Timer(&registers, memory);
+    // mmu = new mmuBus();
+    interrupts = new Interrupts(&registers, &mmu);
+    cpu = new CPU(&registers, interrupts, &mmu);
+    gpu = new GPU(&registers, interrupts, &mmu);
+    timer = new Timer(&registers, &mmu);
 
     if(render)
-        renderer = new Renderer(cpu, gpu, &registers, memory);
+        renderer = new Renderer(cpu, gpu, &registers, &mmu);
 
-    memory->load_boot_rom("./roms/DMG_ROM.bin");
-    // memory->load_cartrige_rom("./roms/Dr. Mario (World).gb");
-    // memory->load_cartrige_rom("./roms/Pokemon Red.gb");
-    // memory->load_cartrige_rom("./roms/cpu_instrs/individual/11-op a,(hl).gb"); // PASSED
-    // memory->load_cartrige_rom("./roms/cpu_instrs/individual/10-bit ops.gb"); // PASSED
-    // memory->load_cartrige_rom("./roms/cpu_instrs/individual/09-op r,r.gb"); // PASSED
-    // memory->load_cartrige_rom("./roms/cpu_instrs/individual/08-misc instrs.gb"); // PASSED
-    // memory->load_cartrige_rom("./roms/cpu_instrs/individual/07-jr,jp,call,ret,rst.gb"); // PASSED
-    // memory->load_cartrige_rom("./roms/cpu_instrs/individual/06-ld r,r.gb"); // PASSED
-    // memory->load_cartrige_rom("./roms/cpu_instrs/individual/05-op rp.gb"); // PASSED
-    // memory->load_cartrige_rom("./roms/cpu_instrs/individual/04-op r,imm.gb"); // PASSED
-    // memory->load_cartrige_rom("./roms/cpu_instrs/individual/03-op sp,hl.gb"); // PASSED
-    // memory->load_cartrige_rom("./roms/cpu_instrs/individual/02-interrupts.gb");
-    // memory->load_cartrige_rom("./roms/cpu_instrs/individual/01-special.gb"); // PASSED
-    // memory->load_cartrige_rom("./roms/instr_timing/instr_timing.gb");
-    // memory->load_cartrige_rom("./roms/GB-TicTacToe.gb");
-    // memory->load_cartrige_rom("./roms/daa.gb");
-    // memory->load_cartrige_rom("./cpu_instrs.gb");
-    // memory->load_cartrige_rom("./Tetris2.gb");
-    memory->load_cartrige_rom("./roms/Tetris.gb");
+    mmu.load_boot_rom("./roms/DMG_ROM.bin");
+    // mmu->load_cartrige_rom("./roms/Dr. Mario (World).gb");
+    // mmu->load_cartrige_rom("./roms/Pokemon Red.gb");
+    // mmu->load_cartrige_rom("./roms/cpu_instrs/individual/11-op a,(hl).gb"); // PASSED
+    // mmu->load_cartrige_rom("./roms/cpu_instrs/individual/10-bit ops.gb"); // PASSED
+    // mmu->load_cartrige_rom("./roms/cpu_instrs/individual/09-op r,r.gb"); // PASSED
+    // mmu->load_cartrige_rom("./roms/cpu_instrs/individual/08-misc instrs.gb"); // PASSED
+    // mmu->load_cartrige_rom("./roms/cpu_instrs/individual/07-jr,jp,call,ret,rst.gb"); // PASSED
+    // mmu->load_cartrige_rom("./roms/cpu_instrs/individual/06-ld r,r.gb"); // PASSED
+    // mmu->load_cartrige_rom("./roms/cpu_instrs/individual/05-op rp.gb"); // PASSED
+    // mmu->load_cartrige_rom("./roms/cpu_instrs/individual/04-op r,imm.gb"); // PASSED
+    // mmu->load_cartrige_rom("./roms/cpu_instrs/individual/03-op sp,hl.gb"); // PASSED
+    // mmu->load_cartrige_rom("./roms/cpu_instrs/individual/02-interrupts.gb");
+    // mmu->load_cartrige_rom("./roms/cpu_instrs/individual/01-special.gb"); // PASSED
+    // mmu->load_cartrige_rom("./roms/instr_timing/instr_timing.gb");
+    // mmu->load_cartrige_rom("./roms/GB-TicTacToe.gb");
+    // mmu->load_cartrige_rom("./roms/daa.gb");
+    // mmu->load_cartrige_rom("./cpu_instrs.gb");
+    // mmu->load_cartrige_rom("./Tetris2.gb");
+    mmu.load_cartrige_rom("./roms/Tetris.gb");
 }
     
 /* static struct timespec frameStart; */
@@ -60,8 +60,8 @@ void GB::run(){
         interrupts->check();
 
         registers.m = registers.t / 4;
-        memory->clock.m += registers.m;
-        memory->clock.t += registers.t;
+        mmu.clock.m += registers.m;
+        mmu.clock.t += registers.t;
 
         timer->inc();
         if(counter>=10000){
@@ -82,7 +82,7 @@ void GB::run(){
         if(mtime < 1.0 / 60.0) sleep(1 / 60.0 - mtime);
         
         clock_gettime(CLOCK_MONOTONIC, &frameStart); */
-        // uint16_t tmp_bit = memory->read_short(0x4244);
+        // uint16_t tmp_bit = mmu->read_short(0x4244);
         // if(tmp_bit == 0xcb10){
             // std::cout << "BYTE IS " << std::hex << +tmp_bit << std::endl;
         //     exit(1);
@@ -92,55 +92,55 @@ void GB::run(){
          
         // renderer->render();    
         // if(isstop){
-        if(debug)
-            if(isstop || stopped){
-                cpu->registers->print_flags();
-                cpu->registers->print_registers();
-                std::cout << "LOCK IS " << std::hex << +memory->clock.t << std::endl;
-                std::cout << "DIV IS " << std::hex << +memory->read_byte(0xff04) << std::endl;
-                std::cout << "TAC IS " << std::hex << +memory->read_byte(0xff07) << std::endl;
+        // if(debug)
+        //     if(isstop || stopped){
+        //         cpu->registers->print_flags();
+        //         cpu->registers->print_registers();
+        //         std::cout << "LOCK IS " << std::hex << +mmu->clock.t << std::endl;
+        //         std::cout << "DIV IS " << std::hex << +mmu->read_byte(0xff04) << std::endl;
+        //         std::cout << "TAC IS " << std::hex << +mmu->read_byte(0xff07) << std::endl;
 
-                std::cout << "LY: " << std::hex << +this->memory->read_byte(0xff42) << std::endl;
-                std::string dummy;
-                std::cout << "Enter to continue..." << std::endl;
-                std::getline(std::cin, dummy);
-                stopped = 1;
-            }
-        if(isTracking){
-            myset.insert(registers.pc);
-            // myset.insert(cpu->last_instruction);
-            std::cout << "myset contains:";
-            for (it=myset.begin(); it!=myset.end(); ++it)
-                std::cout << ' ' << *it;
-              std::cout << '\n';
-        }
+        //         std::cout << "LY: " << std::hex << +this->mmu->read_byte(0xff42) << std::endl;
+        //         std::string dummy;
+        //         std::cout << "Enter to continue..." << std::endl;
+        //         std::getline(std::cin, dummy);
+        //         stopped = 1;
+        //     }
+        // if(isTracking){
+        //     myset.insert(registers.pc);
+        //     // myset.insert(cpu->last_instruction);
+        //     std::cout << "myset contains:";
+        //     for (it=myset.begin(); it!=myset.end(); ++it)
+        //         std::cout << ' ' << *it;
+        //       std::cout << '\n';
+        // }
         SDL_Event event;
         SDL_PollEvent(&event);
         // while (SDL_PollEvent(&event)) {
             switch (event.type) {
                 case SDL_KEYUP:
                     switch(event.key.keysym.sym){
-                        case SDLK_RIGHT:  memory->keys.keys2 &= 0xE; break;
-                        case SDLK_LEFT:   memory->keys.keys2 &= 0xD; break;
-                        case SDLK_UP:     memory->keys.keys2 &= 0xB; break;
-                        case SDLK_DOWN:   memory->keys.keys2 &= 0x7; break;
-                        case SDLK_z:      memory->keys.keys1 &= 0xE; break;
-                        case SDLK_x:      memory->keys.keys1 &= 0xD; break;
-                        case SDLK_SPACE:  memory->keys.keys1 &= 0xB; break;
-                        case SDLK_RETURN: memory->keys.keys1 &= 0x7; break;
+                        case SDLK_RIGHT:  mmu.keys.keys2 &= 0xE; break;
+                        case SDLK_LEFT:   mmu.keys.keys2 &= 0xD; break;
+                        case SDLK_UP:     mmu.keys.keys2 &= 0xB; break;
+                        case SDLK_DOWN:   mmu.keys.keys2 &= 0x7; break;
+                        case SDLK_z:      mmu.keys.keys1 &= 0xE; break;
+                        case SDLK_x:      mmu.keys.keys1 &= 0xD; break;
+                        case SDLK_SPACE:  mmu.keys.keys1 &= 0xB; break;
+                        case SDLK_RETURN: mmu.keys.keys1 &= 0x7; break;
                         
                     }
                     break;
                 case SDL_KEYDOWN:
                     switch(event.key.keysym.sym){
-                        case SDLK_RIGHT:  memory->keys.keys2 |= 0x1; break;
-                        case SDLK_LEFT:   memory->keys.keys2 |= 0x2; break;
-                        case SDLK_UP:     memory->keys.keys2 |= 0x4; break;
-                        case SDLK_DOWN:   memory->keys.keys2 |= 0x8; break;
-                        case SDLK_z:      memory->keys.keys1 |= 0x1; break;
-                        case SDLK_x:      memory->keys.keys1 |= 0x2; break;
-                        case SDLK_SPACE:  memory->keys.keys1 |= 0x4; break;
-                        case SDLK_RETURN: memory->keys.keys1 |= 0x8; break;
+                        case SDLK_RIGHT:  mmu.keys.keys2 |= 0x1; break;
+                        case SDLK_LEFT:   mmu.keys.keys2 |= 0x2; break;
+                        case SDLK_UP:     mmu.keys.keys2 |= 0x4; break;
+                        case SDLK_DOWN:   mmu.keys.keys2 |= 0x8; break;
+                        case SDLK_z:      mmu.keys.keys1 |= 0x1; break;
+                        case SDLK_x:      mmu.keys.keys1 |= 0x2; break;
+                        case SDLK_SPACE:  mmu.keys.keys1 |= 0x4; break;
+                        case SDLK_RETURN: mmu.keys.keys1 |= 0x8; break;
                         case SDLK_r:      renderer->render(); break;
                         case SDLK_ESCAPE: exit(1); break;
                     }
@@ -155,7 +155,7 @@ void GB::run(){
 
 int main(){
     GB gameboy;
-
+     
     gameboy.init();
     gameboy.run(); 
     // gameboy.render(); 

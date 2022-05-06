@@ -27,7 +27,7 @@ void InstructionSet::extended_execute(uint8_t opcode){
             registers->l = rlc(registers->l);
             break;
         case 0x06: // RLC (HL)
-            memory->write_byte(registers->hl, rlc(memory->read_byte(registers->hl)));
+            mmu->write_byte(registers->hl, rlc(mmu->read_byte(registers->hl)));
             break;
         case 0x07: // RLC A
             registers->a = rlc(registers->a);
@@ -51,7 +51,7 @@ void InstructionSet::extended_execute(uint8_t opcode){
             registers->l = rrc(registers->l);
             break;
         case 0x0E: // RRC (HL)
-            memory->write_byte(registers->hl, rrc(memory->read_byte(registers->hl)));
+            mmu->write_byte(registers->hl, rrc(mmu->read_byte(registers->hl)));
             break;
         case 0x0F: // RRC A
             registers->a = rrc(registers->a);
@@ -75,7 +75,7 @@ void InstructionSet::extended_execute(uint8_t opcode){
             registers->l = rl(registers->l);
             break;
         case 0x16: // RL (HL)
-            memory->write_byte(registers->hl, rl(memory->read_byte(registers->hl)));
+            mmu->write_byte(registers->hl, rl(mmu->read_byte(registers->hl)));
             break;
         case 0x17: // RL A
             registers->a = rl(registers->a);
@@ -99,7 +99,7 @@ void InstructionSet::extended_execute(uint8_t opcode){
             registers->l = rr(registers->l);
             break;
         case 0x1E: // RR (HL)
-            memory->write_byte(registers->hl, rr(memory->read_byte(registers->hl)));
+            mmu->write_byte(registers->hl, rr(mmu->read_byte(registers->hl)));
             break;
         case 0x1F: // RR A
             registers->a = rr(registers->a);
@@ -123,7 +123,7 @@ void InstructionSet::extended_execute(uint8_t opcode){
             registers->l = sla(registers->l);
             break;
         case 0x26: // SLA (HL)
-            memory->write_byte(registers->hl, sla(memory->read_byte(registers->hl)));
+            mmu->write_byte(registers->hl, sla(mmu->read_byte(registers->hl)));
             break;
         case 0x27: // SLA A
             registers->a = sla(registers->a);
@@ -147,7 +147,7 @@ void InstructionSet::extended_execute(uint8_t opcode){
             registers->l = sra(registers->l);
             break;
         case 0x2E: // SRA (HL)
-            memory->write_byte(registers->hl, sra(memory->read_byte(registers->hl)));
+            mmu->write_byte(registers->hl, sra(mmu->read_byte(registers->hl)));
             break;
         case 0x2F: // SRA A
             registers->a = sra(registers->a);
@@ -171,7 +171,7 @@ void InstructionSet::extended_execute(uint8_t opcode){
             registers->l = swap(registers->l);
             break;
         case 0x36: // SWAP (HL)
-            memory->write_byte(registers->hl, swap(memory->read_byte(registers->hl)));
+            mmu->write_byte(registers->hl, swap(mmu->read_byte(registers->hl)));
             break;
         case 0x37: // SWAP A
             registers->a = swap(registers->a);
@@ -195,7 +195,7 @@ void InstructionSet::extended_execute(uint8_t opcode){
             registers->l = srl(registers->l);
             break;
         case 0x3E: // SRL (HL)
-            memory->write_byte(registers->hl, srl(memory->read_byte(registers->hl)));
+            mmu->write_byte(registers->hl, srl(mmu->read_byte(registers->hl)));
             break;
         case 0x3F: // SRL A
             registers->a = srl(registers->a);
@@ -231,7 +231,7 @@ void InstructionSet::extended_execute(uint8_t opcode){
             bit(1 << 0, registers->l);
             break;
         case 0x46: // BIT 0, (HL)
-            bit(1 << 0, memory->read_byte(registers->hl));
+            bit(1 << 0, mmu->read_byte(registers->hl));
             break;
         case 0x47: // BIT 0, A
             bit(1 << 0, registers->a);
@@ -255,7 +255,7 @@ void InstructionSet::extended_execute(uint8_t opcode){
             bit(1 << 1, registers->l);
             break;
         case 0x4E: // BIT 1, (HL)
-            bit(1 << 1, memory->read_byte(registers->hl));
+            bit(1 << 1, mmu->read_byte(registers->hl));
             break;
         case 0x4F: // BIT 1, A
             bit(1 << 1, registers->a);
@@ -279,7 +279,7 @@ void InstructionSet::extended_execute(uint8_t opcode){
             bit(1 << 2, registers->l);
             break;
         case 0x56: // BIT 2, (HL)
-            bit(1 << 2, memory->read_byte(registers->hl));
+            bit(1 << 2, mmu->read_byte(registers->hl));
             break;
         case 0x57: // BIT 2, A
             bit(1 << 2, registers->a);
@@ -303,7 +303,7 @@ void InstructionSet::extended_execute(uint8_t opcode){
             bit(1 << 3, registers->l);
             break;
         case 0x5E: // BIT 3, (HL)
-            bit(1 << 3, memory->read_byte(registers->hl));
+            bit(1 << 3, mmu->read_byte(registers->hl));
             break;
         case 0x5F: // BIT 3, A
             bit(1 << 3, registers->a);
@@ -327,7 +327,7 @@ void InstructionSet::extended_execute(uint8_t opcode){
             bit(1 << 4, registers->l);
             break;
         case 0x66: // BIT 4, (HL)
-            bit(1 << 4, memory->read_byte(registers->hl));
+            bit(1 << 4, mmu->read_byte(registers->hl));
             break;
         case 0x67: // BIT 4, A
             bit(1 << 4, registers->a);
@@ -351,7 +351,7 @@ void InstructionSet::extended_execute(uint8_t opcode){
             bit(1 << 5, registers->l);
             break;
         case 0x6E: // BIT 5, (HL)
-            bit(1 << 5, memory->read_byte(registers->hl));
+            bit(1 << 5, mmu->read_byte(registers->hl));
             break;
         case 0x6F: // BIT 5, A
             bit(1 << 5, registers->a);
@@ -375,7 +375,7 @@ void InstructionSet::extended_execute(uint8_t opcode){
             bit(1 << 6, registers->l);
             break;
         case 0x76: // BIT 6, (HL)
-            bit(1 << 6, memory->read_byte(registers->hl));
+            bit(1 << 6, mmu->read_byte(registers->hl));
             break;
         case 0x77: // BIT 6, A
             bit(1 << 6, registers->a);
@@ -399,7 +399,7 @@ void InstructionSet::extended_execute(uint8_t opcode){
             bit(1 << 7, registers->l);
             break;
         case 0x7E: // BIT 7, (HL)
-            bit(1 << 7, memory->read_byte(registers->hl));
+            bit(1 << 7, mmu->read_byte(registers->hl));
             break;
         case 0x7F: // BIT 7, A
             bit(1 << 7, registers->a);
@@ -423,7 +423,7 @@ void InstructionSet::extended_execute(uint8_t opcode){
             registers->l &= ~(1 << 0);
             break;
         case 0x86: // RES 0, (HL)
-            memory->write_byte(registers->hl, memory->read_byte(registers->hl) & ~(1 << 0));
+            mmu->write_byte(registers->hl, mmu->read_byte(registers->hl) & ~(1 << 0));
             break;
         case 0x87: // RES 0, A
             registers->a &= ~(1 << 0);
@@ -448,7 +448,7 @@ void InstructionSet::extended_execute(uint8_t opcode){
             registers->l &= ~(1 << 1);
             break;
         case 0x8E: // RES 1, (HL)
-            memory->write_byte(registers->hl, memory->read_byte(registers->hl) & ~(1 << 1));
+            mmu->write_byte(registers->hl, mmu->read_byte(registers->hl) & ~(1 << 1));
             break;
         case 0x8F: // RES 0, A
             registers->a &= ~(1 << 1);
@@ -473,7 +473,7 @@ void InstructionSet::extended_execute(uint8_t opcode){
             registers->l &= ~(1 << 2);
             break;
         case 0x96: // RES 2, (HL)
-            memory->write_byte(registers->hl, memory->read_byte(registers->hl) & ~(1 << 2));
+            mmu->write_byte(registers->hl, mmu->read_byte(registers->hl) & ~(1 << 2));
             break;
         case 0x97: // RES 2, A
             registers->a &= ~(1 << 2);
@@ -499,7 +499,7 @@ void InstructionSet::extended_execute(uint8_t opcode){
             registers->l &= ~(1 << 3);
             break;
         case 0x9E: // RES 3, (HL)
-            memory->write_byte(registers->hl, memory->read_byte(registers->hl) & ~(1 << 3));
+            mmu->write_byte(registers->hl, mmu->read_byte(registers->hl) & ~(1 << 3));
             break;
         case 0x9F: // RES 3, A
             registers->a &= ~(1 << 3);
@@ -525,7 +525,7 @@ void InstructionSet::extended_execute(uint8_t opcode){
             registers->l &= ~(1 << 4);
             break;
         case 0xA6: // RES 4, (HL)
-            memory->write_byte(registers->hl, memory->read_byte(registers->hl) & ~(1 << 4));
+            mmu->write_byte(registers->hl, mmu->read_byte(registers->hl) & ~(1 << 4));
             break;
         case 0xA7: // RES 4, A
             registers->a &= ~(1 << 4);
@@ -550,7 +550,7 @@ void InstructionSet::extended_execute(uint8_t opcode){
             registers->l &= ~(1 << 5);
             break;
         case 0xAE: // RES 5, (HL)
-            memory->write_byte(registers->hl, memory->read_byte(registers->hl) & ~(1 << 5));
+            mmu->write_byte(registers->hl, mmu->read_byte(registers->hl) & ~(1 << 5));
             break;
         case 0xAF: // RES 5, A
             registers->a &= ~(1 << 5);
@@ -576,7 +576,7 @@ void InstructionSet::extended_execute(uint8_t opcode){
             registers->l &= ~(1 << 6);
             break;
         case 0xB6: // RES 6, (HL)
-            memory->write_byte(registers->hl, memory->read_byte(registers->hl) & ~(1 << 6));
+            mmu->write_byte(registers->hl, mmu->read_byte(registers->hl) & ~(1 << 6));
             break;
         case 0xB7: // RES 6, A
             registers->a &= ~(1 << 6);
@@ -601,7 +601,7 @@ void InstructionSet::extended_execute(uint8_t opcode){
             registers->l &= ~(1 << 7);
             break;
         case 0xBE: // RES 7, (HL)
-            memory->write_byte(registers->hl, memory->read_byte(registers->hl) & ~(1 << 7));
+            mmu->write_byte(registers->hl, mmu->read_byte(registers->hl) & ~(1 << 7));
             break;
         case 0xBF: // RES 7, A
             registers->a &= ~(1 << 7);
@@ -626,7 +626,7 @@ void InstructionSet::extended_execute(uint8_t opcode){
             registers->l = set(1 << 0, registers->l);
             break;
         case 0xC6: // SET 0, (HL)
-            memory->write_byte(registers->hl, set(1 << 0, memory->read_byte(registers->hl)));
+            mmu->write_byte(registers->hl, set(1 << 0, mmu->read_byte(registers->hl)));
             break;
         case 0xC7: // SET 0, A
             registers->a = set(1 << 0, registers->a);
@@ -651,7 +651,7 @@ void InstructionSet::extended_execute(uint8_t opcode){
             registers->l = set(1 << 1, registers->l);
             break;
         case 0xCE: // SET 1, (HL)
-            memory->write_byte(registers->hl, set(1 << 1, memory->read_byte(registers->hl)));
+            mmu->write_byte(registers->hl, set(1 << 1, mmu->read_byte(registers->hl)));
             break;
         case 0xCF: // SET 1, A
             registers->a = set(1 << 1, registers->a);
@@ -676,7 +676,7 @@ void InstructionSet::extended_execute(uint8_t opcode){
             registers->l = set(1 << 2, registers->l);
             break;
         case 0xD6: // SET 2, (HL)
-            memory->write_byte(registers->hl, set(1 << 2, memory->read_byte(registers->hl)));
+            mmu->write_byte(registers->hl, set(1 << 2, mmu->read_byte(registers->hl)));
             break;
         case 0xD7: // SET 2, A
             registers->a = set(1 << 2, registers->a);
@@ -701,7 +701,7 @@ void InstructionSet::extended_execute(uint8_t opcode){
             registers->l = set(1 << 3, registers->l);
             break;
         case 0xDE: // SET 3, (HL)
-            memory->write_byte(registers->hl, set(1 << 3, memory->read_byte(registers->hl)));
+            mmu->write_byte(registers->hl, set(1 << 3, mmu->read_byte(registers->hl)));
             break;
         case 0xDF: // SET 3, A
             registers->a = set(1 << 3, registers->a);
@@ -727,7 +727,7 @@ void InstructionSet::extended_execute(uint8_t opcode){
             registers->l = set(1 << 4, registers->l);
             break;
         case 0xE6: // SET 4, (HL)
-            memory->write_byte(registers->hl, set(1 << 4, memory->read_byte(registers->hl)));
+            mmu->write_byte(registers->hl, set(1 << 4, mmu->read_byte(registers->hl)));
             break;
         case 0xE7: // SET 4, A
             registers->a = set(1 << 4, registers->a);
@@ -753,7 +753,7 @@ void InstructionSet::extended_execute(uint8_t opcode){
             registers->l = set(1 << 5, registers->l);
             break;
         case 0xEE: // SET 5, (HL)
-            memory->write_byte(registers->hl, set(1 << 5, memory->read_byte(registers->hl)));
+            mmu->write_byte(registers->hl, set(1 << 5, mmu->read_byte(registers->hl)));
             break;
         case 0xEF: // SET 5, A
             registers->a = set(1 << 5, registers->a);
@@ -778,7 +778,7 @@ void InstructionSet::extended_execute(uint8_t opcode){
             registers->l = set(1 << 6, registers->l);
             break;
         case 0xF6: // SET 6, (HL)
-            memory->write_byte(registers->hl, set(1 << 6, memory->read_byte(registers->hl)));
+            mmu->write_byte(registers->hl, set(1 << 6, mmu->read_byte(registers->hl)));
             break;
         case 0xF7: // SET 6, A
             registers->a = set(1 << 6, registers->a);
@@ -804,7 +804,7 @@ void InstructionSet::extended_execute(uint8_t opcode){
             registers->l = set(1 << 7, registers->l);
             break;
         case 0xFE: // SET 7, (HL)
-            memory->write_byte(registers->hl, set(1 << 7, memory->read_byte(registers->hl)));
+            mmu->write_byte(registers->hl, set(1 << 7, mmu->read_byte(registers->hl)));
             break;
         case 0xFF: // SET 7, A
             registers->a = set(1 << 7, registers->a);

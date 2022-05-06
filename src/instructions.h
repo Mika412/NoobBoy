@@ -1,16 +1,19 @@
 #pragma once
 
 #include "Registers.h"
-#include "Memory.h"
+#include "mmu.h"
 #include "interrupt.h"
 
 
 class InstructionSet{
     private:
         Registers *registers;
-        MemoryBus *memory;
+        MMU *mmu;
         Interrupts *interrupts;
         bool *stopped;
+
+        void write_short_stack(uint16_t value);
+        uint16_t read_short_stack();
 
     public:
         const unsigned char instructionTicks[256] = {
@@ -70,7 +73,7 @@ class InstructionSet{
             8, 8, 8, 8, 8,  8, 16, 8,  8, 8, 8, 8, 8, 8, 16, 8  // 0xf_
         };
 
-        InstructionSet(Registers* registers, Interrupts* interrupts, MemoryBus* memory, bool *stopped);
+        InstructionSet(Registers* registers, Interrupts* interrupts, MMU* memory, bool *stopped);
         void execute(uint8_t opcode);
         void add(uint8_t* destination, uint8_t value);
         void sub(uint8_t value);

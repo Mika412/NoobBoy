@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Registers.h"
-#include "Memory.h"
+#include "mmu.h"
 #include "interrupt.h"
 
 struct rgb {
@@ -25,8 +25,13 @@ const COLOUR palette[4] = {
 class GPU{
     public:
         Registers* registers;
-        MemoryBus* memory;
+        MMU* memory;
         Interrupts *interrupts;
+        uint8_t* control;
+        uint8_t* scrollX;
+        uint8_t* scrollY;
+        uint8_t* scanline;
+        unsigned long tick;
 
         COLOUR framebuffer[160 * 144];
         unsigned short background[2000];
@@ -35,7 +40,7 @@ class GPU{
         int mode = 0;
         int modeclock = 0;
 
-    GPU(Registers *registers, Interrupts* interrupts, MemoryBus *memory);
+    GPU(Registers *registers, Interrupts* interrupts, MMU *memory);
     void step(); 
     void render_scan_lines(); 
 };

@@ -7,7 +7,7 @@
 class GB{
     public:
         Registers registers;
-        MemoryBus *memory;
+        MMU mmu;
         CPU *cpu;
         GPU *gpu;
         Interrupts *interrupts;

@@ -1,8 +1,8 @@
 #include "interrupt.h"
-#include "Memory.h"
+#include "mmu.h"
 
 
-Interrupts::Interrupts(Registers *registers, MemoryBus *mmu) {
+Interrupts::Interrupts(Registers *registers, MMU *mmu) {
     this->mmu = mmu;
     this->registers = registers;
 }
@@ -40,7 +40,7 @@ void Interrupts::check() {
         return;
 
     if(this->jump_vblank){
-        this->mmu->write_short_stack(this->registers->pc);
+        this->mmu->write_short_stack(&registers->sp, this->registers->pc);
         this->registers->pc = 0x40;
         this->unset_interrupt_flag(INTERRUPT_VBLANK);
         this->set_master_flag(false);
@@ -49,8 +49,7 @@ void Interrupts::check() {
         // std::cout << "INTERRUPTING LIKE CRAZY" << std::endl;
     }
     if(this->jump_timer){
-        this->mmu->write_short_stack(this->registers->pc);
-        // this->mmu->write_short_stack(&this->registers->sp, this->registers->pc + 2);
+        this->mmu->write_short_stack(&registers->sp, this->registers->pc);
         this->registers->pc = 0x50;
         this->set_master_flag(false);
         this->unset_interrupt_flag(INTERRUPT_TIMER);
@@ -60,8 +59,7 @@ void Interrupts::check() {
     }
 
     if(this->jump_joypad){
-        this->mmu->write_short_stack(this->registers->pc);
-        // this->mmu->write_short_stack(&this->registers->sp, this->registers->pc + 2);
+        this->mmu->write_short_stack(&registers->sp, this->registers->pc);
         this->registers->pc = 0x60;
         this->set_master_flag(false);
         this->unset_interrupt_flag(INTERRUPT_JOYPAD);

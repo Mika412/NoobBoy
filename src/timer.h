@@ -1,17 +1,17 @@
 #pragma once
 
 #include "Registers.h"
-#include "Memory.h"
+#include "mmu.h"
 
 class Timer{
     public:
         Registers *registers;
-        MemoryBus *memory;
+        MMU *memory;
         int main = 0;
         int sub = 0;
         int div = 0;
 
-        Timer(Registers *registers, MemoryBus *memory);
+        Timer(Registers *registers, MMU *memory);
         void step();
         void check();
         void inc();

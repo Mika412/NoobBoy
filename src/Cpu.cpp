@@ -4,7 +4,7 @@
 
 using namespace std;
 
-CPU::CPU(Registers *registers, Interrupts* interrupts, MemoryBus* memory){
+CPU::CPU(Registers *registers, Interrupts* interrupts, MMU* memory){
     this->memory = memory;
     this->interrupts = interrupts;
     this->registers = registers;

@@ -2,7 +2,7 @@
 
 #include "timer.h"
 
-Timer::Timer(Registers *registers, MemoryBus* memory){
+Timer::Timer(Registers *registers, MMU* memory){
     this->registers = registers;
     this->memory = memory;
 }
