@@ -13,30 +13,31 @@ void GB::init(){
     cpu = new CPU(&registers, interrupts, &mmu);
     gpu = new GPU(&registers, interrupts, &mmu);
     timer = new Timer(&registers, &mmu);
+    joypad = new Joypad(interrupts, &mmu);
 
     if(render)
         renderer = new Renderer(cpu, gpu, &registers, &mmu);
 
     mmu.load_boot_rom("./roms/DMG_ROM.bin");
-    // mmu->load_cartrige_rom("./roms/Dr. Mario (World).gb");
-    // mmu->load_cartrige_rom("./roms/Pokemon Red.gb");
-    // mmu->load_cartrige_rom("./roms/cpu_instrs/individual/11-op a,(hl).gb"); // PASSED
-    // mmu->load_cartrige_rom("./roms/cpu_instrs/individual/10-bit ops.gb"); // PASSED
-    // mmu->load_cartrige_rom("./roms/cpu_instrs/individual/09-op r,r.gb"); // PASSED
-    // mmu->load_cartrige_rom("./roms/cpu_instrs/individual/08-misc instrs.gb"); // PASSED
-    // mmu->load_cartrige_rom("./roms/cpu_instrs/individual/07-jr,jp,call,ret,rst.gb"); // PASSED
-    // mmu->load_cartrige_rom("./roms/cpu_instrs/individual/06-ld r,r.gb"); // PASSED
-    // mmu->load_cartrige_rom("./roms/cpu_instrs/individual/05-op rp.gb"); // PASSED
-    // mmu->load_cartrige_rom("./roms/cpu_instrs/individual/04-op r,imm.gb"); // PASSED
-    // mmu->load_cartrige_rom("./roms/cpu_instrs/individual/03-op sp,hl.gb"); // PASSED
-    // mmu->load_cartrige_rom("./roms/cpu_instrs/individual/02-interrupts.gb");
-    // mmu->load_cartrige_rom("./roms/cpu_instrs/individual/01-special.gb"); // PASSED
-    // mmu->load_cartrige_rom("./roms/instr_timing/instr_timing.gb");
-    // mmu->load_cartrige_rom("./roms/GB-TicTacToe.gb");
-    // mmu->load_cartrige_rom("./roms/daa.gb");
-    // mmu->load_cartrige_rom("./cpu_instrs.gb");
-    // mmu->load_cartrige_rom("./Tetris2.gb");
-    mmu.load_cartrige_rom("./roms/Tetris.gb");
+    // mmu.load_cartrige_rom("./roms/Dr. Mario (World).gb");
+    // mmu.load_cartrige_rom("./roms/Pokemon Red.gb");
+    // mmu.load_cartrige_rom("./roms/cpu_instrs/individual/11-op a,(hl).gb"); // PASSED
+    // mmu.load_cartrige_rom("./roms/cpu_instrs/individual/10-bit ops.gb"); // PASSED
+    // mmu.load_cartrige_rom("./roms/cpu_instrs/individual/09-op r,r.gb"); // PASSED
+    // mmu.load_cartrige_rom("./roms/cpu_instrs/individual/08-misc instrs.gb"); // PASSED
+    // mmu.load_cartrige_rom("./roms/cpu_instrs/individual/07-jr,jp,call,ret,rst.gb"); // PASSED
+    // mmu.load_cartrige_rom("./roms/cpu_instrs/individual/06-ld r,r.gb"); // PASSED
+    // mmu.load_cartrige_rom("./roms/cpu_instrs/individual/05-op rp.gb"); // PASSED
+    // mmu.load_cartrige_rom("./roms/cpu_instrs/individual/04-op r,imm.gb"); // PASSED
+    // mmu.load_cartrige_rom("./roms/cpu_instrs/individual/03-op sp,hl.gb"); // PASSED
+    // mmu.load_cartrige_rom("./roms/cpu_instrs/individual/02-interrupts.gb");
+    // mmu.load_cartrige_rom("./roms/cpu_instrs/individual/01-special.gb"); // PASSED
+    // mmu.load_cartrige_rom("./roms/instr_timing/instr_timing.gb");
+    // mmu.load_cartrige_rom("./roms/GB-TicTacToe.gb");
+    // mmu.load_cartrige_rom("./roms/daa.gb");
+    // mmu.load_cartrige_rom("./roms/cpu_instrs.gb");
+    mmu.load_cartrige_rom("./roms/Tetris2.gb");
+    // mmu.load_cartrige_rom("./roms/Tetris.gb");
 }
     
 /* static struct timespec frameStart; */
@@ -120,28 +121,28 @@ void GB::run(){
             switch (event.type) {
                 case SDL_KEYUP:
                     switch(event.key.keysym.sym){
-                        case SDLK_RIGHT:  mmu.keys.keys2 &= 0xE; break;
-                        case SDLK_LEFT:   mmu.keys.keys2 &= 0xD; break;
-                        case SDLK_UP:     mmu.keys.keys2 &= 0xB; break;
-                        case SDLK_DOWN:   mmu.keys.keys2 &= 0x7; break;
-                        case SDLK_z:      mmu.keys.keys1 &= 0xE; break;
-                        case SDLK_x:      mmu.keys.keys1 &= 0xD; break;
-                        case SDLK_SPACE:  mmu.keys.keys1 &= 0xB; break;
-                        case SDLK_RETURN: mmu.keys.keys1 &= 0x7; break;
+                        case SDLK_RIGHT:  joypad->key_release(JOYPAD_RIGHT); break;
+                        case SDLK_LEFT:   joypad->key_release(JOYPAD_LEFT); break;
+                        case SDLK_UP:     joypad->key_release(JOYPAD_UP); break;
+                        case SDLK_DOWN:   joypad->key_release(JOYPAD_DOWN); break;
+                        case SDLK_z:      joypad->key_release(JOYPAD_A); break;
+                        case SDLK_x:      joypad->key_release(JOYPAD_B); break;
+                        case SDLK_SPACE:  joypad->key_release(JOYPAD_START); break;
+                        case SDLK_RETURN: joypad->key_release(JOYPAD_SELECT); break;
                         
                     }
                     break;
                 case SDL_KEYDOWN:
                     switch(event.key.keysym.sym){
-                        case SDLK_RIGHT:  mmu.keys.keys2 |= 0x1; break;
-                        case SDLK_LEFT:   mmu.keys.keys2 |= 0x2; break;
-                        case SDLK_UP:     mmu.keys.keys2 |= 0x4; break;
-                        case SDLK_DOWN:   mmu.keys.keys2 |= 0x8; break;
-                        case SDLK_z:      mmu.keys.keys1 |= 0x1; break;
-                        case SDLK_x:      mmu.keys.keys1 |= 0x2; break;
-                        case SDLK_SPACE:  mmu.keys.keys1 |= 0x4; break;
-                        case SDLK_RETURN: mmu.keys.keys1 |= 0x8; break;
-                        case SDLK_r:      renderer->render(); break;
+                        case SDLK_RIGHT:  joypad->key_press(JOYPAD_RIGHT); break;
+                        case SDLK_LEFT:   joypad->key_press(JOYPAD_LEFT); break;
+                        case SDLK_UP:     joypad->key_press(JOYPAD_UP); break;
+                        case SDLK_DOWN:   joypad->key_press(JOYPAD_DOWN); break;
+                        case SDLK_z:      joypad->key_press(JOYPAD_A); break;
+                        case SDLK_x:      joypad->key_press(JOYPAD_B); break;
+                        case SDLK_SPACE:  joypad->key_press(JOYPAD_START); break;
+                        case SDLK_RETURN: joypad->key_press(JOYPAD_SELECT); break;
+                    //     case SDLK_r:      renderer->render(); break;
                         case SDLK_ESCAPE: exit(1); break;
                     }
                     break;

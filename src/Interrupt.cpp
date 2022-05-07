@@ -1,5 +1,5 @@
 #include "interrupt.h"
-#include "mmu.h"
+#include <iostream>
 
 
 Interrupts::Interrupts(Registers *registers, MMU *mmu) {
@@ -64,7 +64,7 @@ void Interrupts::check() {
         this->set_master_flag(false);
         this->unset_interrupt_flag(INTERRUPT_JOYPAD);
         this->jump_joypad = false;
-        // std::cout << "INTERRUPTING LIKE CRAZY JOYPAD" << std::endl;
+        std::cout << "INTERRUPTING LIKE CRAZY JOYPAD" << std::endl;
         // mmu->is_halted = false;
     }
         // if(fire & (1 << 4)){ // JOYPAD
@@ -82,7 +82,8 @@ void Interrupts::check() {
     //     return;
     // }
  
-    // std::cout << this->is_interrupt_enabled(INTERRUPT_VBLANK) << " " << this->is_interrupt_flag_set(INTERRUPT_VBLANK) << "\n";
+    std::cout << this->is_interrupt_enabled(INTERRUPT_JOYPAD) << " " << this->is_interrupt_flag_set(INTERRUPT_JOYPAD) << std::endl;
+    std::cout << std::hex << +(this->mmu->joypad) << std::endl;
     // Check if VBLANK
     if(this->is_interrupt_enabled(INTERRUPT_VBLANK) && this->is_interrupt_flag_set(INTERRUPT_VBLANK)) {
         this->jump_vblank = true;

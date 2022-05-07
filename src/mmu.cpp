@@ -55,9 +55,10 @@ void MMU::updateTile(unsigned short laddress, unsigned char value) {
 
 uint8_t MMU::read_byte(uint16_t address) {
     if(address == 0xff00) {
-        switch(keys.column){
-            case 0x10: return keys.keys1;
-            case 0x20: return keys.keys2;
+        // return (uint8_t)(joypad >> 8);
+        switch(memory[0xff00] & 0x30){ // Mask `00110000` to check which SELECT
+            case 0x10: return (uint8_t)(joypad & 0x0F);
+            case 0x20: return (uint8_t)(joypad >> 4) & 0x0F;
             default: return 0xFF;
         }
     }
@@ -86,9 +87,9 @@ void MMU::write_byte(uint16_t address, uint8_t value) {
     if(address >= 0xFEA0 && address <= 0xFEFF) // Writing in unused area. TODO: Prettify this
         return;
 
-    if(address == 0xff00){
-        keys.column = value & 0x30;
-    }
+    // if(address == 0xff00){
+    //     keys.column = value & 0x30;
+    // }
     if(address == 0xff50){
         romDisabled = true;
     }

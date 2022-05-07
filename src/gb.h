@@ -3,6 +3,7 @@
 #include "timer.h"
 #include "renderer.h"
 #include "interrupt.h"
+#include "joypad.h"
 
 class GB{
     public:
@@ -13,6 +14,7 @@ class GB{
         Interrupts *interrupts;
         Timer *timer;
         Renderer *renderer;
+        Joypad *joypad;
 
         bool render = true;
         bool debug = false;
