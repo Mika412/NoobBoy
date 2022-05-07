@@ -2,29 +2,34 @@
 
 #include "timer.h"
 
-Timer::Timer(Registers *registers, MMU* memory){
+Timer::Timer(Registers *registers, MMU* memory, Interrupts* interrupts){
     this->registers = registers;
     this->memory = memory;
+    this->interrupts = interrupts;
 }
 
 void Timer::inc(){
-    sub += this->registers->m;
-    if(sub >= 4){
-        main++;
-        sub -= 4;
-
-        div++;
-        if(div == 16){
-            memory->timer.div = (memory->timer.div + 1) & 255;
-            div = 0;
-        }
+    div += this->registers->m;
+        std::cout << "SUB " << +(memory->timer.div) << std::endl;
+    if(div >= 4){
+        // main++;
+        div -= 4;
+        memory->timer.div++;
+        // // div++;
+        // if(div == 16){
+        //     std::cout << "SUB " << +(sub) << std::endl;
+        //     memory->timer.div = (memory->timer.div + 1);
+        //     // memory->timer.div = (memory->timer.div + 1) & 255;
+        //     div = 0;
+        // }
     }
 
     check();
 }
 
 void Timer::check(){
-    if(memory->timer.tac & 4){
+    if((memory->timer.tac >> 2) & 0x1){
+        exit(1);
         int threshold = 1000; // TODO: Replace this
         switch(memory->timer.tac & 3){
             case 0: 
@@ -51,7 +56,7 @@ void Timer::step(){
 
     if(memory->timer.tima > 255){
         memory->timer.tima = memory->timer.tma;
-        
+        interrupts->set_interrupt_flag(INTERRUPT_TIMER);
         // memory->interruptFlags.IF |= 4;
     }
 }

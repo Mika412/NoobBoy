@@ -2,21 +2,12 @@
 
 #include <stdint.h>
 #include <fstream>
-
-enum Registers_8bit { A, B, C, D, E, F, H, L};
-enum Registers_16bit { AF, BC, DE, HL};
-
-struct FlagsRegister {
-    bool zero = false;
-    bool subtract = false;
-    bool half_carry = false;
-    bool carry = false;
-};
-enum RegisterFlagNames { FLAG_ZERO = 7, FLAG_SUBTRACT = 6, FLAG_HALF_CARRY = 5, FLAG_CARRY = 4};
+enum RegisterFlags { FLAG_ZERO = (1 << 7), FLAG_SUBTRACT = (1 << 6), FLAG_HALF_CARRY = (1 << 5), FLAG_CARRY = (1 << 4)};
 
 class Registers {
     public:  
-        uint16_t pc, sp;
+        uint16_t pc; // Program Counter/Pointer
+        uint16_t sp; // Stack pointer
 
         struct {
             union {
@@ -57,20 +48,16 @@ class Registers {
                 uint16_t hl;
             };
         };  
-
+        long cycles = 0;
+        int last_tick = 0;
         unsigned long m = 0; // Quarter clock for last instr
         unsigned long t = 0; // Clock for last instr
         
-        Registers();
 
-        uint8_t get_val(Registers_8bit register_name);
-        void set_val(Registers_8bit register_name, uint16_t value);
-        void set_register_flags(FlagsRegister flags);
-        void set_register_flag(RegisterFlagNames flag);
-        void unset_register_flag(RegisterFlagNames flag);
-        bool is_set_register_flag(RegisterFlagNames flag);
-        FlagsRegister get_register_flags();
-        uint8_t* get_register_variable(Registers_8bit reg);
+        // void set_register_flags(FlagsRegister flags);
+        void set_register_flags(uint8_t flags);
+        void unset_register_flags(uint8_t flags);
+        bool is_set_register_flag(uint8_t flag);
 
         // Debug
         void print_flags();

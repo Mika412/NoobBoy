@@ -10,26 +10,28 @@ CPU::CPU(Registers *registers, Interrupts* interrupts, MMU* memory){
     this->registers = registers;
     this->instructions = new InstructionSet(registers, interrupts, memory, &this->stopped);
     // this->instructions = new InstructionSet(registers, interrupts, memory, &this->stopped);
-    /* this->registers->a = 0x01;
-    this->registers->f = 0xF0;
-    this->registers->b = 0x00;
-    this->registers->c = 0x13;
-    this->registers->d = 0x00;
-    this->registers->e = 0xd8;
-    this->registers->h = 0x01;
-    this->registers->l = 0x4d;
+    // this->registers->a = 0x01;
+    // this->registers->f = 0xF0;
+    // this->registers->b = 0x00;
+    // this->registers->c = 0x13;
+    // this->registers->d = 0x00;
+    // this->registers->e = 0xd8;
+    // this->registers->h = 0x01;
+    // this->registers->l = 0x4d;
 
-    this->registers->sp = 0xfffe;
-    this->registers->pc = 0x0100;
+    // this->registers->sp = 0xfffe;
+    // this->registers->pc = 0x0100;
 
-    this->registers->set_register_flag(FLAG_ZERO);
-    this->registers->set_register_flag(FLAG_HALF_CARRY);
-    this->registers->set_register_flag(FLAG_CARRY);
-    this->registers->unset_register_flag(FLAG_SUBTRACT); */
+    // this->registers->set_register_flag(FLAG_ZERO);
+    // this->registers->set_register_flag(FLAG_HALF_CARRY);
+    // this->registers->set_register_flag(FLAG_CARRY);
+    // this->registers->unset_register_flag(FLAG_SUBTRACT);
     
     // this->memory->romDisabled = true;
+    // this->memory->timer.div = 0x44;
+    // this->memory->timer.tac = 0xF8;
     // Testing rem
-    /* this->registers->a = 0x11;
+    this->registers->a = 0x11;
     this->registers->f = 0x80;
     this->registers->b = 0x00;
     this->registers->c = 0x00;
@@ -41,17 +43,18 @@ CPU::CPU(Registers *registers, Interrupts* interrupts, MMU* memory){
     this->registers->sp = 0xfffe;
     this->registers->pc = 0x0100;
 
-    this->registers->set_register_flag(FLAG_ZERO);
-    this->registers->unset_register_flag(FLAG_HALF_CARRY);
-    this->registers->unset_register_flag(FLAG_CARRY);
-    this->registers->unset_register_flag(FLAG_SUBTRACT);
+    this->registers->set_register_flags(FLAG_ZERO);
+    this->registers->unset_register_flags(FLAG_HALF_CARRY);
+    this->registers->unset_register_flags(FLAG_CARRY);
+    this->registers->unset_register_flags(FLAG_SUBTRACT);
     
-    this->memory->write_byte(0xFF00, 0xF);
+    // this->memory->write_byte(0xFF00, 0xF);
 
+    this->memory->romDisabled = true;
     this->memory->timer.div = 0x44;
     this->memory->timer.tima = 0x00;
     this->memory->timer.tma = 0x00;
-    this->memory->timer.tac = 0xF8; */
+    this->memory->timer.tac = 0xF8;
 
 }
 
