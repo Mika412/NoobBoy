@@ -25,7 +25,7 @@ const COLOUR palette[4] = {
 class GPU{
     public:
         Registers* registers;
-        MMU* memory;
+        MMU* mmu;
         Interrupts *interrupts;
         uint8_t* control;
         uint8_t* scrollX;
@@ -38,9 +38,12 @@ class GPU{
         // unsigned short background[32 * 32];
 
         int mode = 0;
-        int modeclock = 0;
+        int modeclock = 32;
+        // int modeclock = 0;
+        
+        bool can_render = false;
 
-    GPU(Registers *registers, Interrupts* interrupts, MMU *memory);
+    GPU(Registers *registers, Interrupts* interrupts, MMU *mmu);
     void step(); 
     void render_scan_lines(); 
 };

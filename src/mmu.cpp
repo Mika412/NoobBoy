@@ -38,11 +38,11 @@ void MMU::updateTile(unsigned short laddress, unsigned char value) {
     uint16_t address = laddress & 0xFFFE;
     // address &= 0x1ffe;
     
-    unsigned short tile = (address >> 4) & 511;
-    unsigned short y = (address >> 1) & 7;
+    uint16_t tile = (address >> 4) & 511;
+    uint16_t y = (address >> 1) & 7;
     
     unsigned char bitIndex;
-    for(unsigned char x = 0; x < 8; x++) {
+    for(uint8_t x = 0; x < 8; x++) {
             bitIndex = 1 << (7 - x);
         
         //((unsigned char (*)[8][8])tiles)[tile][y][x] = ((vram[address] & bitIndex) ? 1 : 0) + ((vram[address + 1] & bitIndex) ? 2 : 0);
@@ -51,6 +51,56 @@ void MMU::updateTile(unsigned short laddress, unsigned char value) {
     }
 
     renderFlag.tiles = true;
+}
+// void MMU::updateTile(uint16_t address, uint8_t lower) {
+//     // if(address & 1)
+//     //     return;
+//     address &= 0xFFFE;
+
+//     uint8_t upper = this->read_byte(address + 1);
+
+//     int tmp = (address & 0x1fff);
+//     int tile_id = tmp >> 4;
+//     int y = (tmp >> 1) & 0x7;
+
+//     for(int i = 0; i < 8; i++)
+//         this->tiles[tile_id][y][7 - i] = ((upper >> i) & 1) | (((lower >> i) & 1) << 1);
+// }
+
+void MMU::updateSprite(unsigned short laddress, unsigned char value) {
+    // if((laddress & 3) != 2){
+    //     return;
+    // }
+    std::cout << "ADDRESS " << std::hex << +laddress << " SPRITE "<< std::hex << +value << std::endl;
+    uint16_t address = laddress - 0xFE00;
+    // uint16_t address = laddress & 0xFFFE;
+    unsigned short tile = (address >> 2);
+
+    printf("TILE %d\n", tile);
+    switch(address & 3){
+        case 0:
+            sprites_y_cord[tile] = value - 16;
+            break;
+        case 1:
+            sprites_x_cord[tile] = value - 8;
+            break;
+        case 2:
+            sprites[tile] = value;
+            break;
+    //         // address &= 0x1ffe;
+            
+    //         unsigned short y = (address >> 1) & 7;
+            
+    //         unsigned char bitIndex;
+    //         for(unsigned char x = 0; x < 8; x++) {
+    //                 bitIndex = 1 << (7 - x);
+                
+    //             //((unsigned char (*)[8][8])tiles)[tile][y][x] = ((vram[address] & bitIndex) ? 1 : 0) + ((vram[address + 1] & bitIndex) ? 2 : 0);
+    //             // tiles[tile][y][x] = ((vram[address] & bitIndex) ? 1 : 0) + ((vram[address + 1] & bitIndex) ? 2 : 0);
+    //             sprites[tile][y][x] = ((memory[address] & bitIndex) ? 1 : 0) + ((memory[address + 1] & bitIndex) ? 2 : 0);
+    //         }
+    // }
+    }
 }
 
 uint8_t MMU::read_byte(uint16_t address) {
@@ -80,13 +130,23 @@ uint8_t MMU::read_byte(uint16_t address) {
     } else if (address < 0x8000) {
         return ROMbanks[1 % banksLoaded][address - 0x4000];
     }
+    // if(address >= 0xFE00 && address < 0xFE9F) {
+    //     std::cout << "Entered" <<  std::endl;
+    // }
     return memory[address];
 }
 
 void MMU::write_byte(uint16_t address, uint8_t value) {
     if(address >= 0xFEA0 && address <= 0xFEFF) // Writing in unused area. TODO: Prettify this
         return;
-
+    
+    // Copy Sprites from ROM to RAM (OAM)
+    if(address == 0xFF46){ 
+        // std::cout << "\nFUCK "<< +(value << 8) << std::endl;
+        // exit(1);
+        // for(uint16_t i = 0; i < 20; i++) write_byte(0xFE00 + i, read_byte((value << 8) + i));
+        for(uint16_t i = 0; i < 160; i++) write_byte(0xFE00 + i, read_byte((value << 8) + i));
+    }
     // if(address == 0xff00){
     //     keys.column = value & 0x30;
     // }
@@ -106,6 +166,16 @@ void MMU::write_byte(uint16_t address, uint8_t value) {
         }else{
             renderFlag.background = true;
         }
+    }
+    // if(address == 0xC002) {
+    //     printf("TILE %x\n", +value);
+    // }
+    if(address >= 0xFE00 && address < 0xFE9F) {
+        // if(value > 0){
+        //     exit(1);
+        // }
+        renderFlag.background = true;
+        updateSprite(address, value);
     }
 }
 

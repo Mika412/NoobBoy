@@ -55,6 +55,7 @@ void Renderer::render(){
 
         if(memory->renderFlag.tiles)
             this->render_tiles(); 
+            this->render_sprites(); 
 
         if(memory->renderFlag.viewport){
             this->render_viewport(); 
@@ -167,6 +168,25 @@ void Renderer::render_tiles(){
     }
 }
 
+void Renderer::render_sprites(){
+    int offset = viewport_width + status_width + tiles_width;
+    int i, x, y;
+    for(i = 0; i < 40; i++) {
+        int tile = memory->sprites[i];
+        for(x = 0; x < 8; x++) {
+            for(y = 0; y < 8; y++) {
+                unsigned char color = memory->tiles[tile][y][x];
+                int offsetX = offset + ((i * 8 + x) % sprites_width);
+                int offsetY = y +  (int(i/16)) * 8;
+                frameBuffer[4 * ( offsetY * window_width + offsetX) + 0] = palette[color].r;
+                frameBuffer[4 * ( offsetY * window_width + offsetX) + 1] = palette[color].g;
+                frameBuffer[4 * ( offsetY * window_width + offsetX) + 2] = palette[color].b;
+                frameBuffer[4 * ( offsetY * window_width + offsetX) + 3] = palette[color].a;
+            }
+        }
+    }
+}
+
 void Renderer::render_viewport(){
     int i, x, y;
     for(i = 0; i < 160 * 144; i++) {
@@ -182,9 +202,13 @@ void Renderer::render_viewport(){
 }
 
 void Renderer::render_background(){
+    printf("BACKGROUND");
     int sp = 0;
     for(unsigned short i = 0x9800; i <= 0x9bff; i++) {
-        unsigned char tile = memory->read_byte(i);
+        int tile = memory->read_byte(i);
+        if(!(memory->read_byte(0xFF40) >> 5 & 0x1) && tile < 128)
+            tile += 256 ;
+        // unsigned char tile = memory->read_byte(i);
         if ( tile == 0){
             sp++;
             continue;
@@ -203,4 +227,45 @@ void Renderer::render_background(){
         }
         sp++;
     }
+    for(int i = 0; i < 40; i++) {
+        int tile = memory->sprites[i];
+        for(int x = 0; x < 8; x++) {
+            for(int y = 0; y < 8; y++) {
+                unsigned char color = memory->tiles[tile][y][x];
+                // int offsetX = offset + ((i * 8 + x) % sprites_width);
+                // int offsetY = y +  (int(i/16)) * 8;
+                // int xi = (sp % 32) * 8 + x;
+                int xi = memory->sprites_x_cord[i] + x;
+                int yi = viewport_height + memory->sprites_y_cord[i] + y;
+                frameBuffer[4 * ( yi * window_width + xi) + 0] = palette[color].r;
+                frameBuffer[4 * ( yi * window_width + xi) + 1] = palette[color].g;
+                frameBuffer[4 * ( yi * window_width + xi) + 2] = palette[color].b;
+                frameBuffer[4 * ( yi * window_width + xi) + 3] = palette[color].a;
+            }
+        }
+    }
+    // }
+    // for(unsigned short i = 0xFE00; i <= 0xFE9F; i++) {
+    //     int sprite = memory->read_byte(i);
+        
+
+    //     // unsigned char tile = memory->read_byte(i);
+    //     if ( tile == 0){
+    //         sp++;
+    //         continue;
+    //     }
+    //     for(int y = 0; y < 8; y++) {
+    //         for(int x = 0; x < 8; x++) {
+    //             unsigned char color = memory->tiles[tile][y][x];
+
+    //             int xi = (sp % 32) * 8 + x;
+    //             int yi = viewport_height + (sp / 32) * 8 + y;
+    //             frameBuffer[4 * ( yi * window_width + xi) + 0] = palette[color].r;
+    //             frameBuffer[4 * ( yi * window_width + xi) + 1] = palette[color].g;
+    //             frameBuffer[4 * ( yi * window_width + xi) + 2] = palette[color].b;
+    //             frameBuffer[4 * ( yi * window_width + xi) + 3] = palette[color].a;
+    //         }
+    //     }
+    //     sp++;
+    // }
 }

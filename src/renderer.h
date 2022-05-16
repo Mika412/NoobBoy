@@ -31,15 +31,19 @@ class Renderer{
         int tiles_width = 128;
         int tiles_height = 144;
 
+        int sprites_width = 128;
+        int sprites_height = 144;
+
         int background_width = 256;
         int background_height = 256;
 
         int window_height = viewport_height + background_height;
-        int window_width = viewport_width + status_width + tiles_width;
+        int window_width = viewport_width + status_width + tiles_width + sprites_width;
 
         TTF_Font *font;
 
         void render_tiles();
+        void render_sprites();
         void render_viewport();
         void render_status();
         void render_background();

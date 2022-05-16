@@ -7,14 +7,14 @@
 // #include <SDL2/SDL_timer.h>
 
 
-GPU::GPU(Registers *registers, Interrupts* interrupts, MMU* memory){
+GPU::GPU(Registers *registers, Interrupts* interrupts, MMU* mmu){
     this->registers = registers;
-    this->memory = memory;
+    this->mmu = mmu;
     this->interrupts = interrupts; 
-    control = &memory->memory[0xff40];
-    scrollY = &memory->memory[0xff42];
-    scrollX = &memory->memory[0xff43];
-    scanline = &memory->memory[0xff44];
+    control = &mmu->memory[0xff40];
+    scrollY = &mmu->memory[0xff42];
+    scrollX = &mmu->memory[0xff43];
+    scanline = &mmu->memory[0xff44];
 }
 
 void GPU::step(){
@@ -51,7 +51,7 @@ void GPU::step(){
                     //Restart scanning modes
                     *this->scanline = 0;
                     mode = 2;
-                    memory->renderFlag.viewport = true;
+                    mmu->renderFlag.viewport = true;
 
 
 
@@ -77,36 +77,31 @@ void GPU::step(){
     }
 }
 void GPU::render_scan_lines(){
-    int mapOffset = (*this->control & (1 << 3)) ? 0x1c00 : 0x1800;
-    /* mapOffset += (((this->scanline + this->scrollY) & 255) >> 3);         */
-    mapOffset += (((*this->scanline + *this->scrollY) & 255) >> 3) << 5;        
-    // std::cout << "SCROLL " << +this->scrollY << std::endl;
+    // Tiles
+    uint16_t address = 0x9800;
+    if((*this->control >> 3) & 1)
+        address += 0x400;
 
-    int lineOffset = (*this->scrollX >> 3);
+    address += (((*this->scanline + *this->scrollY) & 255) >> 3) << 5;
+    address += (*this->scrollX >> 3);
 
     int x = *this->scrollX & 7;
     int y = (*this->scanline + *this->scrollY) & 7;
 
     int pixelOffset = *this->scanline * 160;
-    int tst = mapOffset + lineOffset;
+    for(uint16_t tile_address = address; tile_address < address + 20; tile_address++){
+        int tile = this->mmu->read_byte(tile_address);
+        
+        // Check if background tiles
+        if(!(*this->control >> 6 & 0x1) && tile < 128)
+            tile += 256;
 
-    unsigned char tile = (unsigned char)memory->read_byte(0x8000 + mapOffset + lineOffset);
-
-    for(int i = 0; i < 160; i++) {
-        unsigned char colour = memory->tiles[tile][y][x];
-
-        framebuffer[pixelOffset].r = palette[colour].r;
-        framebuffer[pixelOffset].g = palette[colour].g;
-        framebuffer[pixelOffset].b = palette[colour].b; 
-        framebuffer[pixelOffset].a = palette[colour].a;
-
-        pixelOffset++;
-        x++;
-        if(x == 8) {
-            x = 0;
-            lineOffset = (lineOffset + 1) & 31;
-            tile = memory->read_byte(0x8000 + mapOffset + lineOffset);
-            //if((gpu.control & GPU_CONTROL_TILESET) && tile < 128) tile += 256;
+        for(; x < 8; x++){
+            unsigned char colour = mmu->tiles[tile][y][x];
+            framebuffer[pixelOffset++] = palette[colour];
         }
+        x=0;
     }
+
+    // Sprites
 }
