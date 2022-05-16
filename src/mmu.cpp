@@ -105,10 +105,9 @@ void MMU::updateSprite(unsigned short laddress, unsigned char value) {
 
 uint8_t MMU::read_byte(uint16_t address) {
     if(address == 0xff00) {
-        // return (uint8_t)(joypad >> 8);
         switch(memory[0xff00] & 0x30){ // Mask `00110000` to check which SELECT
-            case 0x10: return (uint8_t)(joypad & 0x0F);
-            case 0x20: return (uint8_t)(joypad >> 4) & 0x0F;
+            case 0x10: return (uint8_t)(joypad & 0x0F) | 0x10; 
+            case 0x20: return (uint8_t)(joypad >> 4) & 0x0F | 0x20; 
             default: return 0xFF;
         }
     }

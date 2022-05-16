@@ -140,6 +140,7 @@ void GB::run(){
                         case SDLK_DOWN:   joypad->key_press(JOYPAD_DOWN); break;
                         case SDLK_z:      joypad->key_press(JOYPAD_A); break;
                         case SDLK_x:      joypad->key_press(JOYPAD_B); break;
+                        // case SDLK_SPACE:  step=true; break;
                         case SDLK_SPACE:  joypad->key_press(JOYPAD_START); break;
                         case SDLK_RETURN: joypad->key_press(JOYPAD_SELECT); break;
                     //     case SDLK_r:      renderer->render(); break;
