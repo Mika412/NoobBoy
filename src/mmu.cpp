@@ -67,7 +67,7 @@ void MMU::updateTile(unsigned short laddress, unsigned char value) {
 //         this->tiles[tile_id][y][7 - i] = ((upper >> i) & 1) | (((lower >> i) & 1) << 1);
 // }
 
-void MMU::updateSprite(unsigned short laddress, unsigned char value) {
+void MMU::updateSprite(unsigned short laddress, uint8_t value) {
     // if((laddress & 3) != 2){
     //     return;
     // }
@@ -75,17 +75,31 @@ void MMU::updateSprite(unsigned short laddress, unsigned char value) {
     uint16_t address = laddress - 0xFE00;
     // uint16_t address = laddress & 0xFFFE;
     unsigned short tile = (address >> 2);
-
-    printf("TILE %d\n", tile);
+    sprite *spr = &sprites[tile];
+    // std::cout << "SP:RITE " << &sprites[tile] << std::endl;
+    printf("TILE %d\n", tile); 
     switch(address & 3){
         case 0:
-            sprites_y_cord[tile] = value - 16;
+            spr->y = value - 16;
             break;
         case 1:
-            sprites_x_cord[tile] = value - 8;
+            spr->x = value - 8;
             break;
         case 2:
-            sprites[tile] = value;
+            spr->tile = value;
+            break;
+        case 3:
+            // TODO: Rewrite this as a struct cast
+            // struct spriteOptions *sprs = (spriteOptions *)value;
+            spr->options.gbcPalleteNumber1  = value >> 0;
+            spr->options.gbcPalleteNumber2  = value >> 1;
+            spr->options.gbcPalleteNumber3  = value >> 2;
+            spr->options.gbcVRAMBank        = value >> 3;
+            spr->options.palleteNumber      = value >> 4;
+            spr->options.xFlip              = value >> 5;
+            spr->options.yFlip              = value >> 6;
+            spr->options.renderPriority     = value >> 7;
+            // spr->options = (struct sprite.options *)value;
             break;
     //         // address &= 0x1ffe;
             

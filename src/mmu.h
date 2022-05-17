@@ -37,9 +37,26 @@ class MMU {
         uint8_t joypad = 0xFF;
         // uint16_t joypad = 0x0F0F;
         // unsigned char column = 0;
+        
+
+        struct sprite {
+            unsigned char y;
+            unsigned char x;
+            unsigned char tile;
+            struct spriteOptions {
+                uint8_t renderPriority : 1;
+                uint8_t yFlip : 1;
+                uint8_t xFlip : 1;
+                uint8_t palleteNumber : 1;
+                uint8_t gbcVRAMBank: 1;
+                uint8_t gbcPalleteNumber3 : 1;
+                uint8_t gbcPalleteNumber2 : 1;
+                uint8_t gbcPalleteNumber1 : 1;
+            } options;
+        };
 
         uint8_t tiles[384][8][8] = {0}; 
-        uint8_t sprites[40] = {0}; 
+        sprite sprites[40] = {sprite()}; 
         uint8_t sprites_y_cord[40] = {0}; 
         uint8_t sprites_x_cord[40] = {0}; 
 
