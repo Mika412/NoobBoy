@@ -13,17 +13,20 @@ class Renderer{
     private:
         SDL_Window *window;
         SDL_Renderer *renderer;
-        SDL_Texture *texture;
 
-        std::vector<unsigned char> frameBuffer;
+        SDL_Texture *viewport_texture;
+        SDL_Texture *debug_texture;
+        SDL_Texture *background_texture;
+        SDL_Texture *tilemap_texture;
+        SDL_Texture *spritemap_texture;
 
         CPU *cpu;
         GPU *gpu;
         Registers *registers;
         MMU *memory;
+        MMU *mmu;
+        bool debug = true;
 
-        int viewport_width = 160;
-        int viewport_height = 144;
 
         int status_width = 160;
         int status_height = 144;
@@ -34,23 +37,48 @@ class Renderer{
         int sprites_width = 128;
         int sprites_height = 144;
 
+        // Viewport 
+        int viewport_width = 160;
+        int viewport_height = 144;
+        std::vector<unsigned char> viewport_pixels;
+        SDL_Rect viewport_rect = {0,0,viewport_width,viewport_height};
+
+        // VRAM  
         int background_width = 256;
         int background_height = 256;
+        std::vector<unsigned char> background_pixels;
+        SDL_Rect background_rect = {0, viewport_height, background_width, background_height};
 
-        int window_height = viewport_height + background_height;
-        int window_width = viewport_width + status_width + tiles_width + sprites_width;
+        // Tilemap
+        int tilemap_width = 128;
+        int tilemap_height = 256;
+        std::vector<unsigned char> tilemap_pixels;
+        SDL_Rect tilemap_rect = {background_width, viewport_height, tilemap_width, tilemap_height};
 
+        // Spritemap
+        int spritemap_width = 128;
+        int spritemap_height = 256;
+        std::vector<unsigned char> spritemap_pixels;
+        SDL_Rect spritemap_rect = {background_width + tilemap_width, 0, sprites_width, sprites_height};
+
+        int debug_texture_height = viewport_height + background_height;
+        int debug_texture_width = background_width + tilemap_width + spritemap_width;
+
+        int window_height = viewport_height;
+        int window_width = viewport_width;
         TTF_Font *font;
+        
 
-        void render_tiles();
-        void render_sprites();
-        void render_viewport();
-        void render_status();
-        void render_background();
+        void draw_viewport();
+        void draw_background();
+        void draw_tilemap();
+        void draw_spritemap();
+        void draw_status();
+        void draw_background_overflow();
 
         // Helper functions
-        std::string num_to_hex(int n);
         void draw_text(int x_pop, int y_pos, std::string text);
+        void render_debug();
 
     public:
         Renderer(CPU *cpu, GPU *gpu, Registers *registers, MMU *memory);

@@ -12,26 +12,35 @@ Renderer::Renderer(CPU *cpu, GPU *gpu, Registers *registers, MMU *memory){
     this->gpu = gpu;
     this->registers = registers;
     this->memory = memory;
+    this->mmu = memory;
 
-    if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
-            printf("error initializing SDL: %s\n", SDL_GetError());
+    SDL_Init(SDL_INIT_VIDEO);
+    if(debug){
+        window_width = debug_texture_width;
+        window_height = debug_texture_height;
     }
-     window = SDL_CreateWindow("GAME",
-                                       SDL_WINDOWPOS_CENTERED,
-                                       SDL_WINDOWPOS_CENTERED,
-                                       window_width, window_height, 0);
+    SDL_CreateWindowAndRenderer(this->window_width*2, this->window_height*2, 0, &this->window, &this->renderer);
+    SDL_RenderSetLogicalSize(this->renderer, this->window_width, this->window_height);
+    SDL_SetWindowResizable(this->window, SDL_TRUE);
+    //
+    std::vector< unsigned char > viewport_pixels(this->viewport_width * this->viewport_height * 4, 0xFF );
+    this->viewport_pixels = viewport_pixels;
 
-    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
-    texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, window_width, window_height );
-    frameBuffer = (std::vector<unsigned char>( window_width * window_height * 4, 0 ));
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+    std::vector< unsigned char > background_pixels(this->background_width * this->background_height * 4, 0xFF );
+    this->background_pixels = background_pixels;
 
-    for( unsigned int i = 0; i < window_width * window_height * 4; i++ )
-    {
-        frameBuffer[ i ] = 255;
-    }
+    std::vector< unsigned char > tilemap_pixels(this->tilemap_width * this->tilemap_height * 4, 0xFF );
+    this->tilemap_pixels = tilemap_pixels;
 
-     //Initialize SDL_ttf
+    std::vector< unsigned char > spritemap_pixels(this->spritemap_width * this->spritemap_height * 4, 0xFF );
+    this->spritemap_pixels = spritemap_pixels;
+
+    this->viewport_texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, this->viewport_width, this->viewport_height);
+    this->background_texture = SDL_CreateTexture(renderer,SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, this->background_width, this->background_height);
+    this->spritemap_texture = SDL_CreateTexture(renderer,SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING,this->spritemap_width, this->spritemap_height);
+    this->tilemap_texture = SDL_CreateTexture(renderer,SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING,this->tilemap_width, this->tilemap_height);
+
+    //  //Initialize SDL_ttf
     if(TTF_Init() == -1)
         printf("SDL_ttf could not initialize! SDL_ttf Error: %s\n", TTF_GetError());
 
@@ -42,60 +51,34 @@ static struct timespec frameStart;
 struct timespec frameEnd;
 
 void Renderer::render(){
-        long mtime, seconds, useconds;
-        clock_gettime(CLOCK_MONOTONIC, &frameEnd);
-        seconds = frameEnd.tv_sec - frameStart.tv_sec;
-        useconds = frameEnd.tv_nsec - frameStart.tv_nsec;
-        mtime = (seconds * 1000 + useconds / (1000.0 * 1000.0));
-        if(mtime < 1.0 / 60.0) return;
-        clock_gettime(CLOCK_MONOTONIC, &frameStart);
+        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+        SDL_RenderClear(renderer);
 
-        if(memory->renderFlag.background)
-            this->render_background(); 
-
-        if(memory->renderFlag.tiles)
-            this->render_tiles(); 
-            this->render_sprites(); 
-
-        if(memory->renderFlag.viewport){
-            this->render_viewport(); 
-
-            SDL_UpdateTexture(texture, NULL, frameBuffer.data(),window_width * 4);
-
+        if(debug){
+            render_debug();
         }
-        SDL_RenderCopy( renderer, texture, NULL, NULL );
-        this->render_status();
+        SDL_SetRenderTarget(renderer, viewport_texture);
+        draw_viewport();
 
-        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-        int tmpScrollY = 256;
-        int overflow = ((tmpScrollY + viewport_height / 2) % background_height) * ((tmpScrollY + viewport_height / 2) / background_height) ;
-        // std::cout << "OVERFLOW " << overflow << std::endl;
-        SDL_Rect rect;
-        rect.x = *gpu->scrollX;
-        // rect.y = viewport_height + tmpScrollY;
-        rect.y = viewport_height + *gpu->scrollY;
-        rect.w = viewport_width;
-        rect.h = viewport_height;
-        SDL_RenderDrawRect(renderer, &rect);
-
-        // Extra rectangle. When leaves view port
-        /* SDL_Rect rect2;
-        rect2.x = memory->gpu.scrollX;
-        rect2.y = viewport_height + memory->gpu.scrollY;
-        rect2.w = viewport_width;
-        rect2.h = viewport_height;
-        SDL_RenderDrawRect(renderer, &rect2); */
-
-        this->render_status();
-
-
+        SDL_RenderCopy(renderer, viewport_texture, NULL, &this->viewport_rect);
         SDL_RenderPresent( renderer );
-
-        memory->renderFlag.viewport = false;
-        memory->renderFlag.background = false;
-        memory->renderFlag.tiles = false;
 }
 
+void Renderer::render_debug(){
+    // SDL_SetRenderTarget(renderer, debug_texture);
+    draw_background();
+    SDL_RenderCopy(renderer, background_texture, NULL, &background_rect);
+
+    draw_background_overflow();
+
+    draw_tilemap();
+    SDL_RenderCopy(renderer, tilemap_texture, NULL, &tilemap_rect);
+
+    draw_spritemap();
+    SDL_RenderCopy(renderer, spritemap_texture, NULL, &spritemap_rect);
+
+    draw_status();
+}
 
 
 void Renderer::draw_text(int x_pos, int y_pos, std::string text){
@@ -113,27 +96,7 @@ void Renderer::draw_text(int x_pos, int y_pos, std::string text){
     SDL_DestroyTexture(textTexture);
 }
 
-// std::string Renderer::num_to_hex(int n){
-//     std::stringstream stream;
-//     stream << std::hex << +registers->a;
-//     return stream.str();
-// }
-
-void Renderer::render_status(){
-    // draw_text(viewport_width + 30,  0, "A: " + num_to_hex(+registers->a));
-    // draw_text(viewport_width + 100, 0, "F: " + num_to_hex(+registers->f));
-
-    // draw_text(viewport_width + 30,  20, "B: " + num_to_hex(+registers->b));
-    // draw_text(viewport_width + 100, 20, "C: " + num_to_hex(+registers->c));
-
-    // draw_text(viewport_width + 30,  40, "H: " + num_to_hex(+registers->c));
-    // draw_text(viewport_width + 100, 40, "L: " + num_to_hex(+registers->l));
-
-    // draw_text(viewport_width + 50, 60, "SP: " + num_to_hex(+registers->sp));
-    // draw_text(viewport_width + 50, 80, "PC: " + num_to_hex(+registers->pc));
-
-    // draw_text(viewport_width + 50, 100, "Ticks: " + num_to_hex(cpu->clock.t));
-
+void Renderer::draw_status(){
     draw_text(viewport_width + 30,  0, "A: " + std::to_string(+registers->a));
     draw_text(viewport_width + 100, 0, "F: " + std::to_string(+registers->f));
 
@@ -150,65 +113,103 @@ void Renderer::render_status(){
 }
 
 
-void Renderer::render_tiles(){
-    int offset = viewport_width + status_width;
-    int i, x, y;
-    for(i = 0; i < 348; i++) {
-        for(x = 0; x < 8; x++) {
-            for(y = 0; y < 8; y++) {
-                unsigned char color = memory->tiles[i][y][x];
-                    int offsetX = offset + ((i * 8 + x) % tiles_width);
-                    int offsetY = y +  (int(i/16)) * 8;
-                    frameBuffer[4 * ( offsetY * window_width + offsetX) + 0] = palette[color].r;
-                    frameBuffer[4 * ( offsetY * window_width + offsetX) + 1] = palette[color].g;
-                    frameBuffer[4 * ( offsetY * window_width + offsetX) + 2] = palette[color].b;
-                    frameBuffer[4 * ( offsetY * window_width + offsetX) + 3] = palette[color].a;
-            }
-        }
+void Renderer::draw_background_overflow(){
+    SDL_SetRenderDrawColor(renderer, 255,255, 255, 100);
+    // SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    int overflowX = std::max(*gpu->scrollX + viewport_width - background_width, 0);
+    int overflowY = std::max(*gpu->scrollY + viewport_height - background_height, 0);
+    // std::cout << "overflowX " << +overflowX << std::endl;
+    SDL_Rect rect;
+    rect.x = *gpu->scrollX;
+    rect.y = viewport_height + *gpu->scrollY;
+    rect.w = viewport_width - overflowX;
+    rect.h = viewport_height;
+    // rect.x = *gpu->scrollX;
+    // rect.y = *gpu->scrollY;
+    // rect.w = viewport_width - overflowX;
+    // rect.h = viewport_height;
+
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+    SDL_SetRenderDrawColor(renderer, 255,255, 255, 100);
+    SDL_RenderFillRect(renderer, &rect);
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    SDL_RenderDrawRect(renderer, &rect);
+    // SDL_RenderDrawRect(renderer, &rect);
+
+    if(overflowX > 0){
+    // if(overflowX > 0 || overflowY > 0){
+        SDL_Rect rect;
+        rect.x = 0;
+        rect.y = viewport_height;
+        rect.w = overflowX;
+        rect.h = viewport_height;
+        // SDL_RenderDrawRect(renderer, &rect);
+        SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+        SDL_SetRenderDrawColor(renderer, 255,255, 255, 100);
+        SDL_RenderFillRect(renderer, &rect);
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+        SDL_RenderDrawRect(renderer, &rect);
     }
 }
 
-void Renderer::render_sprites(){
-    int offset = viewport_width + status_width + tiles_width;
-    int i, x, y;
-    for(i = 0; i < 40; i++) {
-        auto sprite = memory->sprites[i];
-        for(x = 0; x < 8; x++) {
-            for(y = 0; y < 8; y++) {
-                unsigned char color = memory->tiles[sprite.tile][y][x];
-                int offsetX = offset + ((i * 8 + x) % sprites_width);
-                int offsetY = y +  (int(i/16)) * 8;
-                frameBuffer[4 * ( offsetY * window_width + offsetX) + 0] = palette[color].r;
-                frameBuffer[4 * ( offsetY * window_width + offsetX) + 1] = palette[color].g;
-                frameBuffer[4 * ( offsetY * window_width + offsetX) + 2] = palette[color].b;
-                frameBuffer[4 * ( offsetY * window_width + offsetX) + 3] = palette[color].a;
-            }
-        }
-    }
-}
-
-void Renderer::render_viewport(){
-    int i, x, y;
-    for(i = 0; i < 160 * 144; i++) {
-        int x = i % 160;
-        int y = i / 160;
+void Renderer::draw_viewport(){
+    for(int i = 0; i < 144 * 160; i++){
         COLOUR color = gpu->framebuffer[i];
-
-        frameBuffer[4 * ( y * window_width + x) + 0] = color.r;
-        frameBuffer[4 * ( y * window_width + x) + 1] = color.g;
-        frameBuffer[4 * ( y * window_width + x) + 2] = color.b;
-        frameBuffer[4 * ( y * window_width + x) + 3] = color.a;
+        this->viewport_pixels[i * 4 + 0] = color.r;
+        this->viewport_pixels[i * 4 + 1] = color.g;
+        this->viewport_pixels[i * 4 + 2] = color.b;
+        this->viewport_pixels[i * 4 + 3] = color.a;
     }
+    SDL_UpdateTexture(viewport_texture, NULL, viewport_pixels.data(), this->viewport_width * 4);
 }
 
-void Renderer::render_background(){
-    printf("BACKGROUND");
+
+void Renderer::draw_tilemap(){
+    for(int i = 0; i < 384; i++){
+        for(int y = 0; y < 8; y++){
+            for(int x = 0; x < 8; x++){
+                uint8_t pixel = mmu->tiles[i][y][x];
+                int offsetX = ((i * 8 + x) % tilemap_width);
+                int offsetY = y + (int(i/16)) * 8;
+                int offset = 4 * (offsetY * tilemap_width + offsetX);
+
+                this->tilemap_pixels[ offset + 0 ] = palette[pixel].r;
+                this->tilemap_pixels[ offset + 1 ] = palette[pixel].g;
+                this->tilemap_pixels[ offset + 2 ] = palette[pixel].b;
+                this->tilemap_pixels[ offset + 3 ] = palette[pixel].a;
+            }
+        }
+    }
+
+    SDL_UpdateTexture(this->tilemap_texture, NULL, tilemap_pixels.data(), this->tilemap_width * 4);
+}
+
+void Renderer::draw_spritemap(){
+    for(int i = 0; i < 40; i++) {
+        auto sprite = memory->sprites[i];
+        for(int x = 0; x < 8; x++) {
+            for(int y = 0; y < 8; y++) {
+                uint8_t pixel = mmu->tiles[sprite.tile][y][x];
+                int offsetX = ((i * 8 + x) % spritemap_width);
+                int offsetY = y +  (int(i/16)) * 8;
+                int offset = 4 * (offsetY * tilemap_width + offsetX);
+                this->spritemap_pixels[ offset + 0 ] = palette[pixel].r;
+                this->spritemap_pixels[ offset + 1 ] = palette[pixel].g;
+                this->spritemap_pixels[ offset + 2 ] = palette[pixel].b;
+                this->spritemap_pixels[ offset + 3 ] = palette[pixel].a;
+            }
+        }
+    }
+
+    SDL_UpdateTexture(spritemap_texture, NULL, spritemap_pixels.data(), this->spritemap_width * 4);
+}
+
+void Renderer::draw_background(){
     int sp = 0;
     for(unsigned short i = 0x9800; i <= 0x9bff; i++) {
         int tile = memory->read_byte(i);
         if(!(memory->read_byte(0xFF40) >> 5 & 0x1) && tile < 128)
             tile += 256 ;
-        // unsigned char tile = memory->read_byte(i);
         if ( tile == 0){
             sp++;
             continue;
@@ -216,56 +217,35 @@ void Renderer::render_background(){
         for(int y = 0; y < 8; y++) {
             for(int x = 0; x < 8; x++) {
                 unsigned char color = memory->tiles[tile][y][x];
-
                 int xi = (sp % 32) * 8 + x;
-                int yi = viewport_height + (sp / 32) * 8 + y;
-                frameBuffer[4 * ( yi * window_width + xi) + 0] = palette[color].r;
-                frameBuffer[4 * ( yi * window_width + xi) + 1] = palette[color].g;
-                frameBuffer[4 * ( yi * window_width + xi) + 2] = palette[color].b;
-                frameBuffer[4 * ( yi * window_width + xi) + 3] = palette[color].a;
+                int yi = (sp / 32) * 8 + y;
+                int offset = 4 * ( yi * background_width + xi);
+                background_pixels[offset + 0] = palette[color].r;
+                background_pixels[offset + 1] = palette[color].g;
+                background_pixels[offset + 2] = palette[color].b;
+                background_pixels[offset + 3] = palette[color].a;
             }
         }
         sp++;
     }
-    // for(int i = 0; i < 40; i++) {
-    //     int tile = memory->sprites[i];
-    //     for(int x = 0; x < 8; x++) {
-    //         for(int y = 0; y < 8; y++) {
-    //             unsigned char color = memory->tiles[tile][y][x];
-    //             // int offsetX = offset + ((i * 8 + x) % sprites_width);
-    //             // int offsetY = y +  (int(i/16)) * 8;
-    //             // int xi = (sp % 32) * 8 + x;
-    //             int xi = memory->sprites_x_cord[i] + x;
-    //             int yi = viewport_height + memory->sprites_y_cord[i] + y;
-    //             frameBuffer[4 * ( yi * window_width + xi) + 0] = palette[color].r;
-    //             frameBuffer[4 * ( yi * window_width + xi) + 1] = palette[color].g;
-    //             frameBuffer[4 * ( yi * window_width + xi) + 2] = palette[color].b;
-    //             frameBuffer[4 * ( yi * window_width + xi) + 3] = palette[color].a;
-    //         }
-    //     }
-    // }
-    // }
-    // for(unsigned short i = 0xFE00; i <= 0xFE9F; i++) {
-    //     int sprite = memory->read_byte(i);
-        
 
-    //     // unsigned char tile = memory->read_byte(i);
-    //     if ( tile == 0){
-    //         sp++;
-    //         continue;
-    //     }
-    //     for(int y = 0; y < 8; y++) {
-    //         for(int x = 0; x < 8; x++) {
-    //             unsigned char color = memory->tiles[tile][y][x];
+    for(auto sprite : memory->sprites) {
+        for(int x = 0; x < 8; x++) {
+            for(int y = 0; y < 8; y++) {
 
-    //             int xi = (sp % 32) * 8 + x;
-    //             int yi = viewport_height + (sp / 32) * 8 + y;
-    //             frameBuffer[4 * ( yi * window_width + xi) + 0] = palette[color].r;
-    //             frameBuffer[4 * ( yi * window_width + xi) + 1] = palette[color].g;
-    //             frameBuffer[4 * ( yi * window_width + xi) + 2] = palette[color].b;
-    //             frameBuffer[4 * ( yi * window_width + xi) + 3] = palette[color].a;
-    //         }
-    //     }
-    //     sp++;
-    // }
+                uint8_t xF = sprite.options.xFlip ? 7 - x : x;
+                uint8_t color = memory->tiles[sprite.tile][y][xF];
+                if(color){
+                    int xi = (memory->read_byte(0xff43) + sprite.x + x) % 256;
+                    int yi = memory->read_byte(0xff42) + sprite.y + y;
+                    int offset = 4 * ( yi * background_width + xi);
+                    background_pixels[offset + 0] = palette[color].r;
+                    background_pixels[offset + 1] = palette[color].g;
+                    background_pixels[offset + 2] = palette[color].b;
+                    background_pixels[offset + 3] = palette[color].a;
+                }
+            }
+        }
+    }
+    SDL_UpdateTexture(background_texture, NULL, background_pixels.data(), this->background_width * 4);
 }
