@@ -81,24 +81,77 @@ void GPU::render_scan_lines(){
     bool scanlineRow[160];
     int rowPixel = 0;
 
+    this->render_scan_line_background(scanlineRow);
+    this->render_scan_line_window(scanlineRow);
+    this->render_scan_line_sprites(scanlineRow);
+}
+
+void GPU::render_scan_line_background(bool scanlineRow[]){
+    int rowPixel = 0;
+
     // Tiles
     uint16_t address = 0x9800;
-    if((*this->control >> 3) & 1)
-        address += 0x400;
-
-    address += (((*this->scanline + *this->scrollY) & 255) >> 3) << 5;
+    // if((*this->control >> 3) & 1)
+    //     address += 0x400;
+    
+    address += (*this->scanline / 8) * 32;
     address += (*this->scrollX >> 3);
 
     int x = *this->scrollX & 7;
-    int y = (*this->scanline + *this->scrollY) & 7;
+    int y = *this->scanline & 7;
+    int pixelOffset = *this->scanline * 160;
+
+    for(uint16_t tile_address = address; tile_address < address + 20; tile_address++){
+        // if(tile_address % 0x20 != 0){
+        //     exit(1);
+        // }
+        int tile = this->mmu->read_byte(tile_address);
+
+        // Check if background tiles
+        // if(!(*this->control >> 5 & 0x1) && tile < 128)
+        //     tile += 256;
+        if(tile < 128)
+            tile += 256;
+
+        for(; x < 8; x++){
+            int colour = mmu->tiles[tile][y][x];
+            framebuffer[pixelOffset++] = palette[colour];
+            scanlineRow[rowPixel++] = 1;
+        }
+        x=0;
+    }
+}
+
+void GPU::render_scan_line_window(bool scanlineRow[]){
+    if(!(*this->control >> 5 & 0x1)){
+        return;
+    }
+    if(mmu->read_byte(0xFF4A) > *this->scanline){
+        return; 
+    }
+    // bool scanlineRow[160];
+    int rowPixel = 0;
+
+    // Tiles
+    uint16_t address = 0x9C00;
+    // if((*this->control >> 3) & 1)
+    //     address += 0x400;
+    
+    std::cout << +*this->scanline << std::endl;
+    address += ((*this->scanline - mmu->read_byte(0xFF4A)) / 8) * 32;
+    int y = (*this->scanline - mmu->read_byte(0xFF4A)) & 7;
+    int x = 0;
 
     int pixelOffset = *this->scanline * 160;
+    pixelOffset += mmu->read_byte(0xFF4B) - 7;
 
     for(uint16_t tile_address = address; tile_address < address + 20; tile_address++){
         int tile = this->mmu->read_byte(tile_address);
 
         // Check if background tiles
-        if(!(*this->control >> 6 & 0x1) && tile < 128)
+        // if(!(*this->control >> 5 & 0x1) && tile < 128)
+        //     tile += 256;
+        if(tile < 128)
             tile += 256;
 
         for(; x < 8; x++){
@@ -109,6 +162,10 @@ void GPU::render_scan_lines(){
         x=0;
     }
 
+}
+
+void GPU::render_scan_line_sprites(bool scanlineRow[]){
+    int rowPixel = 0;
     // Sprites
     if(!((*control >> 1) & 1)) 
         return;
@@ -122,8 +179,8 @@ void GPU::render_scan_lines(){
 
             for(int x = 0; x < 8; x++){
                 if(sprite.x + x >= 0 && sprite.x + x < 160) {
-                    if(!scanlineRow[sprite.x + x] || sprite.options.renderPriority)
-                        continue;
+                    // if(!scanlineRow[sprite.x + x] || sprite.options.renderPriority)
+                    //     continue;
 
                     uint8_t xF = sprite.options.xFlip ? 7 - x : x;
                     uint8_t colour = mmu->tiles[sprite.tile][y][xF];

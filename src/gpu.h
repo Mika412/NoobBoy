@@ -46,4 +46,7 @@ class GPU{
     GPU(Registers *registers, Interrupts* interrupts, MMU *mmu);
     void step(); 
     void render_scan_lines(); 
+    void render_scan_line_background(bool scanlineRow[]); 
+    void render_scan_line_window(bool scanlineRow[]); 
+    void render_scan_line_sprites(bool scanlineRow[]); 
 };
