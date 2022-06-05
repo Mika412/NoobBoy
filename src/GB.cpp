@@ -44,14 +44,14 @@ void GB::init(){
 /* struct timespec frameEnd; */
 std::set<int> myset;
 std::set<int>::iterator it;
-bool isTracking = false;
 int counter = 0;
 void GB::run(){
-    int close = 0;
-    int stopped = 0;
-    while(!close) {
-        bool isstop = cpu->step();    
-        gpu->step();
+    while(isRunning) {
+        if(!isPaused || doStep){
+            // printf("PC: %x, Cycles: %d\n", +this->registers.pc, mmu.clock.t);
+            // step = false;
+            interrupts->check();
+            // if(interrupts->IME & mmu.read_byte(0xFF0F) & mmu.read_byte(0xFFFF)){
 
         // timer->inc();
 
@@ -101,57 +101,65 @@ void GB::run(){
         //         std::cout << "DIV IS " << std::hex << +mmu->read_byte(0xff04) << std::endl;
         //         std::cout << "TAC IS " << std::hex << +mmu->read_byte(0xff07) << std::endl;
 
-        //         std::cout << "LY: " << std::hex << +this->mmu->read_byte(0xff42) << std::endl;
-        //         std::string dummy;
-        //         std::cout << "Enter to continue..." << std::endl;
-        //         std::getline(std::cin, dummy);
-        //         stopped = 1;
-        //     }
-        // if(isTracking){
-        //     myset.insert(registers.pc);
-        //     // myset.insert(cpu->last_instruction);
-        //     std::cout << "myset contains:";
-        //     for (it=myset.begin(); it!=myset.end(); ++it)
-        //         std::cout << ' ' << *it;
-        //       std::cout << '\n';
-        // }
+                // clock_gettime(CLOCK_MONOTONIC, &frameStart);
+            }
+            // std::cout << "AF: " << +registers.af << std::endl;
+            // std::cout << "BC: " << +registers.bc << std::endl;
+            // std::cout << "DE: " << +registers.de << std::endl;
+            // std::cout << "HL: " << +registers.hl << std::endl;
+            // std::cout << "SP: " << +registers.sp << std::endl;
+            // std::cout << "PC: " << +(registers.pc - 0x100)<< std::endl;
+            // std::cout << "JOYPAD: " << std::hex << +mmu.read_byte(0xff00) << std::endl;
+            // std::cout << "\n" << std::endl;
+            // cpu->registers->print_flags();
+            // cpu->registers->print_registers();
+            // if(registers.pc == 0xc2b5)
+            //     exit(1);
+            
+            doStep = false;
+        }
         SDL_Event event;
         SDL_PollEvent(&event);
-        // while (SDL_PollEvent(&event)) {
+        switch (event.type) {
+            case SDL_KEYUP:
+                switch(event.key.keysym.sym){
+                    case SDLK_RIGHT:  joypad->key_release(JOYPAD_RIGHT); break;
+                    case SDLK_LEFT:   joypad->key_release(JOYPAD_LEFT); break;
+                    case SDLK_UP:     joypad->key_release(JOYPAD_UP); break;
+                    case SDLK_DOWN:   joypad->key_release(JOYPAD_DOWN); break;
+                    case SDLK_z:      joypad->key_release(JOYPAD_A); break;
+                    case SDLK_x:      joypad->key_release(JOYPAD_B); break;
+                    case SDLK_SPACE:  joypad->key_release(JOYPAD_START); break;
+                    case SDLK_RETURN: joypad->key_release(JOYPAD_SELECT); break;
+                }
+                break;
+            case SDL_KEYDOWN:
+                switch(event.key.keysym.sym){
+                    case SDLK_RIGHT:  joypad->key_press(JOYPAD_RIGHT); break;
+                    case SDLK_LEFT:   joypad->key_press(JOYPAD_LEFT); break;
+                    case SDLK_UP:     joypad->key_press(JOYPAD_UP); break;
+                    case SDLK_DOWN:   joypad->key_press(JOYPAD_DOWN); break;
+                    case SDLK_z:      joypad->key_press(JOYPAD_A); break;
+                    case SDLK_x:      joypad->key_press(JOYPAD_B); break;
+                    case SDLK_SPACE:  joypad->key_press(JOYPAD_START); break;
+                    case SDLK_RETURN: joypad->key_press(JOYPAD_SELECT); break;
+                    case SDLK_ESCAPE: isRunning = false; break;
+                }
+                break;
+            case SDL_QUIT:
+                isRunning = false;
+                break;
+        }
+        if(debug){
             switch (event.type) {
                 case SDL_KEYUP:
                     switch(event.key.keysym.sym){
-                        case SDLK_RIGHT:  joypad->key_release(JOYPAD_RIGHT); break;
-                        case SDLK_LEFT:   joypad->key_release(JOYPAD_LEFT); break;
-                        case SDLK_UP:     joypad->key_release(JOYPAD_UP); break;
-                        case SDLK_DOWN:   joypad->key_release(JOYPAD_DOWN); break;
-                        case SDLK_z:      joypad->key_release(JOYPAD_A); break;
-                        case SDLK_x:      joypad->key_release(JOYPAD_B); break;
-                        case SDLK_SPACE:  joypad->key_release(JOYPAD_START); break;
-                        case SDLK_RETURN: joypad->key_release(JOYPAD_SELECT); break;
-                        
+                        case SDLK_s:  doStep = true; break;
+                        case SDLK_p:  isPaused = !isPaused; break;
                     }
-                    break;
-                case SDL_KEYDOWN:
-                    switch(event.key.keysym.sym){
-                        case SDLK_RIGHT:  joypad->key_press(JOYPAD_RIGHT); break;
-                        case SDLK_LEFT:   joypad->key_press(JOYPAD_LEFT); break;
-                        case SDLK_UP:     joypad->key_press(JOYPAD_UP); break;
-                        case SDLK_DOWN:   joypad->key_press(JOYPAD_DOWN); break;
-                        case SDLK_z:      joypad->key_press(JOYPAD_A); break;
-                        case SDLK_x:      joypad->key_press(JOYPAD_B); break;
-                        // case SDLK_SPACE:  step=true; break;
-                        case SDLK_SPACE:  joypad->key_press(JOYPAD_START); break;
-                        case SDLK_RETURN: joypad->key_press(JOYPAD_SELECT); break;
-                    //     case SDLK_r:      renderer->render(); break;
-                        case SDLK_ESCAPE: exit(1); break;
-                    }
-                    break;
-                case SDL_QUIT:
-                    close = 1;
                     break;
             }
-        // }
+        }
     }
 }
 

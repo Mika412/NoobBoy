@@ -17,8 +17,10 @@ class GB{
         Joypad *joypad;
 
         bool render = true;
-        bool debug = false;
-        // bool debug = true;
+        bool debug = true;
+        bool doStep = false;
+        bool isPaused = false;
+        bool isRunning = true;
 
     void init();
     void run();
