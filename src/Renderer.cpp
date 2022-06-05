@@ -113,43 +113,38 @@ void Renderer::draw_status(){
 }
 
 
-void Renderer::draw_background_overflow(){
-    SDL_SetRenderDrawColor(renderer, 255,255, 255, 100);
-    // SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-    int overflowX = std::max(*gpu->scrollX + viewport_width - background_width, 0);
-    int overflowY = std::max(*gpu->scrollY + viewport_height - background_height, 0);
-    // std::cout << "overflowX " << +overflowX << std::endl;
-    SDL_Rect rect;
-    rect.x = *gpu->scrollX;
-    rect.y = viewport_height + *gpu->scrollY;
-    rect.w = viewport_width - overflowX;
-    rect.h = viewport_height;
-    // rect.x = *gpu->scrollX;
-    // rect.y = *gpu->scrollY;
+void Renderer::draw_rectangle(int x, int y, int width, int height, rgb color){
+    SDL_Rect rect = {x, y, width, height};
+    // rect.x = *ppu->scrollX;
+    // rect.y = viewport_height + *ppu->scrollY;
+    // rect.w = viewport_width - overflowX;
+    // rect.h = viewport_height;
+    // rect.x = *ppu->scrollX;
+    // rect.y = *ppu->scrollY;
     // rect.w = viewport_width - overflowX;
     // rect.h = viewport_height;
 
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
-    SDL_SetRenderDrawColor(renderer, 255,255, 255, 100);
+    SDL_SetRenderDrawColor(renderer, color.r,color.g,color.b, color.a);
+    // SDL_SetRenderDrawColor(renderer, 255,255, 255, 100);
     SDL_RenderFillRect(renderer, &rect);
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderDrawRect(renderer, &rect);
-    // SDL_RenderDrawRect(renderer, &rect);
+}
+void Renderer::draw_background_overflow(){
+    int overflowX = std::max(*ppu->scrollX + viewport_width - background_width, 0);
+    int overflowY = std::max(*ppu->scrollY + viewport_height - background_height, 0);
 
-    if(overflowX > 0){
-    // if(overflowX > 0 || overflowY > 0){
-        SDL_Rect rect;
-        rect.x = 0;
-        rect.y = viewport_height;
-        rect.w = overflowX;
-        rect.h = viewport_height;
-        // SDL_RenderDrawRect(renderer, &rect);
-        SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
-        SDL_SetRenderDrawColor(renderer, 255,255, 255, 100);
-        SDL_RenderFillRect(renderer, &rect);
-        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-        SDL_RenderDrawRect(renderer, &rect);
-    }
+    this->draw_rectangle(*ppu->scrollX,  viewport_height + *ppu->scrollY, viewport_width - overflowX, viewport_height, {255,255,255,100});
+
+    if(overflowX)
+        this->draw_rectangle(0,  viewport_height + *ppu->scrollY, overflowX, viewport_height, rgb{0,0,255,100});
+
+    if(overflowY)
+        this->draw_rectangle(*ppu->scrollX,  viewport_height, viewport_width - overflowX, overflowY, rgb{0,255,0,100});
+
+    if(overflowX && overflowY)
+        this->draw_rectangle(0,  viewport_height, overflowX, overflowY, rgb{255,0,0,100});
 }
 
 void Renderer::draw_viewport(){
