@@ -25,7 +25,7 @@ class Renderer{
         Registers *registers;
         MMU *memory;
         MMU *mmu;
-        bool debug = true;
+        bool debug = false;
 
 
         int status_width = 160;
@@ -75,12 +75,13 @@ class Renderer{
         void draw_spritemap();
         void draw_status();
         void draw_background_overflow();
+        void draw_rectangle(int x, int y, int width, int height, rgb color);
 
         // Helper functions
         void draw_text(int x_pop, int y_pos, std::string text);
         void render_debug();
 
     public:
-        Renderer(CPU *cpu, GPU *gpu, Registers *registers, MMU *memory);
+        Renderer(CPU *cpu, PPU *ppu, Registers *registers, MMU *memory, bool debug);
         void render();
 };

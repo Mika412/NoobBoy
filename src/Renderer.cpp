@@ -7,12 +7,13 @@
 #include <string>
 #include <iomanip>
 
-Renderer::Renderer(CPU *cpu, GPU *gpu, Registers *registers, MMU *memory){
+Renderer::Renderer(CPU *cpu, PPU *gpu, Registers *registers, MMU *memory, bool debug){
     this->cpu = cpu;
     this->gpu = gpu;
     this->registers = registers;
     this->memory = memory;
     this->mmu = memory;
+    this->debug = debug;
 
     SDL_Init(SDL_INIT_VIDEO);
     if(debug){

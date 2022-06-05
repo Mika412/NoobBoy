@@ -10,8 +10,13 @@ CPU::CPU(Registers *registers, Interrupts* interrupts, MMU* memory){
     this->registers = registers;
     this->instructions = new InstructionSet(registers, interrupts, memory, &this->stopped);
     // this->instructions = new InstructionSet(registers, interrupts, memory, &this->stopped);
+
+
+}
+
+void CPU::no_bootrom_init() {
     // this->registers->a = 0x01;
-    // this->registers->f = 0xF0;
+    // this->registers->f = 0xb0;
     // this->registers->b = 0x00;
     // this->registers->c = 0x13;
     // this->registers->d = 0x00;
@@ -22,14 +27,18 @@ CPU::CPU(Registers *registers, Interrupts* interrupts, MMU* memory){
     // this->registers->sp = 0xfffe;
     // this->registers->pc = 0x0100;
 
-    // this->registers->set_register_flag(FLAG_ZERO);
-    // this->registers->set_register_flag(FLAG_HALF_CARRY);
-    // this->registers->set_register_flag(FLAG_CARRY);
-    // this->registers->unset_register_flag(FLAG_SUBTRACT);
-    
+    // // this->registers->set_register_flag(FLAG_ZERO);
+    // // this->registers->set_register_flag(FLAG_HALF_CARRY);
+    // // this->registers->set_register_flag(FLAG_CARRY);
+    // // this->registers->unset_register_flag(FLAG_SUBTRACT);
+    // // this->memory->clock.t = 324;
     // this->memory->romDisabled = true;
-    // this->memory->timer.div = 0x44;
+    // this->memory->timer.div = 44032;
+    // // this->memory->timer.div = 0x44;
     // this->memory->timer.tac = 0xF8;
+    // // this->memory->write_byte(0xFF40, 91);
+    // this->memory->write_byte(0xFF40, 145);
+
     // Testing rem
     this->registers->a = 0x11;
     this->registers->f = 0x80;
@@ -55,9 +64,13 @@ CPU::CPU(Registers *registers, Interrupts* interrupts, MMU* memory){
     this->memory->timer.tima = 0x00;
     this->memory->timer.tma = 0x00;
     this->memory->timer.tac = 0xF8;
+    this->memory->write_byte(0xff45, 0);
 
+
+    for(int i = 0xFE00; i < 0xFE9F; i++){
+        this->memory->write_byte(i, 0xFF);
+    }
 }
-
 
 bool CPU::step(){
     if(stopped) return false;

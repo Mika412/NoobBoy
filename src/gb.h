@@ -22,6 +22,6 @@ class GB{
         bool isPaused = false;
         bool isRunning = true;
 
-    void init();
+    void init(std::string rom, std::string bootrom, bool debug);
     void run();
 };

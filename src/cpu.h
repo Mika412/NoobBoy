@@ -27,6 +27,7 @@ class CPU {
 
         void reset();
         bool step();
+        void no_bootrom_init();
         void print_flags();
         void print_debug();
 };
