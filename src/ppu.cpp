@@ -137,7 +137,7 @@ void PPU::render_scan_line_background(){
     for(uint16_t tile_address = address; tile_address < address + 20; tile_address++){
         int tile = this->mmu->read_byte(tile_address);
 
-        if(tile < 128)
+        if(!this->control->bgWindowDataSelect && tile < 128)
             tile += 256;
 
         for(; x < 8; x++){
@@ -171,7 +171,7 @@ void PPU::render_scan_line_window(){
     for(uint16_t tile_address = address; tile_address < address + 20; tile_address++){
         int tile = this->mmu->read_byte(tile_address);
 
-        if(tile < 128)
+        if(!this->control->bgWindowDataSelect && tile < 128)
             tile += 256;
 
         for(; x < 8; x++){
@@ -190,9 +190,9 @@ void PPU::render_scan_line_sprites(){
     for(auto sprite : mmu->sprites){
         if(sprite.y <= *scanline && (sprite.y + 8) > *scanline) {
             int pixelOffset = *this->scanline * 160 + sprite.x;
-            
-            // Flip vertically
             uint8_t y = *scanline % sprite.y;
+
+            // Flip vertically
             if(sprite.options.yFlip) y = 7 - y;
 
             for(int x = 0; x < 8; x++){
