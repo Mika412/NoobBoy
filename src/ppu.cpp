@@ -127,11 +127,11 @@ void PPU::render_scan_line_background(){
     if(this->control->bgDisplaySelect)
         address += 0x400;
 
-    address += (*this->scanline / 8) * 32;
+    address += (*this->scrollY + *this->scanline) / 8 * 32;
     address += (*this->scrollX >> 3);
 
     int x = *this->scrollX & 7;
-    int y = *this->scanline & 7;
+    int y = (*this->scanline + *this->scrollY) & 7;
     int pixelOffset = *this->scanline * 160;
 
     for(uint16_t tile_address = address; tile_address < address + 20; tile_address++){
