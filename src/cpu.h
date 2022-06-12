@@ -6,22 +6,15 @@
 #include "instructions.h"
 
 class CPU {
-    private:
-        InstructionSet* instructions;
-        MMU *memory;
-        Interrupts *interrupts;
+    InstructionSet* instructions;
+    MMU *memory;
+    Interrupts *interrupts;
 
     public:
         Registers *registers;
 
         bool stopped = false;
-        uint8_t last_instruction = 0x00;
-        
-
-        struct clock {
-            unsigned long m = 0; // Total quarter clock
-            unsigned long t = 0; // Total full clock
-        } clock;
+        int instrs_count = 0;
 
         CPU(Registers *registers, Interrupts* interrupts, MMU* memory);
 

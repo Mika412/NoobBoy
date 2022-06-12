@@ -79,29 +79,20 @@ void CPU::no_bootrom_init() {
 bool CPU::step(){
     if(stopped) return false;
 
-    uint16_t or_pc = registers->pc;
     uint8_t instruction = this->memory->read_byte(registers->pc++);
+    uint8_t cb_instruction = this->memory->read_byte(registers->pc);
+    registers->pc &= 65535; // TODO: Check if I really need this. uint16 may overflow correctly
+    this->instrs_count += 1;
 
     instructions->execute(instruction);
     
-    registers->pc &= 65535; // TODO: Check if I really need this. uint16 may overflow correctly
-    registers->m = registers->t / 4;
     
-    // Update total clock in memory
-    memory->clock.t += registers->t;
-    memory->clock.m += registers->m;
+    memory->clock.t_instr = memory->clock.t - memory->clock.t_prev;
+    memory->clock.t_prev = memory->clock.t;
+    memory->clock.last_instr = instruction;
+    if(instruction == 0xCB){
+        memory->clock.last_instr = cb_instruction;
+    }
 
-    this->last_instruction = instruction;
-
-    // return registers->pc == 0xc753; // return registers->pc == 0xC34E;
-    // return registers->pc == 0x0101; // return registers->pc == 0xC34E;
-    // return registers->pc == 0x0101; // return registers->pc == 0xC34E;
-    return registers->pc == 0x01A4; // return registers->pc == 0xC34E;
-    // return registers->pc == 0xc17e; // return registers->pc == 0xC34E;
-    // return registers->pc == 0xC34A;
-    // return registers->pc == 0x2817;
-    // return registers->pc == 0x6a22;
-    // return registers->pc == 0x2882;
-    // return or_pc == 0x006b && registers.c == 1;
-    // return false;
+    return false;
 }     

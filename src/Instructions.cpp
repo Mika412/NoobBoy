@@ -670,7 +670,6 @@ void InstructionSet::execute(uint8_t opcode) {
             break;
         case 0xC7: // RST $00
             mmu->write_short_stack(&registers->sp, registers->pc++);
-            // mmu->write_short_stack(&registers->sp, registers->pc++);
             registers->pc = 0x0000;
             break;
         case 0xC8: // RET Z
@@ -746,8 +745,6 @@ void InstructionSet::execute(uint8_t opcode) {
         case 0xD9: // RETI
             interrupts->set_master_flag(true);
             registers->pc = mmu->read_short_stack(&registers->sp);
-            registers->last_tick = 2;
-            this->registers->t = 8;
             break;
         case 0xDA: // JP C, nn
             jump(registers->is_set_register_flag(FLAG_CARRY));
@@ -947,14 +944,10 @@ void InstructionSet::call(bool condition){
     uint16_t operand = mmu->read_short(registers->pc);
     registers->pc += 2;
     
-    registers->last_tick = 12;
-    this->registers->t =12;
     mmu->clock.t += 12;
     if(condition){
         mmu->write_short_stack(&registers->sp, registers->pc);
         registers->pc = operand;
-        registers->last_tick = 12;
-        this->registers->t = 12;
         mmu->clock.t += 12;
     }
     // if(!registers->is_set_register_flag(FLAG_ZERO)){
@@ -968,12 +961,8 @@ void InstructionSet::call(bool condition){
 void InstructionSet::ret(bool condition){
     if(condition){
         registers->pc = mmu->read_short_stack(&registers->sp);
-        registers->last_tick = 2;
-        this->registers->t = 20;
         mmu->clock.t += 20;
     }else{
-        registers->last_tick = 5;
-        this->registers->t = 8;
         mmu->clock.t += 8;
     }
 }
@@ -982,13 +971,9 @@ void InstructionSet::jump_add(bool condition){
     if(condition){
         registers->pc += 1 + (signed char)(mmu->read_byte(registers->pc));
         // registers->pc++;
-        registers->last_tick = 12;
-        this->registers->t = 12;
         mmu->clock.t += 12;
     }else{
         registers->pc++;
-        registers->last_tick = 8;
-        this->registers->t = 8;
         mmu->clock.t += 8;
     }
 }
@@ -996,13 +981,9 @@ void InstructionSet::jump_add(bool condition){
 void InstructionSet::jump(bool condition){
     if(condition){
         registers->pc = mmu->read_short(registers->pc);
-        registers->last_tick = 3;
-        this->registers->t = 16;
         mmu->clock.t += 16;
     }else{
         registers->pc+=2;
-        registers->last_tick = 4;
-        this->registers->t = 12;
         mmu->clock.t += 12;
     }
 }
