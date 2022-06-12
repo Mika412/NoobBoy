@@ -49,45 +49,24 @@ void GB::run(){
                 mmu.write_byte(0xff02, 0x0);
             }
 
+            counter++;
+            if(ppu->can_render){
+            // if(gpu->can_render){
+                renderer->render();
+                ppu->can_render = false;
+                // static struct timespec frameStart;
+                // struct timespec frameEnd;
 
+                // long mtime, seconds, useconds;
 
+                // clock_gettime(CLOCK_MONOTONIC, &frameEnd);
+                // seconds = frameEnd.tv_sec - frameStart.tv_sec;
+                // useconds = frameEnd.tv_nsec - frameStart.tv_nsec;
 
+                // mtime = (seconds * 1000 + useconds / (1000.0 * 1000.0));
 
-        if(counter>=10000){
-        if(render)
-            renderer->render();
-        counter=0;
-        }
-        counter++;
-        
-        // long mtime, seconds, useconds;
-        
-        /* clock_gettime(CLOCK_MONOTONIC, &frameEnd);
-        seconds = frameEnd.tv_sec - frameStart.tv_sec;
-        useconds = frameEnd.tv_nsec - frameStart.tv_nsec;
-        
-        mtime = (seconds * 1000 + useconds / (1000.0 * 1000.0));
-        
-        if(mtime < 1.0 / 60.0) sleep(1 / 60.0 - mtime);
-        
-        clock_gettime(CLOCK_MONOTONIC, &frameStart); */
-        // uint16_t tmp_bit = mmu->read_short(0x4244);
-        // if(tmp_bit == 0xcb10){
-            // std::cout << "BYTE IS " << std::hex << +tmp_bit << std::endl;
-        //     exit(1);
-        // }
-        /* cpu->registers->print_flags();
-        cpu->registers->print_registers(); */
-         
-        // renderer->render();    
-        // if(isstop){
-        // if(debug)
-        //     if(isstop || stopped){
-        //         cpu->registers->print_flags();
-        //         cpu->registers->print_registers();
-        //         std::cout << "LOCK IS " << std::hex << +mmu->clock.t << std::endl;
-        //         std::cout << "DIV IS " << std::hex << +mmu->read_byte(0xff04) << std::endl;
-        //         std::cout << "TAC IS " << std::hex << +mmu->read_byte(0xff07) << std::endl;
+                // if(mtime < 1.0 / 60.0) 
+                //     sleep(1 / 60.0 - mtime);
 
                 // clock_gettime(CLOCK_MONOTONIC, &frameStart);
             }

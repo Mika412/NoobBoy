@@ -1,6 +1,7 @@
 #include "renderer.h"
 #include <SDL2/SDL_ttf.h>
 #include <iostream>
+#include <memory>
 #include <vector>
 #include <unistd.h>
 #include <stdlib.h>
@@ -68,16 +69,14 @@ void Renderer::render(){
 void Renderer::render_debug(){
     // SDL_SetRenderTarget(renderer, debug_texture);
     draw_background();
-    SDL_RenderCopy(renderer, background_texture, NULL, &background_rect);
-
-    draw_background_overflow();
-
     draw_tilemap();
-    SDL_RenderCopy(renderer, tilemap_texture, NULL, &tilemap_rect);
-
     draw_spritemap();
+
+    SDL_RenderCopy(renderer, background_texture, NULL, &background_rect);
+    SDL_RenderCopy(renderer, tilemap_texture, NULL, &tilemap_rect);
     SDL_RenderCopy(renderer, spritemap_texture, NULL, &spritemap_rect);
 
+    draw_background_overflow();
     draw_status();
 }
 
@@ -225,6 +224,35 @@ void Renderer::draw_background(){
             }
         }
         sp++;
+    }
+    // Draw window
+    // TODO: Cleanup: Reuse the background code
+    if(this->ppu->control->windowEnable){
+        // exit(1);
+        sp=0;
+        for(unsigned short i = 0x9C00; i <= 0x9FFF; i++) {
+            int tile = memory->read_byte(i);
+            if(!this->ppu->control->bgWindowDataSelect && tile < 128)
+                tile += 256;
+
+            if ( tile == 0){
+                sp++;
+                continue;
+            }
+            for(int y = 0; y < 8; y++) {
+                for(int x = 0; x < 8; x++) {
+                    unsigned char color = memory->tiles[tile][y][x];
+                    int xi = memory->read_byte(0xFF4B) - 7 + (sp % 32) * 8 + x;
+                    int yi = memory->read_byte(0xFF4A) + (sp / 32) * 8 + y;
+                    int offset = 4 * ( yi * background_width + xi);
+                    background_pixels[offset + 0] = palette[color].r;
+                    background_pixels[offset + 1] = palette[color].g;
+                    background_pixels[offset + 2] = palette[color].b;
+                    background_pixels[offset + 3] = palette[color].a;
+                }
+            }
+            sp++;
+        }
     }
 
     for(auto sprite : memory->sprites) {
