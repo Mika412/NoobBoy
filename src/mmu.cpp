@@ -32,6 +32,18 @@ void MMU::load_cartrige_rom(string location) {
         GAME_ROM.read((char*)ROMbanks[i], 0x4000);
         banksLoaded++;
     }
+    switch (ROMbanks[0][0x147]){
+        case 1 : this->mbcType = 1; break;
+        case 2 : this->mbcType = 1; break;
+        case 3 : this->mbcType = 1; break;
+        case 5 : this->mbcType = 2; break;
+        case 6 : this->mbcType = 2; break;
+        default : break;
+    }
+
+    // std::cout << "MBC TYPE " << std::hex << +mbcType << std::endl; 
+    // std::cout << "ROM TYPE " << std::hex << +ROMbanks[0][0x147] << std::endl; 
+    // exit(1);
 }
 
 void MMU::updateTile(unsigned short laddress, unsigned char value) {
@@ -52,32 +64,17 @@ void MMU::updateTile(unsigned short laddress, unsigned char value) {
 
     renderFlag.tiles = true;
 }
-// void MMU::updateTile(uint16_t address, uint8_t lower) {
-//     // if(address & 1)
-//     //     return;
-//     address &= 0xFFFE;
-
-//     uint8_t upper = this->read_byte(address + 1);
-
-//     int tmp = (address & 0x1fff);
-//     int tile_id = tmp >> 4;
-//     int y = (tmp >> 1) & 0x7;
-
-//     for(int i = 0; i < 8; i++)
-//         this->tiles[tile_id][y][7 - i] = ((upper >> i) & 1) | (((lower >> i) & 1) << 1);
-// }
 
 void MMU::updateSprite(unsigned short laddress, uint8_t value) {
+    renderFlag.background = true;
     // if((laddress & 3) != 2){
     //     return;
     // }
-    std::cout << "ADDRESS " << std::hex << +laddress << " SPRITE "<< std::hex << +value << std::endl;
     uint16_t address = laddress - 0xFE00;
     // uint16_t address = laddress & 0xFFFE;
     unsigned short tile = (address >> 2);
     sprite *spr = &sprites[tile];
-    // std::cout << "SP:RITE " << &sprites[tile] << std::endl;
-    printf("TILE %d\n", tile); 
+
     switch(address & 3){
         case 0:
             spr->y = value - 16;
@@ -91,6 +88,7 @@ void MMU::updateSprite(unsigned short laddress, uint8_t value) {
         case 3:
             // TODO: Rewrite this as a struct cast
             // struct spriteOptions *sprs = (spriteOptions *)value;
+            // spr->options = value;
             spr->options.gbcPalleteNumber1  = value >> 0;
             spr->options.gbcPalleteNumber2  = value >> 1;
             spr->options.gbcPalleteNumber3  = value >> 2;
@@ -125,27 +123,37 @@ uint8_t MMU::read_byte(uint16_t address) {
             default: return 0xFF;
         }
     }
-    if(address >= 0xFEA0 && address <= 0xFEFF)
-        exit(1);
+    // if(address >= 0xFEA0 && address <= 0xFEFF)
+    //     exit(1);
 
     //Timers
-    // else if(address == 0xff04) return timer.div;
-    else if(address == 0xff04) return (unsigned char) rand();
+    else if(address == 0xff04) return timer.div;
     else if(address == 0xff05) return timer.tima;
     else if(address == 0xff06) return timer.tma;
     else if(address == 0xff07) return timer.tac;
+   
+    if(address == 0xff0f) return memory[0xFF0F];
 
-    if (address < 0x100 && !romDisabled) {
-        return memory[address];
-    } 
-    if (address < 0x4000) {
+    if (address < 0x100 && !romDisabled) return memory[address];
+    
+    // Switchable ROM banks
+    if (address < 0x4000)
         return ROMbanks[0][address];
-    } else if (address < 0x8000) {
-        return ROMbanks[1 % banksLoaded][address - 0x4000];
+    else if(address >= 0x4000 && address < 0x8000)
+        return ROMbanks[mbcRomNumber][address - 0x4000];
+    
+    // Switchable RAM banks
+    if (address >= 0xA000 && address <= 0xBFFF){
+        return RAMbanks[mbcRamNumber][address - 0xA000];
     }
-    // if(address >= 0xFE00 && address < 0xFE9F) {
-    //     std::cout << "Entered" <<  std::endl;
+
+    
+    if(address >= 0xFE00 && address < 0xFE9F) return 0; 
+
+    // if(address >= 0xA000 && address < 0xBFFF){
+    //     return RAMbanks[mbc1ramNumber][address - 0xA000];
     // }
+    
     return memory[address];
 }
 
@@ -155,14 +163,15 @@ void MMU::write_byte(uint16_t address, uint8_t value) {
     
     // Copy Sprites from ROM to RAM (OAM)
     if(address == 0xFF46){ 
-        // std::cout << "\nFUCK "<< +(value << 8) << std::endl;
-        // exit(1);
-        // for(uint16_t i = 0; i < 20; i++) write_byte(0xFE00 + i, read_byte((value << 8) + i));
         for(uint16_t i = 0; i < 160; i++) write_byte(0xFE00 + i, read_byte((value << 8) + i));
     }
-    // if(address == 0xff00){
-    //     keys.column = value & 0x30;
-    // }
+
+    if(address == 0xff45){
+        std::cout << "LYC: " << +value << std::endl;
+        std::cout << "LY: " << +memory[0xff44] << std::endl;
+        std::cout << "STAT: " << +memory[0xff41] << std::endl;
+    }
+
     if(address == 0xff50){
         romDisabled = true;
     }
@@ -170,9 +179,64 @@ void MMU::write_byte(uint16_t address, uint8_t value) {
     else if(address == 0xff04) timer.div = 0;
     else if(address == 0xff05) timer.tima = value;
     else if(address == 0xff06) timer.tma = value;
-    else if(address == 0xff07) timer.tac = value & 7;
+    else if(address == 0xff07){
+        timer.tac = value;
+        // timer.tac = value & 7;
+    }
+    if(address == 0xff0f){
+        memory[0xFF0F] = value;// & 0x1F;
+        return;
+    }
+    // if(address >= 0x8000)
+    //     memory[address] = value;
 
-    memory[address] = value;
+     //	MBC0
+    // if (this->mbcType == 0x00) {
+            
+    //     //	make ROM readonly
+    //     if (address >= 0x8000)
+    //         memory[address] = value;
+    // }
+    //	MBC1
+    if (true) {
+    // if (this->mbcType == 0x00) {
+    // if (this->mbcType == 0x01) {
+
+        //	external RAM enable / disable
+        if (address < 0x2000)
+            mbcRamEnabled = value > 0;
+
+        //	choose ROM bank nr (lower 5 bits, 0-4)
+        if (address >= 0x2000 && address < 0x4000) {
+            mbcRomNumber = value & 0x1f;
+            if (value == 0x00 || value == 0x20 || value == 0x40 || value == 0x60)
+                mbcRomNumber = (value & 0x1f) + 1;
+
+            // std::cout << "MBC ROM NUMBER: " << std::hex << +mbc1romNumber << std::endl;
+        }
+        // //	choose RAM bank nr OR ROM bank top 2 bits (5-6)
+        else if (address < 0x6000) {
+            //	mode: ROM bank 2 bits
+            if (mbcRomMode == 0)
+                mbcRomNumber |= (value & 3) << 5;
+            //	mode: RAM bank selection
+            else
+                mbcRamNumber = value & 3;
+        }
+        else if (address >= 0x6000 && address < 0x8000) {
+            mbcRomMode = value > 0;
+        }
+        else {
+            memory[address] = value;
+        }
+    }   
+
+    if(address >= 0xA000 && address < 0xC000){
+        if(this->mbcRamEnabled){
+            this->RAMbanks[this->mbcRamNumber][address - 0xA000] = value;
+        }
+    }
+
     if(address >= 0x8000 && address <= 0x9fff) {
         if(address <= 0x97ff){
             updateTile(address, value);
@@ -180,16 +244,12 @@ void MMU::write_byte(uint16_t address, uint8_t value) {
             renderFlag.background = true;
         }
     }
-    // if(address == 0xC002) {
-    //     printf("TILE %x\n", +value);
-    // }
+
     if(address >= 0xFE00 && address < 0xFE9F) {
-        // if(value > 0){
-        //     exit(1);
-        // }
-        renderFlag.background = true;
         updateSprite(address, value);
     }
+
+
 }
 
 uint16_t MMU::read_short(uint16_t address){
@@ -212,3 +272,5 @@ uint16_t MMU::read_short_stack(uint16_t *sp) {
 
     return value;
 }
+
+

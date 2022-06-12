@@ -12,7 +12,15 @@ class MMU {
         // TODO: MAKE THIS SOMEHOW PRIVATE
         uint8_t memory[0xFFFF];
 
+        int mbcType = 0;
+        bool mbcRamEnabled = false;
+        // bool mbc2ramEnabled = false;
+        uint8_t mbcRomMode = 0;
+        uint8_t mbcRomNumber = 1;
+        uint8_t mbcRamNumber = 0;
+        // uint8_t mbc2romNumber = 0;
         uint8_t ROMbanks[0x7F][0x4000];
+        uint8_t RAMbanks[0x7F][0x2000];
         uint8_t banksLoaded;
         
         struct renderFlag {
@@ -22,22 +30,22 @@ class MMU {
         } renderFlag;
 
         struct clock {
-            unsigned char m = 0;
-            unsigned char t = 0;
+            int m = 0;
+            int t = 0;
+            int t_prev = 0;
+            int t_instr = 0;
+            int last_instr = 0;
         } clock;
 
 
         struct timer{
-            unsigned char div = 0;
+            uint16_t div = 0;
             unsigned char tima = 0;
             unsigned char tma = 0;
             unsigned char tac = 0;
         } timer;
 
         uint8_t joypad = 0xFF;
-        // uint16_t joypad = 0x0F0F;
-        // unsigned char column = 0;
-        
 
         struct sprite {
             unsigned char y;
@@ -63,6 +71,7 @@ class MMU {
         bool updatedTiles = false;
         
         bool romDisabled = false;
+        bool is_halted = false;
 
         void load_boot_rom(std::string location);
         void load_cartrige_rom(std::string location);
