@@ -52,15 +52,14 @@ class PPU{
         unsigned short background[2000];
         // unsigned short background[32 * 32];
 
-        int mode = 0;
-        int modeclock = 32;
-        // int modeclock = 0;
-        
+        int mode = 1;
+        int modeclock = 0;
+
         bool can_render = false;
 
     PPU(Registers *registers, Interrupts* interrupts, MMU *mmu);
     void step(); 
-    void step2(); 
+    void compare_ly_lyc(); 
     void render_scan_lines(); 
     void render_scan_line_background(); 
     void render_scan_line_window(); 

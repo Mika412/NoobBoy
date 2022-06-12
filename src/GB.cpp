@@ -11,7 +11,7 @@
 void GB::init(std::string rom, std::string bootrom, bool debug){
     interrupts = new Interrupts(&registers, &mmu);
     cpu = new CPU(&registers, interrupts, &mmu);
-    gpu = new GPU(&registers, interrupts, &mmu);
+    ppu = new PPU(&registers, interrupts, &mmu);
     timer = new Timer(&mmu, interrupts);
     joypad = new Joypad(interrupts, &mmu);
 
@@ -38,6 +38,10 @@ void GB::run(){
                 bool isstop = cpu->step();
             else
                 cpu->instrs_count += 1;
+
+            timer->inc();
+            ppu->step();
+
 
             if (mmu.read_byte(0xff02) == 0x81) {
                 char c = mmu.read_byte(0xff01);

@@ -14,57 +14,35 @@ PPU::PPU(Registers *registers, Interrupts* interrupts, MMU* mmu){
 }
 
 void PPU::step(){
-
-    for (mmu->timer.div += mmu->clock.t - mmu->clock.t_prev; mmu->clock.t_prev++ != mmu->clock.t;)
-      if (control->lcdEnable) {
-        if (++modeclock == 456) {
-
-          if (*scanline < 144)
-            render_scan_lines();
-          if (*scanline == 143) {
-            this->interrupts->set_interrupt_flag(INTERRUPT_VBLANK);
-            can_render = true;
-            mmu->renderFlag.viewport = true;
-          }
-
-            if(*this->scanline == mmu->read_byte(0xff45)){// && *this->scanline > 0){
-                mmu->write_byte(0xff41, mmu->read_byte(0xff41) | (1 << 2));
-            }else{
-                mmu->write_byte(0xff41, mmu->read_byte(0xff41) & ~(1 << 2));
-            }
-          *scanline = (*scanline + 1) % 154;
-          modeclock = 0;
-        }
-    } else{
-        *scanline = modeclock = 0;
+    modeclock += mmu->clock.t_instr;
+    if(!this->control){
+        return;
     }
-}
-
-void PPU::step2(){
-    // std::cout << "SCANLINE: " << +this->scanline << std::endl;
-    // std::cout << "MODE " << mode << std::endl;
-    // std::cout << "Incorrect cycles: " << this->cpu->cycles << std::endl;
-    modeclock += mmu->clock.t;
-    // modeclock += registers->t;
-    // if(!this->control){
-    //     return;
-    // }
+    if (!control->lcdEnable) {return;}
     switch (mode) {
         case 0: // HBLANK
             if(modeclock >= 204){
+                modeclock -= 204;
+                mode = 2;
                 *this->scanline+=1;
 
-                if(*this->scanline == 143){
-                    if(this->interrupts->is_interrupt_enabled(INTERRUPT_VBLANK)){
+                mmu->write_byte(0xff41, mmu->read_byte(0xff41) & ~(1));
+                compare_ly_lyc();
+                // if(*this->scanline == mmu->read_byte(0xff45)){// && *this->scanline > 0){
+                //     mmu->write_byte(0xff41, mmu->read_byte(0xff41) | (1 << 2));
+                // }else{
+                //     mmu->write_byte(0xff41, mmu->read_byte(0xff41) & ~(1 << 2));
+                // }
+                if(*this->scanline == 144){
+                    // if(this->interrupts->is_interrupt_enabled(INTERRUPT_VBLANK)){
                         this->interrupts->set_interrupt_flag(INTERRUPT_VBLANK);
                         can_render = true;
-                    }
+                        // exit(1);
+                    // }
                     can_render = true;
                     mode = 1;
-                }else{
-                    mode = 2;
                 }
-                modeclock -= 204;
+                
                 // render_scan_lines();
 
                 // std::cout << "SCANLINE: "<< +(*this->scanline) << std::endl;
@@ -86,6 +64,7 @@ void PPU::step2(){
                     mode = 2;
                     mmu->renderFlag.viewport = true;
                 }
+                mmu->write_byte(0xff41, mmu->read_byte(0xff41) | 1);
                 if(*this->scanline == mmu->read_byte(0xff45) && *this->scanline > 0){
                     mmu->write_byte(0xff41, mmu->read_byte(0xff41) | (1 << 2));
                 }else{
@@ -109,6 +88,19 @@ void PPU::step2(){
             }
             break;
             
+    }
+}
+
+void PPU::compare_ly_lyc(){
+    mmu->write_byte(0xff41, mmu->read_byte(0xff41) & ~(1 << 2));
+
+    uint8_t lyc = mmu->read_byte(0xFF45);
+    uint8_t stat = mmu->read_byte(0xFF41);
+
+    if (lyc == *scanline) {
+        stat |= 1 << 2;
+        if (stat & (1 << 6))
+            this->interrupts->set_interrupt_flag(INTERRUPT_LCD);
     }
 }
 

@@ -9,7 +9,7 @@
 
 Renderer::Renderer(CPU *cpu, PPU *gpu, Registers *registers, MMU *memory, bool debug){
     this->cpu = cpu;
-    this->gpu = gpu;
+    this->ppu = gpu;
     this->registers = registers;
     this->memory = memory;
     this->mmu = memory;
@@ -150,7 +150,7 @@ void Renderer::draw_background_overflow(){
 
 void Renderer::draw_viewport(){
     for(int i = 0; i < 144 * 160; i++){
-        COLOUR color = gpu->framebuffer[i];
+        COLOUR color = ppu->framebuffer[i];
         this->viewport_pixels[i * 4 + 0] = color.r;
         this->viewport_pixels[i * 4 + 1] = color.g;
         this->viewport_pixels[i * 4 + 2] = color.b;
@@ -202,10 +202,12 @@ void Renderer::draw_spritemap(){
 
 void Renderer::draw_background(){
     int sp = 0;
+    // for(unsigned short i = 0x9C00; i <= 0x9FFF; i++) {
     for(unsigned short i = 0x9800; i <= 0x9bff; i++) {
         int tile = memory->read_byte(i);
-        if(!(memory->read_byte(0xFF40) >> 5 & 0x1) && tile < 128)
-            tile += 256 ;
+        if(!this->ppu->control->bgWindowDataSelect && tile < 128)
+            tile += 256;
+
         if ( tile == 0){
             sp++;
             continue;

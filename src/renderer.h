@@ -1,5 +1,5 @@
 #include "mmu.h"
-#include "gpu.h"
+#include "ppu.h"
 #include "cpu.h"
 
 #include <SDL2/SDL.h>
@@ -21,7 +21,7 @@ class Renderer{
         SDL_Texture *spritemap_texture;
 
         CPU *cpu;
-        GPU *gpu;
+        PPU *ppu;
         Registers *registers;
         MMU *memory;
         MMU *mmu;

@@ -1,5 +1,6 @@
+// #include <cstring>
 #include "cpu.h"
-#include "gpu.h"
+#include "ppu.h"
 #include "timer.h"
 #include "renderer.h"
 #include "interrupt.h"
@@ -10,7 +11,7 @@ class GB{
         Registers registers;
         MMU mmu;
         CPU *cpu;
-        GPU *gpu;
+        PPU *ppu;
         Interrupts *interrupts;
         Timer *timer;
         Renderer *renderer;
