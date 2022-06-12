@@ -78,6 +78,15 @@ void CPU::no_bootrom_init() {
 
 bool CPU::step(){
     if(stopped) return false;
+    if(memory->is_halted){
+        this->instrs_count += 1;
+        // TODO: Rewrite this
+        memory->clock.t_instr = 4;
+        memory->clock.t += 4;
+        memory->clock.t_prev = memory->clock.t ;
+        memory->clock.last_instr = 0;
+        return false;
+    }
 
     uint8_t instruction = this->memory->read_byte(registers->pc++);
     uint8_t cb_instruction = this->memory->read_byte(registers->pc);

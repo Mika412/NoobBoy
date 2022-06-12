@@ -8,7 +8,7 @@ Interrupts::Interrupts(Registers *registers, MMU *mmu) {
 }
 
 void Interrupts::set_master_flag(bool state) {
-    this->IME |= (int(state) << 0);
+    this->IME = (int(state) << 0);
 }
 
 bool Interrupts::is_master_enabled() {
@@ -35,69 +35,55 @@ bool Interrupts::is_interrupt_flag_set(uint8_t flag) {
     return (mmu->read_byte(0xFF0F) & flag);
 }
 
-void Interrupts::check() {
+bool Interrupts::check() {
+    if (mmu->read_byte(0xFF0F) & 0x0F)
+        this->mmu->is_halted = false;
+
     if (!this->IME)
-        return;
+        return false;
 
-    if(this->jump_vblank){
-        this->mmu->write_short_stack(&registers->sp, this->registers->pc);
-        this->registers->pc = 0x40;
-        this->unset_interrupt_flag(INTERRUPT_VBLANK);
-        this->set_master_flag(false);
-        this->jump_vblank = false;
-        // mmu->is_halted = false;
-        // std::cout << "INTERRUPTING LIKE CRAZY" << std::endl;
-    }
-    if(this->jump_timer){
-        this->mmu->write_short_stack(&registers->sp, this->registers->pc);
-        this->registers->pc = 0x50;
-        this->set_master_flag(false);
-        this->unset_interrupt_flag(INTERRUPT_TIMER);
-        this->jump_timer = false;
-        // std::cout << "INTERRUPTING LIKE CRAZY" << std::endl;
-        // mmu->is_halted = false;
+    if(mmu->read_byte(0xff41) & (1 << 2)){
+        this->set_interrupt_flag(INTERRUPT_LCD);
     }
 
-    if(this->jump_joypad){
-        this->mmu->write_short_stack(&registers->sp, this->registers->pc);
-        this->registers->pc = 0x60;
-        this->set_master_flag(false);
-        this->unset_interrupt_flag(INTERRUPT_JOYPAD);
-        this->jump_joypad = false;
-        std::cout << "INTERRUPTING LIKE CRAZY JOYPAD" << std::endl;
-        // mmu->is_halted = false;
-    }
-        // if(fire & (1 << 4)){ // JOYPAD
-        //     std::cout << "SHOULD JOYPAD" << std::endl;
-        //     memory->interruptFlags.IF &= ~(1 << 4);
-        //     memory->interruptFlags.IME = 0;
-        //     memory->write_short_stack(registers->pc);
-        //     registers->pc = 0x60;
-        //     registers->t += 12;
-        //     return true;
-        // }
-    
-    // if ((this->mmu->read_byte(0xFFFF) & this->mmu->read_byte(0xFF0F)) && !this->triggered_jump){
-    //     triggered_jump = true;
-    //     return;
-    // }
- 
-    std::cout << this->is_interrupt_enabled(INTERRUPT_JOYPAD) << " " << this->is_interrupt_flag_set(INTERRUPT_JOYPAD) << std::endl;
-    std::cout << std::hex << +(this->mmu->joypad) << std::endl;
     // Check if VBLANK
     if(this->is_interrupt_enabled(INTERRUPT_VBLANK) && this->is_interrupt_flag_set(INTERRUPT_VBLANK)) {
-        this->jump_vblank = true;
-        // std::cout << "GPU State: " << ppu->gpu_mode << " Clock: " << ppu->clock << std::endl;
+        this->trigger_interrupt(INTERRUPT_VBLANK, 0x40);
+        return true;
     }
-    // // Check if TIMER
+
+    // Check if LCD
+    if(this->is_interrupt_enabled(INTERRUPT_LCD) && this->is_interrupt_flag_set(INTERRUPT_LCD)) {
+        this->trigger_interrupt(INTERRUPT_LCD, 0x48);
+        return true;
+    }
+
+    // Check if TIMER
     if(this->is_interrupt_enabled(INTERRUPT_TIMER) && this->is_interrupt_flag_set(INTERRUPT_TIMER)) {
-        this->jump_timer = true;
+        this->trigger_interrupt(INTERRUPT_TIMER, 0x50);
+        return true;
     }
 
-    // // Check if JOYPAD
+    // Check if JOYPAD
     if(this->is_interrupt_enabled(INTERRUPT_JOYPAD) && this->is_interrupt_flag_set(INTERRUPT_JOYPAD)) {
-        this->jump_joypad = true;
+        this->trigger_interrupt(INTERRUPT_JOYPAD, 0x60);
+        return true;
     }
 
-    triggered_jump = false;
+
+    return false;
+}
+
+void Interrupts::trigger_interrupt(InterruptFlags interrupt, uint8_t jump_pc) {
+    this->mmu->write_short_stack(&registers->sp, this->registers->pc);
+    this->registers->pc = jump_pc;
+    this->set_master_flag(false);
+    this->unset_interrupt_flag(interrupt);
+    mmu->is_halted = false;
+
+    // TODO: Pretify this
+    mmu->clock.t_instr = 20;
+    mmu->clock.t_prev = mmu->clock.t;
+    mmu->clock.t += 20;
+    mmu->clock.last_instr = 0;
 }

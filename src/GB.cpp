@@ -20,32 +20,33 @@ void GB::init(std::string rom, std::string bootrom, bool debug){
     
     if(!bootrom.empty())
         mmu.load_boot_rom(bootrom);
-    else{
+    else
         cpu->no_bootrom_init();
-    }
+
     mmu.load_cartrige_rom(rom);
-    std::cout << "CARTRIGE TYPE " << std::hex << +mmu.read_byte(0x0147) << std::endl; 
 }
-    
+
 /* static struct timespec frameStart; */
 /* struct timespec frameEnd; */
-std::set<int> myset;
-std::set<int>::iterator it;
 int counter = 0;
 void GB::run(){
     while(isRunning) {
         if(!isPaused || doStep){
-            // printf("PC: %x, Cycles: %d\n", +this->registers.pc, mmu.clock.t);
-            // step = false;
-            interrupts->check();
-            // if(interrupts->IME & mmu.read_byte(0xFF0F) & mmu.read_byte(0xFFFF)){
+            mmu.clock.t_prev = mmu.clock.t;
+            bool interrupted = interrupts->check();
+            if(!interrupted)
+                bool isstop = cpu->step();
+            else
+                cpu->instrs_count += 1;
+
+            if (mmu.read_byte(0xff02) == 0x81) {
+                char c = mmu.read_byte(0xff01);
+                printf("%c", c);
+                mmu.write_byte(0xff02, 0x0);
+            }
 
 
-        registers.m = 0;
-        registers.t = 0;
 
-        interrupts->check();
-                timer->inc();
 
 
         if(counter>=10000){

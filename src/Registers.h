@@ -48,10 +48,6 @@ class Registers {
                 uint16_t hl;
             };
         };  
-        long cycles = 0;
-        int last_tick = 0;
-        unsigned long m = 0; // Quarter clock for last instr
-        unsigned long t = 0; // Clock for last instr
         
 
         // void set_register_flags(FlagsRegister flags);
