@@ -1,20 +1,21 @@
 #pragma once
 
-#include "Registers.h"
 #include "mmu.h"
+#include "interrupt.h"
 
 class Timer{
-    public:
-        Registers *registers;
-        MMU *memory;
-        int main = 0;
-        int sub = 0;
-        int div = 0;
+    Registers *registers;
+    MMU *mmu;
+    Interrupts *interrupts;
 
-        Timer(Registers *registers, MMU *memory);
-        void step();
-        void check();
+    int div = 0;
+    int tac = 0;
+    int tima = 0;
+
+    void check();
+
+    public:
+        Timer(MMU *memory, Interrupts* interrupts);
+
         void inc();
-        /* void rb();
-        void wb(); */
 };

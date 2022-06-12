@@ -13,7 +13,7 @@ void GB::init(std::string rom, std::string bootrom, bool debug){
     interrupts = new Interrupts(&registers, &mmu);
     cpu = new CPU(&registers, interrupts, &mmu);
     gpu = new GPU(&registers, interrupts, &mmu);
-    timer = new Timer(&registers, &mmu);
+    timer = new Timer(&mmu, interrupts);
     joypad = new Joypad(interrupts, &mmu);
 
     if(render)
@@ -41,18 +41,14 @@ void GB::run(){
             interrupts->check();
             // if(interrupts->IME & mmu.read_byte(0xFF0F) & mmu.read_byte(0xFFFF)){
 
-        // timer->inc();
 
         registers.m = 0;
         registers.t = 0;
 
         interrupts->check();
+                timer->inc();
 
-        registers.m = registers.t / 4;
-        mmu.clock.m += registers.m;
-        mmu.clock.t += registers.t;
 
-        timer->inc();
         if(counter>=10000){
         if(render)
             renderer->render();
