@@ -1,4 +1,5 @@
 #pragma once
+#include "SDL.h"
 
 #include "mmu.h"
 #include "interrupt.h"
@@ -19,10 +20,13 @@ class Joypad {
     MMU *mmu;
     Interrupts *interrupts;
 
+    int joypad_cycles = 0;
+
     public:
 
         Joypad(Interrupts* interrupts, MMU* mmu);
 
         void key_press(ButtonFlags key);
         void key_release(ButtonFlags key);
+        void check(int last_instr_cycles);
 };

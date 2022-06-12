@@ -1,6 +1,5 @@
 #include <iostream>
 #include "gb.h"
-#include <SDL2/SDL_keycode.h>
 #include <cstdint>
 #include <unistd.h>
 #include <set>
@@ -102,48 +101,7 @@ void GB::run(){
             
             doStep = false;
         }
-        SDL_Event event;
-        SDL_PollEvent(&event);
-        switch (event.type) {
-            case SDL_KEYUP:
-                switch(event.key.keysym.sym){
-                    case SDLK_RIGHT:  joypad->key_release(JOYPAD_RIGHT); break;
-                    case SDLK_LEFT:   joypad->key_release(JOYPAD_LEFT); break;
-                    case SDLK_UP:     joypad->key_release(JOYPAD_UP); break;
-                    case SDLK_DOWN:   joypad->key_release(JOYPAD_DOWN); break;
-                    case SDLK_z:      joypad->key_release(JOYPAD_A); break;
-                    case SDLK_x:      joypad->key_release(JOYPAD_B); break;
-                    case SDLK_SPACE:  joypad->key_release(JOYPAD_START); break;
-                    case SDLK_RETURN: joypad->key_release(JOYPAD_SELECT); break;
-                }
-                break;
-            case SDL_KEYDOWN:
-                switch(event.key.keysym.sym){
-                    case SDLK_RIGHT:  joypad->key_press(JOYPAD_RIGHT); break;
-                    case SDLK_LEFT:   joypad->key_press(JOYPAD_LEFT); break;
-                    case SDLK_UP:     joypad->key_press(JOYPAD_UP); break;
-                    case SDLK_DOWN:   joypad->key_press(JOYPAD_DOWN); break;
-                    case SDLK_z:      joypad->key_press(JOYPAD_A); break;
-                    case SDLK_x:      joypad->key_press(JOYPAD_B); break;
-                    case SDLK_SPACE:  joypad->key_press(JOYPAD_START); break;
-                    case SDLK_RETURN: joypad->key_press(JOYPAD_SELECT); break;
-                    case SDLK_ESCAPE: isRunning = false; break;
-                }
-                break;
-            case SDL_QUIT:
-                isRunning = false;
-                break;
-        }
-        if(debug){
-            switch (event.type) {
-                case SDL_KEYUP:
-                    switch(event.key.keysym.sym){
-                        case SDLK_s:  doStep = true; break;
-                        case SDLK_p:  isPaused = !isPaused; break;
-                    }
-                    break;
-            }
-        }
+        joypad->check(mmu.clock.t_instr);
     }
 }
 
