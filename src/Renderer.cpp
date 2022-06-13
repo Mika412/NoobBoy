@@ -53,6 +53,14 @@ static struct timespec frameStart;
 struct timespec frameEnd;
 
 void Renderer::render(){
+        switch(this->status->colorMode){
+            case NORMAL:
+                SDL_SetTextureColorMod(viewport_texture, 255, 255, 255);
+                break;
+            case RETRO:
+                SDL_SetTextureColorMod(viewport_texture, 155, 188, 15);
+        }
+
         SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
         SDL_RenderClear(renderer);
 
@@ -67,7 +75,6 @@ void Renderer::render(){
 }
 
 void Renderer::render_debug(){
-    // SDL_SetRenderTarget(renderer, debug_texture);
     draw_background();
     draw_tilemap();
     draw_spritemap();
@@ -110,27 +117,25 @@ void Renderer::draw_status(){
     draw_text(viewport_width + 50, 80, "PC: " + std::to_string(+registers->pc));
 
     draw_text(viewport_width + 50, 100, "Ticks: " + std::to_string(+memory->clock.t));
+    
+    // Draw paused message
+    if(this->status->isPaused){
+        this->draw_rectangle(window_width - 58,  window_height - 22, 55, 20, {255,0,0,100});
+        draw_text(window_width - 55, window_height - 22, "STOPPED");
+    }
 }
 
 
 void Renderer::draw_rectangle(int x, int y, int width, int height, rgb color){
     SDL_Rect rect = {x, y, width, height};
-    // rect.x = *ppu->scrollX;
-    // rect.y = viewport_height + *ppu->scrollY;
-    // rect.w = viewport_width - overflowX;
-    // rect.h = viewport_height;
-    // rect.x = *ppu->scrollX;
-    // rect.y = *ppu->scrollY;
-    // rect.w = viewport_width - overflowX;
-    // rect.h = viewport_height;
 
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
     SDL_SetRenderDrawColor(renderer, color.r,color.g,color.b, color.a);
-    // SDL_SetRenderDrawColor(renderer, 255,255, 255, 100);
     SDL_RenderFillRect(renderer, &rect);
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderDrawRect(renderer, &rect);
 }
+
 void Renderer::draw_background_overflow(){
     int overflowX = std::max(*ppu->scrollX + viewport_width - background_width, 0);
     int overflowY = std::max(*ppu->scrollY + viewport_height - background_height, 0);

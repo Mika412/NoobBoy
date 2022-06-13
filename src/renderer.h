@@ -69,7 +69,6 @@ class Renderer{
         int window_width = viewport_width;
         TTF_Font *font;
         
-
         void draw_viewport();
         void draw_background();
         void draw_tilemap();

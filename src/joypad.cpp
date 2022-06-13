@@ -49,6 +49,8 @@ void Joypad::check(int last_instr_cycles){
                 case SDLK_SPACE:  this->key_press(JOYPAD_START); break;
                 case SDLK_RETURN: this->key_press(JOYPAD_SELECT); break;
                 case SDLK_ESCAPE: this->status->isRunning = false; break;
+                case SDLK_1:      this->status->colorMode = RETRO; break;
+                case SDLK_2:      this->status->colorMode = NORMAL; break;
             }
             break;
         case SDL_QUIT:
@@ -56,14 +58,14 @@ void Joypad::check(int last_instr_cycles){
             exit(0);
             break;
     }
-    // if(debug){
-    //     switch (event.type) {
-    //         case SDL_KEYUP:
-    //             switch(event.key.keysym.sym){
-    //                 case SDLK_s:  doStep = true; break;
-    //                 case SDLK_p:  isPaused = !isPaused; break;
-    //             }
-    //             break;
-    //     }
-    // }
+    if(this->status->debug){
+        switch (event.type) {
+            case SDL_KEYUP:
+                switch(event.key.keysym.sym){
+                    case SDLK_s:  this->status->doStep = true; break;
+                    case SDLK_p:  this->status->isPaused = !this->status->isPaused; break;
+                }
+                break;
+        }
+    }
 }

@@ -51,9 +51,9 @@ void GB::run(){
 
             counter++;
         }
-
+        
+        // TODO: Add delay and render every frame even if it's paused
         if(ppu->can_render || status.doStep){
-        // if(gpu->can_render){
             renderer->render();
             ppu->can_render = false;
             // static struct timespec frameStart;
@@ -72,8 +72,8 @@ void GB::run(){
 
             // clock_gettime(CLOCK_MONOTONIC, &frameStart);
         }
-        joypad->check(mmu.clock.t_instr);
         status.doStep = false;
+        joypad->check(mmu.clock.t_instr);
     }
 }
 
