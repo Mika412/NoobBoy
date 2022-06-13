@@ -8,16 +8,16 @@
 #include <string>
 #include <iomanip>
 
-Renderer::Renderer(CPU *cpu, PPU *gpu, Registers *registers, MMU *memory, bool debug){
+Renderer::Renderer(Status *status, CPU *cpu, PPU *gpu, Registers *registers, MMU *memory){
     this->cpu = cpu;
     this->ppu = gpu;
     this->registers = registers;
     this->memory = memory;
     this->mmu = memory;
-    this->debug = debug;
+    this->status = status;
 
     SDL_Init(SDL_INIT_VIDEO);
-    if(debug){
+    if(status->debug){
         window_width = debug_texture_width;
         window_height = debug_texture_height;
     }
@@ -56,9 +56,9 @@ void Renderer::render(){
         SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
         SDL_RenderClear(renderer);
 
-        if(debug){
+        if(status->debug)
             render_debug();
-        }
+
         SDL_SetRenderTarget(renderer, viewport_texture);
         draw_viewport();
 

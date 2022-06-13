@@ -1,8 +1,9 @@
 #include "joypad.h"
 
-Joypad::Joypad(Interrupts* interrupts, MMU* mmu){
+Joypad::Joypad(Status* status, Interrupts* interrupts, MMU* mmu){
     this->interrupts = interrupts;
     this->mmu = mmu;
+    this->status = status;
 }
 
 void Joypad::key_press(ButtonFlags key){
@@ -47,11 +48,11 @@ void Joypad::check(int last_instr_cycles){
                 case SDLK_x:      this->key_press(JOYPAD_B); break;
                 case SDLK_SPACE:  this->key_press(JOYPAD_START); break;
                 case SDLK_RETURN: this->key_press(JOYPAD_SELECT); break;
-                // case SDLK_ESCAPE: isRunning = false; break;
+                case SDLK_ESCAPE: this->status->isRunning = false; break;
             }
             break;
         case SDL_QUIT:
-            // isRunning = false;
+            this->status->isRunning = false;
             exit(0);
             break;
     }

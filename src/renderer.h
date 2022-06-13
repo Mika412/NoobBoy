@@ -1,6 +1,7 @@
 #include "mmu.h"
 #include "ppu.h"
 #include "cpu.h"
+#include "status.h"
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
@@ -25,7 +26,7 @@ class Renderer{
         Registers *registers;
         MMU *memory;
         MMU *mmu;
-        bool debug = false;
+        Status *status;
 
 
         int status_width = 160;
@@ -82,6 +83,6 @@ class Renderer{
         void render_debug();
 
     public:
-        Renderer(CPU *cpu, PPU *ppu, Registers *registers, MMU *memory, bool debug);
+        Renderer(Status *status, CPU *cpu, PPU *ppu, Registers *registers, MMU *memory);
         void render();
 };

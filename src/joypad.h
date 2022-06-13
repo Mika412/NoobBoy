@@ -3,6 +3,7 @@
 
 #include "mmu.h"
 #include "interrupt.h"
+#include "status.h"
 
 enum ButtonFlags { 
     JOYPAD_A        = (1 << 0),
@@ -17,6 +18,7 @@ enum ButtonFlags {
 };
 
 class Joypad {
+    Status *status;
     MMU *mmu;
     Interrupts *interrupts;
 
@@ -24,7 +26,7 @@ class Joypad {
 
     public:
 
-        Joypad(Interrupts* interrupts, MMU* mmu);
+        Joypad(Status* status, Interrupts* interrupts, MMU* mmu);
 
         void key_press(ButtonFlags key);
         void key_release(ButtonFlags key);
