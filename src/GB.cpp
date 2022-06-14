@@ -13,11 +13,11 @@ void GB::init(std::string rom, std::string bootrom, bool debug){
     cpu = new CPU(&registers, interrupts, &mmu);
     ppu = new PPU(&registers, interrupts, &mmu);
     timer = new Timer(&mmu, interrupts);
-    joypad = new Joypad(interrupts, &mmu);
+    joypad = new Joypad(&status, interrupts, &mmu);
+    status.debug = debug;
 
-    if(render)
-        renderer = new Renderer(cpu, ppu, &registers, &mmu, debug);
-    
+    renderer = new Renderer(&status, cpu, ppu, &registers, &mmu);
+
     if(!bootrom.empty())
         mmu.load_boot_rom(bootrom);
     else
@@ -30,8 +30,8 @@ void GB::init(std::string rom, std::string bootrom, bool debug){
 /* struct timespec frameEnd; */
 int counter = 0;
 void GB::run(){
-    while(isRunning) {
-        if(!isPaused || doStep){
+    while(status.isRunning) {
+        if(!status.isPaused || status.doStep){
             mmu.clock.t_prev = mmu.clock.t;
             bool interrupted = interrupts->check();
             if(!interrupted)
@@ -50,41 +50,29 @@ void GB::run(){
             }
 
             counter++;
-            if(ppu->can_render){
-            // if(gpu->can_render){
-                renderer->render();
-                ppu->can_render = false;
-                // static struct timespec frameStart;
-                // struct timespec frameEnd;
-
-                // long mtime, seconds, useconds;
-
-                // clock_gettime(CLOCK_MONOTONIC, &frameEnd);
-                // seconds = frameEnd.tv_sec - frameStart.tv_sec;
-                // useconds = frameEnd.tv_nsec - frameStart.tv_nsec;
-
-                // mtime = (seconds * 1000 + useconds / (1000.0 * 1000.0));
-
-                // if(mtime < 1.0 / 60.0) 
-                //     sleep(1 / 60.0 - mtime);
-
-                // clock_gettime(CLOCK_MONOTONIC, &frameStart);
-            }
-            // std::cout << "AF: " << +registers.af << std::endl;
-            // std::cout << "BC: " << +registers.bc << std::endl;
-            // std::cout << "DE: " << +registers.de << std::endl;
-            // std::cout << "HL: " << +registers.hl << std::endl;
-            // std::cout << "SP: " << +registers.sp << std::endl;
-            // std::cout << "PC: " << +(registers.pc - 0x100)<< std::endl;
-            // std::cout << "JOYPAD: " << std::hex << +mmu.read_byte(0xff00) << std::endl;
-            // std::cout << "\n" << std::endl;
-            // cpu->registers->print_flags();
-            // cpu->registers->print_registers();
-            // if(registers.pc == 0xc2b5)
-            //     exit(1);
-            
-            doStep = false;
         }
+        
+        // TODO: Add delay and render every frame even if it's paused
+        if(ppu->can_render || status.doStep){
+            renderer->render();
+            ppu->can_render = false;
+            // static struct timespec frameStart;
+            // struct timespec frameEnd;
+
+            // long mtime, seconds, useconds;
+
+            // clock_gettime(CLOCK_MONOTONIC, &frameEnd);
+            // seconds = frameEnd.tv_sec - frameStart.tv_sec;
+            // useconds = frameEnd.tv_nsec - frameStart.tv_nsec;
+
+            // mtime = (seconds * 1000 + useconds / (1000.0 * 1000.0));
+
+            // if(mtime < 1.0 / 60.0) 
+            //     sleep(1 / 60.0 - mtime);
+
+            // clock_gettime(CLOCK_MONOTONIC, &frameStart);
+        }
+        status.doStep = false;
         joypad->check(mmu.clock.t_instr);
     }
 }

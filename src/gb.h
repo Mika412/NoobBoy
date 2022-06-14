@@ -5,9 +5,12 @@
 #include "renderer.h"
 #include "interrupt.h"
 #include "joypad.h"
+#include "status.h"
 
 class GB{
     public:
+        Status status;
+
         Registers registers;
         MMU mmu;
         CPU *cpu;
@@ -16,12 +19,6 @@ class GB{
         Timer *timer;
         Renderer *renderer;
         Joypad *joypad;
-
-        bool render = true;
-        bool debug = true;
-        bool doStep = false;
-        bool isPaused = false;
-        bool isRunning = true;
 
     void init(std::string rom, std::string bootrom, bool debug);
     void run();
