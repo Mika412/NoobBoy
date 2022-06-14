@@ -22,6 +22,7 @@ class Joypad {
     MMU *mmu;
     Interrupts *interrupts;
 
+    uint8_t joypad_state;
     int joypad_cycles = 0;
 
     public:
@@ -31,4 +32,5 @@ class Joypad {
         void key_press(ButtonFlags key);
         void key_release(ButtonFlags key);
         void check(int last_instr_cycles);
+        void update_joypad_memory();
 };
