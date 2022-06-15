@@ -7,22 +7,20 @@ Joypad::Joypad(Status* status, Interrupts* interrupts, MMU* mmu){
 }
 
 void Joypad::key_press(ButtonFlags key){
-    mmu->joypad &= ~(0xFF & key);
-    interrupts->set_interrupt_flag(INTERRUPT_JOYPAD);
+    this->joypad_state = mmu->joypad & ~(0xFF & key);
 }
 
 void Joypad::key_release(ButtonFlags key){
-    mmu->joypad |= 0xFF & key;
-    interrupts->set_interrupt_flag(INTERRUPT_JOYPAD);
+    this->joypad_state = mmu->joypad | (0xFF & key);
+}
+void Joypad::update_joypad_memory(){
+    if(this->joypad_state) {
+        mmu->joypad = this->joypad_state;
+        interrupts->set_interrupt_flag(INTERRUPT_JOYPAD);
+    }
 }
 
 void Joypad::check(int last_instr_cycles){
-    joypad_cycles += last_instr_cycles;
-    if(joypad_cycles < 65536)
-        return; 
-
-    joypad_cycles -= 65536;
-
     SDL_Event event;
     SDL_PollEvent(&event);
     switch (event.type) {
@@ -36,6 +34,8 @@ void Joypad::check(int last_instr_cycles){
                 case SDLK_x:      this->key_release(JOYPAD_B); break;
                 case SDLK_SPACE:  this->key_release(JOYPAD_START); break;
                 case SDLK_RETURN: this->key_release(JOYPAD_SELECT); break;
+                case SDLK_s:  if(status->debug) status->doStep = true; break;
+                case SDLK_p:  if(status->debug) status->isPaused = !this->status->isPaused; break;
             }
             break;
         case SDL_KEYDOWN:
@@ -58,14 +58,10 @@ void Joypad::check(int last_instr_cycles){
             exit(0);
             break;
     }
-    if(this->status->debug){
-        switch (event.type) {
-            case SDL_KEYUP:
-                switch(event.key.keysym.sym){
-                    case SDLK_s:  this->status->doStep = true; break;
-                    case SDLK_p:  this->status->isPaused = !this->status->isPaused; break;
-                }
-                break;
-        }
+
+    joypad_cycles += last_instr_cycles;
+    if(joypad_cycles >= 65536){
+        update_joypad_memory();
+        joypad_cycles -= 65536;
     }
 }
