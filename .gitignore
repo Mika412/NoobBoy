@@ -6,5 +6,4 @@ roms
 .cache
 build.sh
 Makefile
-cmake
 .DS_Store
