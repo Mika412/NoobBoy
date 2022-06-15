@@ -53,7 +53,7 @@ void GB::run(){
         }
         
         // TODO: Add delay and render every frame even if it's paused
-        if(ppu->can_render || status.doStep){
+        if(ppu->can_render || status.isPaused){
             renderer->render();
             ppu->can_render = false;
             // static struct timespec frameStart;
