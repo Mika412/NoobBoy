@@ -120,13 +120,20 @@ void PPU::render_scan_line_background(){
         address += 0x400;
 
     address += (*this->scrollY + *this->scanline) / 8 * 32;
+
+    uint16_t start_row_address = address;
+    uint16_t end_row_address = address + 32;
     address += (*this->scrollX >> 3);
 
     int x = *this->scrollX & 7;
     int y = (*this->scanline + *this->scrollY) & 7;
     int pixelOffset = *this->scanline * 160;
 
-    for(uint16_t tile_address = address; tile_address < address + 20; tile_address++){
+    for(int i = 0; i < 21; i++){
+        uint16_t tile_address = address + i;
+        if(tile_address >= end_row_address)
+            tile_address  = (start_row_address + tile_address % end_row_address);
+
         int tile = this->mmu->read_byte(tile_address);
 
         if(!this->control->bgWindowDataSelect && tile < 128)
@@ -181,14 +188,15 @@ void PPU::render_scan_line_sprites(){
 
     for(auto sprite : mmu->sprites){
         if(sprite.y <= *scanline && (sprite.y + 8) > *scanline) {
-            int pixelOffset = *this->scanline * 160 + sprite.x;
             uint8_t y = *scanline % sprite.y;
 
             // Flip vertically
             if(sprite.options.yFlip) y = 7 - y;
 
             for(int x = 0; x < 8; x++){
-                if(sprite.x + x >= 0 && sprite.x + x < 160) {
+                int x_wrap = (sprite.x + x) % 256;
+                int pixelOffset = *this->scanline * 160 + x_wrap;
+                if(x_wrap >= 0 && x_wrap< 160) {
                     // Flip horizontally
                     uint8_t xF = sprite.options.xFlip ? 7 - x : x;
                     uint8_t colour = mmu->tiles[sprite.tile][y][xF];

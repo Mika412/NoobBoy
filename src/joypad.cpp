@@ -16,11 +16,19 @@ void Joypad::key_release(ButtonFlags key){
 void Joypad::update_joypad_memory(){
     if(this->joypad_state) {
         mmu->joypad = this->joypad_state;
+        this->joypad_state = 0;
         interrupts->set_interrupt_flag(INTERRUPT_JOYPAD);
     }
 }
 
 void Joypad::check(int last_instr_cycles){
+    joypad_cycles += last_instr_cycles;
+    if(!status->isPaused){
+        if(joypad_cycles < 65536)
+            return;
+        joypad_cycles -= 65536;
+    }
+
     SDL_Event event;
     SDL_PollEvent(&event);
     switch (event.type) {
@@ -58,10 +66,5 @@ void Joypad::check(int last_instr_cycles){
             exit(0);
             break;
     }
-
-    joypad_cycles += last_instr_cycles;
-    if(joypad_cycles >= 65536){
-        update_joypad_memory();
-        joypad_cycles -= 65536;
-    }
+    update_joypad_memory();
 }

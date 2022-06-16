@@ -250,6 +250,10 @@ void Renderer::draw_background(){
                     int xi = memory->read_byte(0xFF4B) - 7 + (sp % 32) * 8 + x;
                     int yi = memory->read_byte(0xFF4A) + (sp / 32) * 8 + y;
                     int offset = 4 * ( yi * background_width + xi);
+
+                    if(offset >= background_pixels.size())
+                        continue;
+
                     background_pixels[offset + 0] = palette[color].r;
                     background_pixels[offset + 1] = palette[color].g;
                     background_pixels[offset + 2] = palette[color].b;
@@ -270,6 +274,10 @@ void Renderer::draw_background(){
                     int xi = (memory->read_byte(0xff43) + sprite.x + x) % 256;
                     int yi = memory->read_byte(0xff42) + sprite.y + y;
                     int offset = 4 * ( yi * background_width + xi);
+
+                    if(offset >= background_pixels.size())
+                        continue;
+
                     background_pixels[offset + 0] = palette[color].r;
                     background_pixels[offset + 1] = palette[color].g;
                     background_pixels[offset + 2] = palette[color].b;
