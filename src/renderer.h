@@ -9,6 +9,8 @@
 #include <SDL2/SDL_ttf.h>
 
 #include <vector>
+#include <chrono>
+#include <thread>
 
 class Renderer{
     private:
@@ -68,6 +70,11 @@ class Renderer{
         int window_height = viewport_height;
         int window_width = viewport_width;
         TTF_Font *font;
+    
+
+        int framerate_time = 1000 / 60;
+        std::chrono::steady_clock::time_point startFrame;
+        std::chrono::steady_clock::time_point endFrame;
         
         void draw_viewport();
         void draw_background();
@@ -80,6 +87,7 @@ class Renderer{
         // Helper functions
         void draw_text(int x_pop, int y_pos, std::string text);
         void render_debug();
+        void check_framerate();
 
     public:
         Renderer(Status *status, CPU *cpu, PPU *ppu, Registers *registers, MMU *memory);

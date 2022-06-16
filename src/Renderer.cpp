@@ -49,29 +49,38 @@ Renderer::Renderer(Status *status, CPU *cpu, PPU *gpu, Registers *registers, MMU
     font = TTF_OpenFont("fonts/VT323-Regular.ttf", 18);
 }
 
-static struct timespec frameStart;
-struct timespec frameEnd;
 
 void Renderer::render(){
-        switch(this->status->colorMode){
-            case NORMAL:
-                SDL_SetTextureColorMod(viewport_texture, 255, 255, 255);
-                break;
-            case RETRO:
-                SDL_SetTextureColorMod(viewport_texture, 155, 188, 15);
-        }
+    this->check_framerate();
 
-        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-        SDL_RenderClear(renderer);
+    switch(this->status->colorMode){
+        case NORMAL:
+            SDL_SetTextureColorMod(viewport_texture, 255, 255, 255);
+            break;
+        case RETRO:
+            SDL_SetTextureColorMod(viewport_texture, 155, 188, 15);
+    }
 
-        if(status->debug)
-            render_debug();
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+    SDL_RenderClear(renderer);
 
-        SDL_SetRenderTarget(renderer, viewport_texture);
-        draw_viewport();
+    if(status->debug)
+        render_debug();
 
-        SDL_RenderCopy(renderer, viewport_texture, NULL, &this->viewport_rect);
-        SDL_RenderPresent( renderer );
+    SDL_SetRenderTarget(renderer, viewport_texture);
+    draw_viewport();
+
+    SDL_RenderCopy(renderer, viewport_texture, NULL, &this->viewport_rect);
+    SDL_RenderPresent( renderer );
+}
+
+void Renderer::check_framerate() {
+    endFrame = std::chrono::steady_clock::now();
+    auto timeTook = std::chrono::duration_cast<std::chrono::milliseconds>(endFrame - startFrame).count();
+    if(timeTook < framerate_time)
+        std::this_thread::sleep_for(std::chrono::milliseconds(framerate_time - timeTook));
+
+    startFrame = std::chrono::steady_clock::now();
 }
 
 void Renderer::render_debug(){
