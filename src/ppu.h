@@ -60,8 +60,9 @@ class PPU{
     PPU(Registers *registers, Interrupts* interrupts, MMU *mmu);
     void step(); 
     void compare_ly_lyc(); 
+
     void render_scan_lines(); 
-    void render_scan_line_background(); 
+    void render_scan_line_background(bool* row_pixels); 
     void render_scan_line_window(); 
-    void render_scan_line_sprites(); 
+    void render_scan_line_sprites(bool* row_pixels); 
 };

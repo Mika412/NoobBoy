@@ -108,12 +108,13 @@ void PPU::render_scan_lines(){
     if(!this->control->lcdEnable)
         return;
 
-    this->render_scan_line_background();
+    bool row_pixels[160] = {0};
+    this->render_scan_line_background(row_pixels);
     this->render_scan_line_window();
-    this->render_scan_line_sprites();
+    this->render_scan_line_sprites(row_pixels);
 }
 
-void PPU::render_scan_line_background(){
+void PPU::render_scan_line_background(bool* row_pixels){
     uint16_t address = 0x9800;
 
     if(this->control->bgDisplaySelect)
@@ -128,20 +129,25 @@ void PPU::render_scan_line_background(){
     int x = *this->scrollX & 7;
     int y = (*this->scanline + *this->scrollY) & 7;
     int pixelOffset = *this->scanline * 160;
-
+    
+    int pixel = 0;
     for(int i = 0; i < 21; i++){
         uint16_t tile_address = address + i;
         if(tile_address >= end_row_address)
             tile_address  = (start_row_address + tile_address % end_row_address);
 
         int tile = this->mmu->read_byte(tile_address);
-
         if(!this->control->bgWindowDataSelect && tile < 128)
             tile += 256;
 
         for(; x < 8; x++){
+            if(pixel >= 160) break;
+
             int colour = mmu->tiles[tile][y][x];
             framebuffer[pixelOffset++] = palette[colour];
+            if(colour > 0)
+                row_pixels[pixel] = true;
+            pixel++;
         }
         x=0;
     }
@@ -182,7 +188,7 @@ void PPU::render_scan_line_window(){
 
 }
 
-void PPU::render_scan_line_sprites(){
+void PPU::render_scan_line_sprites(bool* row_pixels){
     if(!this->control->spriteDisplayEnable) 
         return;
 
@@ -202,7 +208,8 @@ void PPU::render_scan_line_sprites(){
                     uint8_t colour = mmu->tiles[sprite.tile][y][xF];
 
                     if(colour)
-                        framebuffer[pixelOffset] = palette[colour];
+                        if(!row_pixels[x_wrap] || !sprite.options.renderPriority)
+                            framebuffer[pixelOffset] = palette[colour];
                     pixelOffset++;
                 }
             }
