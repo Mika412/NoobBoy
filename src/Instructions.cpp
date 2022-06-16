@@ -423,10 +423,7 @@ void InstructionSet::execute(uint8_t opcode) {
             mmu->write_byte(registers->hl, registers->l);
             break;
         case 0x76: // HALT
-            // TODO: Implement HALT
-            // mmu->is_halted = true;
-            // // std::cout << "HALTING" << std::endl;
-            // registers->pc++;
+            mmu->is_halted = true;
             break;
         case 0x77: // LD (HL), A
             mmu->write_byte(registers->hl, registers->a);
