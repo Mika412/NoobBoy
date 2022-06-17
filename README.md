@@ -9,8 +9,7 @@ To build the project, `cmake`, `SDL2` and `SDL2 ttf` are required. The SDL2 cmak
 
 ### Building
 ```
-$ mkdir build && cd build
-$ cmake ..
+$ cmake .
 $ make
 ```
     
