@@ -194,7 +194,9 @@ void PPU::render_scan_line_sprites(bool* row_pixels){
 
     for(auto sprite : mmu->sprites){
         if(sprite.y <= *scanline && (sprite.y + 8) > *scanline) {
-            uint8_t y = *scanline % sprite.y;
+            uint8_t y = *scanline;
+            if(sprite.y > 0)
+                y %= sprite.y;
 
             // Flip vertically
             if(sprite.options.yFlip) y = 7 - y;
@@ -202,7 +204,7 @@ void PPU::render_scan_line_sprites(bool* row_pixels){
             for(int x = 0; x < 8; x++){
                 int x_wrap = (sprite.x + x) % 256;
                 int pixelOffset = *this->scanline * 160 + x_wrap;
-                if(x_wrap >= 0 && x_wrap< 160) {
+                if(x_wrap >= 0 && x_wrap < 160) {
                     // Flip horizontally
                     uint8_t xF = sprite.options.xFlip ? 7 - x : x;
                     uint8_t colour = mmu->tiles[sprite.tile][y][xF];
