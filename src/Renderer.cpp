@@ -1,19 +1,11 @@
 #include "renderer.h"
-#include <SDL2/SDL_ttf.h>
-#include <iostream>
-#include <memory>
-#include <vector>
-#include <unistd.h>
-#include <stdlib.h>
-#include <string>
-#include <iomanip>
 
-Renderer::Renderer(Status *status, CPU *cpu, PPU *gpu, Registers *registers, MMU *memory){
+Renderer::Renderer(Status *status, CPU *cpu, PPU *gpu, Registers *registers, Interrupts *interrupts, MMU *mmu){
     this->cpu = cpu;
     this->ppu = gpu;
     this->registers = registers;
-    this->memory = memory;
-    this->mmu = memory;
+    this->mmu = mmu;
+    this->interrupts = interrupts;
     this->status = status;
 
     SDL_Init(SDL_INIT_VIDEO);
@@ -49,6 +41,11 @@ Renderer::Renderer(Status *status, CPU *cpu, PPU *gpu, Registers *registers, MMU
     font = TTF_OpenFont("fonts/VT323-Regular.ttf", 18);
 }
 
+std::string to_hex_string( const unsigned int i ) {
+    std::stringstream s;
+    s << "0x" <<  std::setfill('0') << std::setw(2) << std::uppercase << std::hex << i;
+    return s.str();
+}
 
 void Renderer::render(){
     this->check_framerate();
@@ -125,7 +122,19 @@ void Renderer::draw_status(){
     draw_text(viewport_width + 50, 60, "SP: " + std::to_string(+registers->sp));
     draw_text(viewport_width + 50, 80, "PC: " + std::to_string(+registers->pc));
 
-    draw_text(viewport_width + 50, 100, "Ticks: " + std::to_string(+memory->clock.t));
+    draw_text(viewport_width + 30, 100, "Ticks: " + std::to_string(+mmu->clock.t));
+
+    draw_text(viewport_width + 30, 120, "IME: " + std::to_string(+interrupts->is_master_enabled()));
+    draw_text(viewport_width + 100, 120, "HALT: " + std::to_string(+mmu->is_halted));
+
+
+    draw_text(viewport_width + 170, 0,      "IE:   " + to_hex_string(mmu->read_byte(0xFFFF)) + " (" + std::bitset<8>(mmu->read_byte(0xFFFF)).to_string() + ")");
+    draw_text(viewport_width + 170, 20,     "IF:   " + to_hex_string(mmu->read_byte(0xFF0F)) + " (" + std::bitset<8>(mmu->read_byte(0xFF0F)).to_string() + ")");
+    draw_text(viewport_width + 170, 40,     "LCDC: " + to_hex_string(mmu->read_byte(0xFF40)) + " (" + std::bitset<8>(mmu->read_byte(0xFF40)).to_string() + ")");
+    draw_text(viewport_width + 170, 60,     "DIV:  " + to_hex_string(mmu->read_byte(0xFF04)) + " (" + std::bitset<8>(mmu->read_byte(0xFF04)).to_string() + ")");
+    draw_text(viewport_width + 170, 80,     "TIMA: " + to_hex_string(mmu->read_byte(0xFF05)) + " (" + std::bitset<8>(mmu->read_byte(0xFF05)).to_string() + ")");
+    draw_text(viewport_width + 170, 100,    "TMA:  " + to_hex_string(mmu->read_byte(0xFF06)) + " (" + std::bitset<8>(mmu->read_byte(0xFF06)).to_string() + ")");
+    draw_text(viewport_width + 170, 120,    "TAC:  " + to_hex_string(mmu->read_byte(0xFF07)) + " (" + std::bitset<8>(mmu->read_byte(0xFF07)).to_string() + ")");
     
     // Draw paused message
     if(this->status->isPaused){
@@ -149,16 +158,16 @@ void Renderer::draw_background_overflow(){
     int overflowX = std::max(*ppu->scrollX + viewport_width - background_width, 0);
     int overflowY = std::max(*ppu->scrollY + viewport_height - background_height, 0);
 
-    this->draw_rectangle(*ppu->scrollX,  viewport_height + *ppu->scrollY, viewport_width - overflowX, viewport_height, {255,255,255,100});
+    this->draw_rectangle(background_rect.x + *ppu->scrollX,  viewport_height + *ppu->scrollY, viewport_width - overflowX, viewport_height, {255,255,255,100});
 
     if(overflowX)
-        this->draw_rectangle(0,  viewport_height + *ppu->scrollY, overflowX, viewport_height, rgb{0,0,255,100});
+        this->draw_rectangle(background_rect.x,  viewport_height + *ppu->scrollY, overflowX, viewport_height, {255,255,255,100});
 
     if(overflowY)
-        this->draw_rectangle(*ppu->scrollX,  viewport_height, viewport_width - overflowX, overflowY, rgb{0,255,0,100});
+        this->draw_rectangle(background_rect.x + *ppu->scrollX,  viewport_height, viewport_width - overflowX, overflowY, {255,255,255,100});
 
     if(overflowX && overflowY)
-        this->draw_rectangle(0,  viewport_height, overflowX, overflowY, rgb{255,0,0,100});
+        this->draw_rectangle(background_rect.x,  viewport_height, overflowX, overflowY, {255,255,255,100});
 }
 
 void Renderer::draw_viewport(){
@@ -195,7 +204,7 @@ void Renderer::draw_tilemap(){
 
 void Renderer::draw_spritemap(){
     for(int i = 0; i < 40; i++) {
-        auto sprite = memory->sprites[i];
+        auto sprite = mmu->sprites[i];
         for(int x = 0; x < 8; x++) {
             for(int y = 0; y < 8; y++) {
                 uint8_t pixel = mmu->tiles[sprite.tile][y][x];
@@ -217,7 +226,7 @@ void Renderer::draw_background(){
     int sp = 0;
     // for(unsigned short i = 0x9C00; i <= 0x9FFF; i++) {
     for(unsigned short i = 0x9800; i <= 0x9bff; i++) {
-        int tile = memory->read_byte(i);
+        int tile = mmu->read_byte(i);
         if(!this->ppu->control->bgWindowDataSelect && tile < 128)
             tile += 256;
 
@@ -227,7 +236,7 @@ void Renderer::draw_background(){
         }
         for(int y = 0; y < 8; y++) {
             for(int x = 0; x < 8; x++) {
-                unsigned char color = memory->tiles[tile][y][x];
+                unsigned char color = mmu->tiles[tile][y][x];
                 int xi = (sp % 32) * 8 + x;
                 int yi = (sp / 32) * 8 + y;
                 int offset = 4 * ( yi * background_width + xi);
@@ -245,7 +254,7 @@ void Renderer::draw_background(){
         // exit(1);
         sp=0;
         for(unsigned short i = 0x9C00; i <= 0x9FFF; i++) {
-            int tile = memory->read_byte(i);
+            int tile = mmu->read_byte(i);
             if(!this->ppu->control->bgWindowDataSelect && tile < 128)
                 tile += 256;
 
@@ -255,9 +264,9 @@ void Renderer::draw_background(){
             }
             for(int y = 0; y < 8; y++) {
                 for(int x = 0; x < 8; x++) {
-                    unsigned char color = memory->tiles[tile][y][x];
-                    int xi = memory->read_byte(0xFF4B) - 7 + (sp % 32) * 8 + x;
-                    int yi = memory->read_byte(0xFF4A) + (sp / 32) * 8 + y;
+                    unsigned char color = mmu->tiles[tile][y][x];
+                    int xi = mmu->read_byte(0xFF4B) - 7 + (sp % 32) * 8 + x;
+                    int yi = mmu->read_byte(0xFF4A) + (sp / 32) * 8 + y;
                     int offset = 4 * ( yi * background_width + xi);
 
                     if(offset >= background_pixels.size())
@@ -273,15 +282,15 @@ void Renderer::draw_background(){
         }
     }
 
-    for(auto sprite : memory->sprites) {
+    for(auto sprite : mmu->sprites) {
         for(int x = 0; x < 8; x++) {
             for(int y = 0; y < 8; y++) {
 
                 uint8_t xF = sprite.options.xFlip ? 7 - x : x;
-                uint8_t color = memory->tiles[sprite.tile][y][xF];
+                uint8_t color = mmu->tiles[sprite.tile][y][xF];
                 if(color){
-                    int xi = (memory->read_byte(0xff43) + sprite.x + x) % 256;
-                    int yi = memory->read_byte(0xff42) + sprite.y + y;
+                    int xi = (mmu->read_byte(0xff43) + sprite.x + x) % 256;
+                    int yi = mmu->read_byte(0xff42) + sprite.y + y;
                     int offset = 4 * ( yi * background_width + xi);
 
                     if(offset >= background_pixels.size())

@@ -16,7 +16,7 @@ void GB::init(std::string rom, std::string bootrom, bool debug){
     joypad = new Joypad(&status, interrupts, &mmu);
     status.debug = debug;
 
-    renderer = new Renderer(&status, cpu, ppu, &registers, &mmu);
+    renderer = new Renderer(&status, cpu, ppu, &registers, interrupts, &mmu);
 
     if(!bootrom.empty())
         mmu.load_boot_rom(bootrom);

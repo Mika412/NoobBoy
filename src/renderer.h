@@ -2,6 +2,7 @@
 #include "ppu.h"
 #include "cpu.h"
 #include "status.h"
+#include "interrupt.h"
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
@@ -11,6 +12,13 @@
 #include <vector>
 #include <chrono>
 #include <thread>
+#include <iostream>
+#include <vector>
+#include <unistd.h>
+#include <stdlib.h>
+#include <string>
+#include <sstream>
+#include <iomanip>
 
 class Renderer{
     private:
@@ -26,7 +34,7 @@ class Renderer{
         CPU *cpu;
         PPU *ppu;
         Registers *registers;
-        MMU *memory;
+        Interrupts *interrupts;
         MMU *mmu;
         Status *status;
 
@@ -50,19 +58,19 @@ class Renderer{
         int background_width = 256;
         int background_height = 256;
         std::vector<unsigned char> background_pixels;
-        SDL_Rect background_rect = {0, viewport_height, background_width, background_height};
+        SDL_Rect background_rect = {tiles_width + sprites_width, viewport_height, background_width, background_height};
 
         // Tilemap
         int tilemap_width = 128;
         int tilemap_height = 256;
         std::vector<unsigned char> tilemap_pixels;
-        SDL_Rect tilemap_rect = {background_width, viewport_height, tilemap_width, tilemap_height};
+        SDL_Rect tilemap_rect = {0, viewport_height, tilemap_width, tilemap_height};
 
         // Spritemap
         int spritemap_width = 128;
         int spritemap_height = 256;
         std::vector<unsigned char> spritemap_pixels;
-        SDL_Rect spritemap_rect = {background_width + tilemap_width, 0, sprites_width, sprites_height};
+        SDL_Rect spritemap_rect = {tiles_width, viewport_height, sprites_width, sprites_height};
 
         int debug_texture_height = viewport_height + background_height;
         int debug_texture_width = background_width + tilemap_width + spritemap_width;
@@ -90,6 +98,6 @@ class Renderer{
         void check_framerate();
 
     public:
-        Renderer(Status *status, CPU *cpu, PPU *ppu, Registers *registers, MMU *memory);
+        Renderer(Status *status, CPU *cpu, PPU *ppu, Registers *registers, Interrupts *interrupts, MMU *mmu);
         void render();
 };

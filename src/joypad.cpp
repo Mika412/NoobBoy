@@ -42,7 +42,6 @@ void Joypad::check(int last_instr_cycles){
                 case SDLK_x:      this->key_release(JOYPAD_B); break;
                 case SDLK_SPACE:  this->key_release(JOYPAD_START); break;
                 case SDLK_RETURN: this->key_release(JOYPAD_SELECT); break;
-                case SDLK_s:  if(status->debug) status->doStep = true; break;
                 case SDLK_p:  if(status->debug) status->isPaused = !this->status->isPaused; break;
             }
             break;
@@ -59,6 +58,7 @@ void Joypad::check(int last_instr_cycles){
                 case SDLK_ESCAPE: this->status->isRunning = false; break;
                 case SDLK_1:      this->status->colorMode = RETRO; break;
                 case SDLK_2:      this->status->colorMode = NORMAL; break;
+                case SDLK_s:  if(status->debug) status->doStep = true; break;
             }
             break;
         case SDL_QUIT:
