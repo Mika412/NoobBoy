@@ -235,7 +235,15 @@ void MMU::write_byte(uint16_t address, uint8_t value) {
 
         //	choose ROM bank nr (lower 5 bits, 0-4)
         if (address >= 0x2000 && address < 0x4000) {
+            if((value & 0x1f) > 64){
+                std::cout << "YO: " << std::dec << +(value & 0x1f) << std::endl;
+                return;
+            }
             mbcRomNumber = value & 0x1f;
+            // if((value & 0x1f) > 1 && (value & 0x1f) != 12){
+            //     std::cout << "HHE: " << std::dec << +(value & 0x1f) << std::endl;
+            //     exit(1);
+            // }
             if (value == 0x00 || value == 0x20 || value == 0x40 || value == 0x60)
                 mbcRomNumber = (value & 0x1f) + 1;
 
@@ -243,16 +251,15 @@ void MMU::write_byte(uint16_t address, uint8_t value) {
         }
         // //	choose RAM bank nr OR ROM bank top 2 bits (5-6)
         else if (address < 0x6000) {
-            //	mode: ROM bank 2 bits
-            if (mbcRomMode == 0)
-                mbcRomNumber |= (value & 3) << 5;
-            //	mode: RAM bank selection
-            else
+            // //	mode: ROM bank 2 bits
+            // if (mbcRomMode == 0)
+            //     mbcRomNumber |= (value & 3) << 5;
+            // //	mode: RAM bank selection
                 mbcRamNumber = value & 3;
         }
-        else if (address >= 0x6000 && address < 0x8000) {
-            mbcRomMode = value > 0;
-        }
+        // else if (address >= 0x6000 && address < 0x8000) {
+        //     mbcRomMode = value > 0;
+        // }
         else {
             memory[address] = value;
         }
