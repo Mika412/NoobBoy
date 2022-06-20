@@ -5,6 +5,11 @@
 
 #include "Registers.h"
 
+struct rgb {
+    unsigned char r, g, b, a;
+};
+typedef struct rgb COLOUR;
+
 class MMU {
     private:
 
@@ -63,6 +68,38 @@ class MMU {
             } options;
         };
 
+        const COLOUR palette_colours[4] = {
+                { 255, 255, 255, 255},
+                // { 0, 192, 192, 192 },
+                // { 0, 96, 96, 96 },
+                // { 0, 255, 255, 255 },
+                // { 0, 255, 255, 255 },
+                { 192,192,192,255},
+                { 96,96,96, 255 },
+                { 0, 0, 0, 255 },
+        };
+
+        COLOUR palette_BGP[4] = {
+                { 255, 255, 255, 255},
+                { 0, 0, 0, 255 },
+                { 0, 0, 0, 255 },
+                { 0, 0, 0, 255 },
+        };
+
+        COLOUR palette_OBP0[4] = {
+                { 0, 0, 0, 255 },
+                { 0, 0, 0, 255 },
+                { 0, 0, 0, 255 },
+                { 0, 0, 0, 255 },
+        };
+
+        COLOUR palette_OBP1[4] = {
+                { 0, 0, 0, 255 },
+                { 0, 0, 0, 255 },
+                { 0, 0, 0, 255 },
+                { 0, 0, 0, 255 },
+        };
+
         uint8_t tiles[384][8][8] = {0}; 
         sprite sprites[40] = {sprite()}; 
         uint8_t sprites_y_cord[40] = {0}; 
@@ -87,4 +124,5 @@ class MMU {
 
         void updateTile(unsigned short address, unsigned char value);
         void updateSprite(unsigned short address, unsigned char value);
+        void updateColourPalette(COLOUR palette, unsigned char value);
 };

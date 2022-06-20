@@ -114,6 +114,12 @@ void MMU::updateSprite(unsigned short laddress, uint8_t value) {
     // }
     }
 }
+void updateColourPalette(COLOUR palette[], uint8_t value){
+    palette->a = value & 0x3;
+    palette->r = (value >> 2) & 0x3;
+    palette->g = (value >> 4) & 0x3;
+    palette->b = (value >> 6) & 0x3;
+}
 
 uint8_t MMU::read_byte(uint16_t address) {
     if(address == 0xff00) {
@@ -183,6 +189,27 @@ void MMU::write_byte(uint16_t address, uint8_t value) {
         timer.tac = value;
         // timer.tac = value & 7;
     }
+    
+    // TODO: CLEAN THIS UP
+    // Update colour palette
+    else if(address == 0xff47){
+        palette_BGP[0] = palette_colours[value & 0x3];
+        palette_BGP[1] = palette_colours[(value >> 2) & 0x3];
+        palette_BGP[2] = palette_colours[(value >> 4) & 0x3];
+        palette_BGP[3] = palette_colours[(value >> 6) & 0x3];
+    }               
+    else if(address == 0xff48){
+        palette_OBP0[0] = palette_colours[value & 0x3];
+        palette_OBP0[1] = palette_colours[(value >> 2) & 0x3];
+        palette_OBP0[2] = palette_colours[(value >> 4) & 0x3];
+        palette_OBP0[3] = palette_colours[(value >> 6) & 0x3];
+    }               
+    else if(address == 0xff49){
+        palette_OBP1[0] = palette_colours[value & 0x3];
+        palette_OBP1[1] = palette_colours[(value >> 2) & 0x3];
+        palette_OBP1[2] = palette_colours[(value >> 4) & 0x3];
+        palette_OBP1[3] = palette_colours[(value >> 6) & 0x3];
+    }               
     if(address == 0xff0f){
         memory[0xFF0F] = value;// & 0x1F;
         return;

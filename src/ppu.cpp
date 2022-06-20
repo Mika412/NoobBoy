@@ -144,7 +144,7 @@ void PPU::render_scan_line_background(bool* row_pixels){
             if(pixel >= 160) break;
 
             int colour = mmu->tiles[tile][y][x];
-            framebuffer[pixelOffset++] = palette[colour];
+            framebuffer[pixelOffset++] = mmu->palette_BGP[colour];
             if(colour > 0)
                 row_pixels[pixel] = true;
             pixel++;
@@ -181,7 +181,7 @@ void PPU::render_scan_line_window(){
 
         for(; x < 8; x++){
             int colour = mmu->tiles[tile][y][x];
-            framebuffer[pixelOffset++] = palette[colour];
+            framebuffer[pixelOffset++] = mmu->palette_BGP[colour];
         }
         x=0;
     }
@@ -207,12 +207,18 @@ void PPU::render_scan_line_sprites(bool* row_pixels){
                 if(x_wrap >= 0 && x_wrap < 160) {
                     // Flip horizontally
                     uint8_t xF = sprite.options.xFlip ? 7 - x : x;
-                    uint8_t colour = mmu->tiles[sprite.tile][y][xF];
-
-                    if(colour)
-                        if(!row_pixels[x_wrap] || !sprite.options.renderPriority)
-                            framebuffer[pixelOffset] = palette[colour];
-                    pixelOffset++;
+                        uint8_t colour_n = mmu->tiles[tile_id][y][xF];
+                        
+                        if(colour_n){
+                            COLOUR colour = mmu->palette_OBP0[colour_n];
+                            if(sprite.options.palleteNumber)
+                                colour = mmu->palette_OBP0[colour_n];
+                            if(!row_pixels[x_wrap] || !sprite.options.renderPriority){
+                                framebuffer[pixelOffset] = colour;
+                            }
+                        }
+                        pixelOffset++;
+                    }
                 }
             }
         }

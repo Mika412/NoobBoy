@@ -191,10 +191,10 @@ void Renderer::draw_tilemap(){
                 int offsetY = y + (int(i/16)) * 8;
                 int offset = 4 * (offsetY * tilemap_width + offsetX);
 
-                this->tilemap_pixels[ offset + 0 ] = palette[pixel].r;
-                this->tilemap_pixels[ offset + 1 ] = palette[pixel].g;
-                this->tilemap_pixels[ offset + 2 ] = palette[pixel].b;
-                this->tilemap_pixels[ offset + 3 ] = palette[pixel].a;
+                this->tilemap_pixels[ offset + 0 ] = mmu->palette_BGP[pixel].r;
+                this->tilemap_pixels[ offset + 1 ] = mmu->palette_BGP[pixel].g;
+                this->tilemap_pixels[ offset + 2 ] = mmu->palette_BGP[pixel].b;
+                this->tilemap_pixels[ offset + 3 ] = mmu->palette_BGP[pixel].a;
             }
         }
     }
@@ -211,10 +211,10 @@ void Renderer::draw_spritemap(){
                 int offsetX = ((i * 8 + x) % spritemap_width);
                 int offsetY = y +  (int(i/16)) * 8;
                 int offset = 4 * (offsetY * tilemap_width + offsetX);
-                this->spritemap_pixels[ offset + 0 ] = palette[pixel].r;
-                this->spritemap_pixels[ offset + 1 ] = palette[pixel].g;
-                this->spritemap_pixels[ offset + 2 ] = palette[pixel].b;
-                this->spritemap_pixels[ offset + 3 ] = palette[pixel].a;
+                this->spritemap_pixels[ offset + 0 ] = mmu->palette_OBP0[pixel].r;
+                this->spritemap_pixels[ offset + 1 ] = mmu->palette_OBP0[pixel].g;
+                this->spritemap_pixels[ offset + 2 ] = mmu->palette_OBP0[pixel].b;
+                this->spritemap_pixels[ offset + 3 ] = mmu->palette_OBP0[pixel].a;
             }
         }
     }
@@ -240,10 +240,10 @@ void Renderer::draw_background(){
                 int xi = (sp % 32) * 8 + x;
                 int yi = (sp / 32) * 8 + y;
                 int offset = 4 * ( yi * background_width + xi);
-                background_pixels[offset + 0] = palette[color].r;
-                background_pixels[offset + 1] = palette[color].g;
-                background_pixels[offset + 2] = palette[color].b;
-                background_pixels[offset + 3] = palette[color].a;
+                background_pixels[offset + 0] = mmu->palette_BGP[color].r;
+                background_pixels[offset + 1] = mmu->palette_BGP[color].g;
+                background_pixels[offset + 2] = mmu->palette_BGP[color].b;
+                background_pixels[offset + 3] = mmu->palette_BGP[color].a;
             }
         }
         sp++;
@@ -272,10 +272,10 @@ void Renderer::draw_background(){
                     if(offset >= background_pixels.size())
                         continue;
 
-                    background_pixels[offset + 0] = palette[color].r;
-                    background_pixels[offset + 1] = palette[color].g;
-                    background_pixels[offset + 2] = palette[color].b;
-                    background_pixels[offset + 3] = palette[color].a;
+                    background_pixels[offset + 0] = mmu->palette_BGP[color].r;
+                    background_pixels[offset + 1] = mmu->palette_BGP[color].g;
+                    background_pixels[offset + 2] = mmu->palette_BGP[color].b;
+                    background_pixels[offset + 3] = mmu->palette_BGP[color].a;
                 }
             }
             sp++;
@@ -296,10 +296,14 @@ void Renderer::draw_background(){
                     if(offset >= background_pixels.size())
                         continue;
 
-                    background_pixels[offset + 0] = palette[color].r;
-                    background_pixels[offset + 1] = palette[color].g;
-                    background_pixels[offset + 2] = palette[color].b;
-                    background_pixels[offset + 3] = palette[color].a;
+                        COLOUR colour = mmu->palette_OBP0[colour_n];
+                        if(sprite.options.palleteNumber)
+                            colour = mmu->palette_OBP0[colour_n];
+                        background_pixels[offset + 0] = colour.r;
+                        background_pixels[offset + 1] = colour.g;
+                        background_pixels[offset + 2] = colour.b;
+                        background_pixels[offset + 3] = colour.a;
+                    }
                 }
             }
         }
