@@ -193,20 +193,24 @@ void PPU::render_scan_line_sprites(bool* row_pixels){
         return;
 
     for(auto sprite : mmu->sprites){
-        if(sprite.y <= *scanline && (sprite.y + 8) > *scanline) {
-            uint8_t y = *scanline;
-            if(sprite.y > 0)
-                y %= sprite.y;
+        for(int tile_num = 0; tile_num < 1 + int(control->spriteSize); tile_num++){
+            int tile_id = sprite.tile + tile_num;
+            int sprite_pos_y = sprite.y + 8 * tile_num;
+            if(sprite_pos_y <= *scanline && (sprite_pos_y + 8) > *scanline) {
+                // Iterate over both tiles
+                uint8_t y = *scanline;
+                if(sprite.y > 0)
+                    y %= sprite_pos_y;
 
-            // Flip vertically
-            if(sprite.options.yFlip) y = 7 - y;
+                // Flip vertically
+                if(sprite.options.yFlip) y = 7 - y;
 
-            for(int x = 0; x < 8; x++){
-                int x_wrap = (sprite.x + x) % 256;
-                int pixelOffset = *this->scanline * 160 + x_wrap;
-                if(x_wrap >= 0 && x_wrap < 160) {
-                    // Flip horizontally
-                    uint8_t xF = sprite.options.xFlip ? 7 - x : x;
+                for(int x = 0; x < 8; x++){
+                    int x_wrap = (sprite.x + x) % 256;
+                    int pixelOffset = *this->scanline * 160 + x_wrap;
+                    if(x_wrap >= 0 && x_wrap < 160) {
+                        // Flip horizontally
+                        uint8_t xF = sprite.options.xFlip ? 7 - x : x;
                         uint8_t colour_n = mmu->tiles[tile_id][y][xF];
                         
                         if(colour_n){

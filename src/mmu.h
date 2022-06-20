@@ -102,8 +102,6 @@ class MMU {
 
         uint8_t tiles[384][8][8] = {0}; 
         sprite sprites[40] = {sprite()}; 
-        uint8_t sprites_y_cord[40] = {0}; 
-        uint8_t sprites_x_cord[40] = {0}; 
 
         bool updatedTiles = false;
         

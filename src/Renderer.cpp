@@ -203,13 +203,12 @@ void Renderer::draw_tilemap(){
 }
 
 void Renderer::draw_spritemap(){
-    for(int i = 0; i < 40; i++) {
-        auto sprite = mmu->sprites[i];
+    auto draw_sprite = [this](int tile_id, int off_x, int off_y) {
         for(int x = 0; x < 8; x++) {
             for(int y = 0; y < 8; y++) {
-                uint8_t pixel = mmu->tiles[sprite.tile][y][x];
-                int offsetX = ((i * 8 + x) % spritemap_width);
-                int offsetY = y +  (int(i/16)) * 8;
+                uint8_t pixel = mmu->tiles[tile_id][y][x];
+                int offsetX = ((off_x + x) % spritemap_width);
+                int offsetY = y + off_y;
                 int offset = 4 * (offsetY * tilemap_width + offsetX);
                 this->spritemap_pixels[ offset + 0 ] = mmu->palette_OBP0[pixel].r;
                 this->spritemap_pixels[ offset + 1 ] = mmu->palette_OBP0[pixel].g;
@@ -217,6 +216,16 @@ void Renderer::draw_spritemap(){
                 this->spritemap_pixels[ offset + 3 ] = mmu->palette_OBP0[pixel].a;
             }
         }
+        return;
+    };
+    for(int i = 0; i < 40; i++) {
+        auto sprite = mmu->sprites[i];
+        // draw_sprite(sprite.tile + 1, i * 8, int(i/16) * ppu->);
+        // if(mmu->sprite_size == 16){
+        //     draw_sprite(sprite.tile + 1, i * 8, 8 + int(i/16) * mmu->sprite_size);
+        // }
+        // for(int tile_n = 0; i < 2 + 1 * int(mmu->sprite_size == 16); tile_n++){
+        // }
     }
 
     SDL_UpdateTexture(spritemap_texture, NULL, spritemap_pixels.data(), this->spritemap_width * 4);
@@ -283,18 +292,19 @@ void Renderer::draw_background(){
     }
 
     for(auto sprite : mmu->sprites) {
-        for(int x = 0; x < 8; x++) {
-            for(int y = 0; y < 8; y++) {
+        // Iterate over both tiles
+        for(int tile_num = 0; tile_num < 1 + int(ppu->control->spriteSize); tile_num++){
+            for(int x = 0; x < 8; x++) {
+                for(int y = 0; y < 8; y++) {
+                    uint8_t xF = sprite.options.xFlip ? 7 - x : x;
+                    uint8_t colour_n = mmu->tiles[sprite.tile + tile_num][y][xF];
+                    if(colour_n){
+                        int xi = (mmu->read_byte(0xff43) + sprite.x + x) % 256;
+                        int yi = mmu->read_byte(0xff42) + sprite.y + y + tile_num * 8;
+                        int offset = 4 * ( yi * background_width + xi);
 
-                uint8_t xF = sprite.options.xFlip ? 7 - x : x;
-                uint8_t color = mmu->tiles[sprite.tile][y][xF];
-                if(color){
-                    int xi = (mmu->read_byte(0xff43) + sprite.x + x) % 256;
-                    int yi = mmu->read_byte(0xff42) + sprite.y + y;
-                    int offset = 4 * ( yi * background_width + xi);
-
-                    if(offset >= background_pixels.size())
-                        continue;
+                        if(offset >= background_pixels.size())
+                            continue;
 
                         COLOUR colour = mmu->palette_OBP0[colour_n];
                         if(sprite.options.palleteNumber)
