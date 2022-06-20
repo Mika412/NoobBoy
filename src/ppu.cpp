@@ -120,7 +120,7 @@ void PPU::render_scan_line_background(bool* row_pixels){
     if(this->control->bgDisplaySelect)
         address += 0x400;
 
-    address += (*this->scrollY + *this->scanline) / 8 * 32;
+    address += ((*this->scrollY + *this->scanline) / 8 * 32) % (32*32);
 
     uint16_t start_row_address = address;
     uint16_t end_row_address = address + 32;
