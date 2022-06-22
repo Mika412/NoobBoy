@@ -1,8 +1,8 @@
 #pragma once
 
 enum ColorModes { 
-    NORMAL,
-    RETRO
+    NORMAL = 0,
+    RETRO = 1
 };
 
 struct Status {
@@ -11,5 +11,5 @@ struct Status {
     bool isRunning = true;
     bool isPaused = false;
     bool doStep = false;
-    ColorModes colorMode = RETRO;
+    int colorMode = NORMAL;
 };

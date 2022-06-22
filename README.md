@@ -43,8 +43,7 @@ arguments:
 
 | Action | Key |
 | --- | --- |
-| Normal color palette | <kbd>1</kbd> |
-| Retro color palette | <kbd>2</kbd> |
+| Toggle color palette | <kbd>c</kbd> |
 | Pause/Resume | <kbd>p</kbd> |
 | Step | <kbd>s</kbd> |
 | Exit | <kbd>Escape</kbd> |

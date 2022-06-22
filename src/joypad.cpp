@@ -34,30 +34,29 @@ void Joypad::check(int last_instr_cycles){
     switch (event.type) {
         case SDL_KEYUP:
             switch(event.key.keysym.sym){
-                case SDLK_RIGHT:  this->key_release(JOYPAD_RIGHT); break;
-                case SDLK_LEFT:   this->key_release(JOYPAD_LEFT); break;
-                case SDLK_UP:     this->key_release(JOYPAD_UP); break;
-                case SDLK_DOWN:   this->key_release(JOYPAD_DOWN); break;
-                case SDLK_z:      this->key_release(JOYPAD_A); break;
-                case SDLK_x:      this->key_release(JOYPAD_B); break;
-                case SDLK_SPACE:  this->key_release(JOYPAD_START); break;
-                case SDLK_RETURN: this->key_release(JOYPAD_SELECT); break;
-                case SDLK_p:  if(status->debug) status->isPaused = !this->status->isPaused; break;
+                case SDLK_RIGHT:  key_release(JOYPAD_RIGHT); break;
+                case SDLK_LEFT:   key_release(JOYPAD_LEFT); break;
+                case SDLK_UP:     key_release(JOYPAD_UP); break;
+                case SDLK_DOWN:   key_release(JOYPAD_DOWN); break;
+                case SDLK_z:      key_release(JOYPAD_A); break;
+                case SDLK_x:      key_release(JOYPAD_B); break;
+                case SDLK_SPACE:  key_release(JOYPAD_START); break;
+                case SDLK_RETURN: key_release(JOYPAD_SELECT); break;
+                case SDLK_p:  if(status->debug) status->isPaused = !status->isPaused; break;
             }
             break;
         case SDL_KEYDOWN:
             switch(event.key.keysym.sym){
-                case SDLK_RIGHT:  this->key_press(JOYPAD_RIGHT); break;
-                case SDLK_LEFT:   this->key_press(JOYPAD_LEFT); break;
-                case SDLK_UP:     this->key_press(JOYPAD_UP); break;
-                case SDLK_DOWN:   this->key_press(JOYPAD_DOWN); break;
-                case SDLK_z:      this->key_press(JOYPAD_A); break;
-                case SDLK_x:      this->key_press(JOYPAD_B); break;
-                case SDLK_SPACE:  this->key_press(JOYPAD_START); break;
-                case SDLK_RETURN: this->key_press(JOYPAD_SELECT); break;
-                case SDLK_ESCAPE: this->status->isRunning = false; break;
-                case SDLK_1:      this->status->colorMode = RETRO; break;
-                case SDLK_2:      this->status->colorMode = NORMAL; break;
+                case SDLK_RIGHT:  key_press(JOYPAD_RIGHT); break;
+                case SDLK_LEFT:   key_press(JOYPAD_LEFT); break;
+                case SDLK_UP:     key_press(JOYPAD_UP); break;
+                case SDLK_DOWN:   key_press(JOYPAD_DOWN); break;
+                case SDLK_z:      key_press(JOYPAD_A); break;
+                case SDLK_x:      key_press(JOYPAD_B); break;
+                case SDLK_SPACE:  key_press(JOYPAD_START); break;
+                case SDLK_RETURN: key_press(JOYPAD_SELECT); break;
+                case SDLK_ESCAPE: status->isRunning = false; break;
+                case SDLK_c:      status->colorMode = (1 + status->colorMode) % 2; break;
                 case SDLK_s:  if(status->debug) status->doStep = true; break;
             }
             break;
