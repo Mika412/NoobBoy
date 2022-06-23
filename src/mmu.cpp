@@ -1,9 +1,6 @@
-#include <cstdint>
-#include <fstream>
-#include <cstring>
-#include <iostream>
 #include "mmu.h"
 #include "keys.h"
+#include "ppu.h"
 
 using namespace std;
 
@@ -46,79 +43,41 @@ void MMU::load_cartrige_rom(string location) {
     // exit(1);
 }
 
-void MMU::updateTile(unsigned short laddress, unsigned char value) {
+void MMU::updateTile(uint16_t laddress, uint8_t value) {
     uint16_t address = laddress & 0xFFFE;
-    // address &= 0x1ffe;
     
     uint16_t tile = (address >> 4) & 511;
     uint16_t y = (address >> 1) & 7;
-    
+
     unsigned char bitIndex;
     for(uint8_t x = 0; x < 8; x++) {
-            bitIndex = 1 << (7 - x);
-        
-        //((unsigned char (*)[8][8])tiles)[tile][y][x] = ((vram[address] & bitIndex) ? 1 : 0) + ((vram[address + 1] & bitIndex) ? 2 : 0);
-        // tiles[tile][y][x] = ((vram[address] & bitIndex) ? 1 : 0) + ((vram[address + 1] & bitIndex) ? 2 : 0);
-        tiles[tile][y][x] = ((memory[address] & bitIndex) ? 1 : 0) + ((memory[address + 1] & bitIndex) ? 2 : 0);
-    }
+        bitIndex = 1 << (7 - x);
 
-    renderFlag.tiles = true;
+        tiles[tile].pixels[y][x] = ((memory[address] & bitIndex) ? 1 : 0) + ((memory[address + 1] & bitIndex) ? 2 : 0);
+    }
 }
 
-void MMU::updateSprite(unsigned short laddress, uint8_t value) {
-    renderFlag.background = true;
-    // if((laddress & 3) != 2){
-    //     return;
-    // }
+void MMU::updateSprite(uint16_t laddress, uint8_t value) {
     uint16_t address = laddress - 0xFE00;
-    // uint16_t address = laddress & 0xFFFE;
-    unsigned short tile = (address >> 2);
-    sprite *spr = &sprites[tile];
-
+    Sprite *sprite = &sprites[address >> 2];
+    sprite->ready = false;
     switch(address & 3){
         case 0:
-            spr->y = value - 16;
+            sprite->y = value - 16;
             break;
         case 1:
-            spr->x = value - 8;
+            sprite->x = value - 8;
             break;
         case 2:
-            spr->tile = value;
+            sprite->tile = value;
             break;
         case 3:
-            // TODO: Rewrite this as a struct cast
-            // struct spriteOptions *sprs = (spriteOptions *)value;
-            // spr->options = value;
-            spr->options.gbcPalleteNumber1  = value >> 0;
-            spr->options.gbcPalleteNumber2  = value >> 1;
-            spr->options.gbcPalleteNumber3  = value >> 2;
-            spr->options.gbcVRAMBank        = value >> 3;
-            spr->options.palleteNumber      = value >> 4;
-            spr->options.xFlip              = value >> 5;
-            spr->options.yFlip              = value >> 6;
-            spr->options.renderPriority     = value >> 7;
-            // spr->options = (struct sprite.options *)value;
+            sprite->options.value = value;
+            
+            sprite->colourPalette = (sprite->options.paletteNumber) ? palette_OBP1 : palette_OBP0;
+            sprite->ready = true;
             break;
-    //         // address &= 0x1ffe;
-            
-    //         unsigned short y = (address >> 1) & 7;
-            
-    //         unsigned char bitIndex;
-    //         for(unsigned char x = 0; x < 8; x++) {
-    //                 bitIndex = 1 << (7 - x);
-                
-    //             //((unsigned char (*)[8][8])tiles)[tile][y][x] = ((vram[address] & bitIndex) ? 1 : 0) + ((vram[address + 1] & bitIndex) ? 2 : 0);
-    //             // tiles[tile][y][x] = ((vram[address] & bitIndex) ? 1 : 0) + ((vram[address + 1] & bitIndex) ? 2 : 0);
-    //             sprites[tile][y][x] = ((memory[address] & bitIndex) ? 1 : 0) + ((memory[address + 1] & bitIndex) ? 2 : 0);
-    //         }
-    // }
     }
-}
-void updateColourPalette(COLOUR palette[], uint8_t value){
-    palette->a = value & 0x3;
-    palette->r = (value >> 2) & 0x3;
-    palette->g = (value >> 4) & 0x3;
-    palette->b = (value >> 6) & 0x3;
 }
 
 uint8_t MMU::read_byte(uint16_t address) {
@@ -274,8 +233,6 @@ void MMU::write_byte(uint16_t address, uint8_t value) {
     if(address >= 0x8000 && address <= 0x9fff) {
         if(address <= 0x97ff){
             updateTile(address, value);
-        }else{
-            renderFlag.background = true;
         }
     }
 

@@ -62,7 +62,6 @@ void PPU::step(){
                     //Restart scanning modes
                     *this->scanline = 0;
                     mode = 2;
-                    mmu->renderFlag.viewport = true;
                 }
                 mmu->write_byte(0xff41, mmu->read_byte(0xff41) | 1);
                 if(*this->scanline == mmu->read_byte(0xff45) && *this->scanline > 0){
@@ -143,7 +142,7 @@ void PPU::render_scan_line_background(bool* row_pixels){
         for(; x < 8; x++){
             if(pixel >= 160) break;
 
-            int colour = mmu->tiles[tile][y][x];
+            int colour = mmu->tiles[tile].pixels[y][x];
             framebuffer[pixelOffset++] = mmu->palette_BGP[colour];
             if(colour > 0)
                 row_pixels[pixel] = true;
@@ -172,7 +171,6 @@ void PPU::render_scan_line_window(){
 
     int pixelOffset = *this->scanline * 160;
     pixelOffset += mmu->read_byte(0xFF4B) - 7;
-
     for(uint16_t tile_address = address; tile_address < address + 20; tile_address++){
         int tile = this->mmu->read_byte(tile_address);
 
@@ -180,51 +178,60 @@ void PPU::render_scan_line_window(){
             tile += 256;
 
         for(; x < 8; x++){
-            int colour = mmu->tiles[tile][y][x];
+            if(pixelOffset > sizeof(framebuffer)) continue;
+            int colour = mmu->tiles[tile].pixels[y][x];
             framebuffer[pixelOffset++] = mmu->palette_BGP[colour];
         }
         x=0;
     }
 
 }
+void PPU::render_sprite_scanline(bool* row_pixels, MMU::Sprite *sprite, uint8_t sprite_pos_y, uint8_t tile_id){
+    int scy_scanline = (*scanline + mmu->read_byte(0xFF42)) % 256;
+
+    // TODO: This loop is not necessary. Rewrite this
+    for(int y = 0; y < 8; y++) {
+        int sprite_y_offset = (mmu->read_byte(0xff42) + sprite_pos_y + y) % 256;
+
+        if(sprite_y_offset != scy_scanline) 
+            continue;
+
+        // Flip vertically
+        if(sprite->options.yFlip) y = 7 - y;
+
+        for(int x = 0; x < 8; x++){
+            int x_wrap = (sprite->x + x) % 256;
+            if(x_wrap < 0 || x_wrap >= 160)
+                continue;
+
+            int pixelOffset = *this->scanline * 160 + x_wrap;
+
+            // Flip horizontally
+            uint8_t xF = sprite->options.xFlip ? 7 - x : x;
+            uint8_t colour_n = mmu->tiles[tile_id].pixels[y][xF];
+            
+            // Black is transparent
+            if(!colour_n)
+                continue;
+
+            if(!row_pixels[x_wrap] || !sprite->options.renderPriority)
+                framebuffer[pixelOffset] = sprite->colourPalette[colour_n];
+        }
+        return;
+    }
+}
 
 void PPU::render_scan_line_sprites(bool* row_pixels){
     if(!this->control->spriteDisplayEnable) 
         return;
 
-    for(auto sprite : mmu->sprites){
-        for(int tile_num = 0; tile_num < 1 + int(control->spriteSize); tile_num++){
-            int tile_id = sprite.tile + tile_num;
-            int sprite_pos_y = sprite.y + 8 * tile_num;
-            if(sprite_pos_y <= *scanline && (sprite_pos_y + 8) > *scanline) {
-                // Iterate over both tiles
-                uint8_t y = *scanline;
-                if(sprite.y > 0)
-                    y %= sprite_pos_y;
+    for(MMU::Sprite sprite : mmu->sprites){
+        if(!sprite.ready)
+            continue;
 
-                // Flip vertically
-                if(sprite.options.yFlip) y = 7 - y;
+        this->render_sprite_scanline(row_pixels, &sprite, sprite.y, sprite.tile);
 
-                for(int x = 0; x < 8; x++){
-                    int x_wrap = (sprite.x + x) % 256;
-                    int pixelOffset = *this->scanline * 160 + x_wrap;
-                    if(x_wrap >= 0 && x_wrap < 160) {
-                        // Flip horizontally
-                        uint8_t xF = sprite.options.xFlip ? 7 - x : x;
-                        uint8_t colour_n = mmu->tiles[tile_id][y][xF];
-                        
-                        if(colour_n){
-                            COLOUR colour = mmu->palette_OBP0[colour_n];
-                            if(sprite.options.palleteNumber)
-                                colour = mmu->palette_OBP0[colour_n];
-                            if(!row_pixels[x_wrap] || !sprite.options.renderPriority){
-                                framebuffer[pixelOffset] = colour;
-                            }
-                        }
-                        pixelOffset++;
-                    }
-                }
-            }
-        }
+        if(control->spriteSize)
+            this->render_sprite_scanline(row_pixels, &sprite, sprite.y + 8, sprite.tile + 1);
     }
 }

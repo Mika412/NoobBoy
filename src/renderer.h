@@ -42,23 +42,11 @@ class Renderer{
         int status_width = 160;
         int status_height = 144;
 
-        int tiles_width = 128;
-        int tiles_height = 144;
-
-        int sprites_width = 128;
-        int sprites_height = 144;
-
         // Viewport 
         int viewport_width = 160;
         int viewport_height = 144;
         std::vector<unsigned char> viewport_pixels;
         SDL_Rect viewport_rect = {0,0,viewport_width,viewport_height};
-
-        // VRAM  
-        int background_width = 256;
-        int background_height = 256;
-        std::vector<unsigned char> background_pixels;
-        SDL_Rect background_rect = {tiles_width + sprites_width, viewport_height, background_width, background_height};
 
         // Tilemap
         int tilemap_width = 128;
@@ -67,13 +55,19 @@ class Renderer{
         SDL_Rect tilemap_rect = {0, viewport_height, tilemap_width, tilemap_height};
 
         // Spritemap
-        int spritemap_width = 128;
-        int spritemap_height = 256;
+        int spritemap_height = 64;
+        int spritemap_width = 40;
         std::vector<unsigned char> spritemap_pixels;
-        SDL_Rect spritemap_rect = {tiles_width, viewport_height, sprites_width, sprites_height};
+        SDL_Rect spritemap_rect = {tilemap_width, viewport_height, spritemap_width * 2, spritemap_height * 2};
+
+        // VRAM  
+        int background_width = 256;
+        int background_height = 256;
+        std::vector<unsigned char> background_pixels;
+        SDL_Rect background_rect = {tilemap_width + spritemap_width * 2, viewport_height, background_width, background_height};
 
         int debug_texture_height = viewport_height + background_height;
-        int debug_texture_width = background_width + tilemap_width + spritemap_width;
+        int debug_texture_width = background_width + tilemap_width + spritemap_width * 2;
 
         int window_height = viewport_height;
         int window_width = viewport_width;
@@ -90,7 +84,7 @@ class Renderer{
         void draw_spritemap();
         void draw_status();
         void draw_background_overflow();
-        void draw_rectangle(int x, int y, int width, int height, rgb color);
+        void draw_rectangle(int x, int y, int width, int height, Colour color);
 
         // Helper functions
         void draw_text(int x_pop, int y_pos, std::string text);
