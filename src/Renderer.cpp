@@ -111,31 +111,31 @@ void Renderer::draw_text(int x_pos, int y_pos, std::string text){
 }
 
 void Renderer::draw_status(){
-    draw_text(viewport_width + 30,  0, "A: " + std::to_string(+registers->a));
-    draw_text(viewport_width + 100, 0, "F: " + std::to_string(+registers->f));
+    draw_text(viewport_width + 10,  0, "A: " + std::to_string(+registers->a));
+    draw_text(viewport_width + 80, 0, "F: " + std::to_string(+registers->f));
 
-    draw_text(viewport_width + 30,  20, "B: " + std::to_string(+registers->b));
-    draw_text(viewport_width + 100, 20, "C: " + std::to_string(+registers->c));
+    draw_text(viewport_width + 10,  20, "B: " + std::to_string(+registers->b));
+    draw_text(viewport_width + 80, 20, "C: " + std::to_string(+registers->c));
 
     draw_text(viewport_width + 30,  40, "H: " + std::to_string(+registers->c));
-    draw_text(viewport_width + 100, 40, "L: " + std::to_string(+registers->l));
+    draw_text(viewport_width + 80, 40, "L: " + std::to_string(+registers->l));
 
-    draw_text(viewport_width + 50, 60, "SP: " + std::to_string(+registers->sp));
-    draw_text(viewport_width + 50, 80, "PC: " + std::to_string(+registers->pc));
+    draw_text(viewport_width + 30, 60, "SP: " + std::to_string(+registers->sp));
+    draw_text(viewport_width + 30, 80, "PC: " + std::to_string(+registers->pc));
 
-    draw_text(viewport_width + 30, 100, "Ticks: " + std::to_string(+mmu->clock.t));
+    draw_text(viewport_width + 10, 100, "Ticks: " + std::to_string(+mmu->clock.t));
 
-    draw_text(viewport_width + 30, 120, "IME: " + std::to_string(+interrupts->is_master_enabled()));
-    draw_text(viewport_width + 100, 120, "HALT: " + std::to_string(+mmu->is_halted));
+    draw_text(viewport_width + 10, 120, "IME: " + std::to_string(+interrupts->is_master_enabled()));
+    draw_text(viewport_width + 80, 120, "HALT: " + std::to_string(+mmu->is_halted));
 
 
-    draw_text(viewport_width + 170, 0,      "IE:   " + to_hex_string(mmu->read_byte(0xFFFF)) + " (" + std::bitset<8>(mmu->read_byte(0xFFFF)).to_string() + ")");
-    draw_text(viewport_width + 170, 20,     "IF:   " + to_hex_string(mmu->read_byte(0xFF0F)) + " (" + std::bitset<8>(mmu->read_byte(0xFF0F)).to_string() + ")");
-    draw_text(viewport_width + 170, 40,     "LCDC: " + to_hex_string(mmu->read_byte(0xFF40)) + " (" + std::bitset<8>(mmu->read_byte(0xFF40)).to_string() + ")");
-    draw_text(viewport_width + 170, 60,     "DIV:  " + to_hex_string(mmu->read_byte(0xFF04)) + " (" + std::bitset<8>(mmu->read_byte(0xFF04)).to_string() + ")");
-    draw_text(viewport_width + 170, 80,     "TIMA: " + to_hex_string(mmu->read_byte(0xFF05)) + " (" + std::bitset<8>(mmu->read_byte(0xFF05)).to_string() + ")");
-    draw_text(viewport_width + 170, 100,    "TMA:  " + to_hex_string(mmu->read_byte(0xFF06)) + " (" + std::bitset<8>(mmu->read_byte(0xFF06)).to_string() + ")");
-    draw_text(viewport_width + 170, 120,    "TAC:  " + to_hex_string(mmu->read_byte(0xFF07)) + " (" + std::bitset<8>(mmu->read_byte(0xFF07)).to_string() + ")");
+    draw_text(viewport_width + 150, 0,      "IE:   " + to_hex_string(mmu->read_byte(0xFFFF)) + " (" + std::bitset<8>(mmu->read_byte(0xFFFF)).to_string() + ")");
+    draw_text(viewport_width + 150, 20,     "IF:   " + to_hex_string(mmu->read_byte(0xFF0F)) + " (" + std::bitset<8>(mmu->read_byte(0xFF0F)).to_string() + ")");
+    draw_text(viewport_width + 150, 40,     "LCDC: " + to_hex_string(mmu->read_byte(0xFF40)) + " (" + std::bitset<8>(mmu->read_byte(0xFF40)).to_string() + ")");
+    draw_text(viewport_width + 150, 60,     "DIV:  " + to_hex_string(mmu->read_byte(0xFF04)) + " (" + std::bitset<8>(mmu->read_byte(0xFF04)).to_string() + ")");
+    draw_text(viewport_width + 150, 80,     "TIMA: " + to_hex_string(mmu->read_byte(0xFF05)) + " (" + std::bitset<8>(mmu->read_byte(0xFF05)).to_string() + ")");
+    draw_text(viewport_width + 150, 100,    "TMA:  " + to_hex_string(mmu->read_byte(0xFF06)) + " (" + std::bitset<8>(mmu->read_byte(0xFF06)).to_string() + ")");
+    draw_text(viewport_width + 150, 120,    "TAC:  " + to_hex_string(mmu->read_byte(0xFF07)) + " (" + std::bitset<8>(mmu->read_byte(0xFF07)).to_string() + ")");
     
     // Draw paused message
     if(this->status->isPaused){
