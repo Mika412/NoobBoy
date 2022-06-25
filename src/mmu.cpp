@@ -236,7 +236,7 @@ void MMU::write_byte(uint16_t address, uint8_t value) {
         }
     }
 
-    if(address >= 0xFE00 && address < 0xFE9F) {
+    if(address >= 0xFE00 && address <= 0xFE9F) {
         updateSprite(address, value);
     }
 

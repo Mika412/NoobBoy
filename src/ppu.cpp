@@ -186,52 +186,70 @@ void PPU::render_scan_line_window(){
     }
 
 }
-void PPU::render_sprite_scanline(bool* row_pixels, MMU::Sprite *sprite, uint8_t sprite_pos_y, uint8_t tile_id){
-    int scy_scanline = (*scanline + mmu->read_byte(0xFF42)) % 256;
 
-    // TODO: This loop is not necessary. Rewrite this
-    for(int y = 0; y < 8; y++) {
-        int sprite_y_offset = (mmu->read_byte(0xff42) + sprite_pos_y + y) % 256;
+void PPU::render_scan_line_sprites(bool* row_pixels){
+    int sprite_height = control->spriteSize ? 16 : 8;
 
-        if(sprite_y_offset != scy_scanline) 
+    bool visible_sprites[40];
+    int sprite_row_count = 0;
+
+    for (int i = 0; i < 40; i++) {
+        auto sprite = mmu->sprites[i];
+
+        if (!sprite.ready) {
+            visible_sprites[i] = false;
+            continue;
+        }
+
+        if ((sprite.y > *scanline) || ((sprite.y + sprite_height) <= *scanline)) {
+            visible_sprites[i] = false;
+            continue;
+        }
+        
+        visible_sprites[i] = sprite_row_count++ <= 10;
+    }
+
+    for (int i = 39; i >= 0; i--)
+    {
+        if (!visible_sprites[i])
+            continue;
+
+        auto sprite = mmu->sprites[i];
+
+        if ((sprite.x < -7) || (sprite.x >= 160))
             continue;
 
         // Flip vertically
-        if(sprite->options.yFlip) y = 7 - y;
+        int pixel_y = *scanline - sprite.y;
+        pixel_y = sprite.options.yFlip ? (7 + 8 * control->spriteSize) - pixel_y : pixel_y;
 
-        for(int x = 0; x < 8; x++){
-            int x_wrap = (sprite->x + x) % 256;
-            if(x_wrap < 0 || x_wrap >= 160)
+        for (int x = 0; x < 8; x++)
+        {
+            int tile_num = sprite.tile & (control->spriteSize ? 0xFE : 0xFF);
+            int colour = 0;
+
+            int x_temp = sprite.x + x;
+            if(x_temp < 0 || x_temp >= 160)
                 continue;
 
-            int pixelOffset = *this->scanline * 160 + x_wrap;
+            int pixelOffset = *this->scanline * 160 + x_temp;
 
             // Flip horizontally
-            uint8_t xF = sprite->options.xFlip ? 7 - x : x;
-            uint8_t colour_n = mmu->tiles[tile_id].pixels[y][xF];
+            uint8_t pixel_x = sprite.options.xFlip ? 7 - x : x;
+
+            if (control->spriteSize && (pixel_y >= 8))
+                colour = mmu->tiles[tile_num + 1].pixels[pixel_y - 8][pixel_x];
+            else
+                colour = mmu->tiles[tile_num].pixels[pixel_y][pixel_x];
             
             // Black is transparent
-            if(!colour_n)
+            if(!colour)
                 continue;
 
-            if(!row_pixels[x_wrap] || !sprite->options.renderPriority)
-                framebuffer[pixelOffset] = sprite->colourPalette[colour_n];
+            if(!row_pixels[x_temp] || !sprite.options.renderPriority)
+                framebuffer[pixelOffset] = sprite.colourPalette[colour];
         }
-        return;
     }
 }
 
-void PPU::render_scan_line_sprites(bool* row_pixels){
-    if(!this->control->spriteDisplayEnable) 
-        return;
 
-    for(MMU::Sprite sprite : mmu->sprites){
-        if(!sprite.ready)
-            continue;
-
-        this->render_sprite_scanline(row_pixels, &sprite, sprite.y, sprite.tile);
-
-        if(control->spriteSize)
-            this->render_sprite_scanline(row_pixels, &sprite, sprite.y + 8, sprite.tile + 1);
-    }
-}

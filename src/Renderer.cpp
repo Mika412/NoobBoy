@@ -189,7 +189,7 @@ void Renderer::draw_tilemap(){
                 int offsetY = y + (int(i/16)) * 8;
                 int offset = 4 * (offsetY * tilemap_width + offsetX);
 
-                Colour colour = mmu->palette_OBP0[colour_n];
+                Colour colour = mmu->palette_BGP[colour_n];
                 std::copy(colour.colours, colour.colours + 4, tilemap_pixels.begin() + offset);
             }
         }
@@ -202,8 +202,10 @@ void Renderer::draw_spritemap(){
     auto draw_sprite = [this](MMU::Sprite sprite, int tile_off, int off_x, int off_y) {
         if(!sprite.ready) return;
         for(int x = 0; x < 8; x++) {
+            uint8_t xF = sprite.options.xFlip ? 7 - x : x;
             for(int y = 0; y < 8; y++) {
-                uint8_t colour_n = mmu->tiles[sprite.tile + tile_off].pixels[y][x];
+                uint8_t yF = sprite.options.yFlip ? 7 - y : y;
+                uint8_t colour_n = mmu->tiles[sprite.tile + tile_off].pixels[yF][xF];
                 int offsetX = ((off_x + x) % spritemap_width);
                 int offsetY = y + off_y;
                 int offset = 4 * (offsetY * spritemap_width + offsetX);
@@ -255,38 +257,8 @@ void Renderer::draw_background(){
         }
         sp++;
     }
-    // Draw window
-    // TODO: Cleanup: Reuse the background code
-    if(this->ppu->control->windowEnable){
-        // exit(1);
-        sp=0;
-        for(unsigned short i = 0x9C00; i <= 0x9FFF; i++) {
-            int tile = mmu->read_byte(i);
-            if(!this->ppu->control->bgWindowDataSelect && tile < 128)
-                tile += 256;
 
-            if ( tile == 0){
-                sp++;
-                continue;
-            }
-            for(int y = 0; y < 8; y++) {
-                for(int x = 0; x < 8; x++) {
-                    unsigned char color = mmu->tiles[tile].pixels[y][x];
-                    int xi = mmu->read_byte(0xFF4B) - 7 + (sp % 32) * 8 + x;
-                    int yi = mmu->read_byte(0xFF4A) + (sp / 32) * 8 + y;
-                    int offset = 4 * ( yi * background_width + xi);
-
-                    if(offset >= background_pixels.size())
-                        continue;
-
-                    Colour colour = mmu->palette_BGP[color];
-                    std::copy(colour.colours, colour.colours + 4, background_pixels.begin() + offset);
-                }
-            }
-            sp++;
-        }
-    }
-
+    // Draw sprites
     for(auto sprite : mmu->sprites) {
         if(!sprite.ready) continue;
         for(int tile_num = 0; tile_num < 1 + int(ppu->control->spriteSize); tile_num++){
@@ -295,10 +267,14 @@ void Renderer::draw_background(){
             for(int x = 0; x < 8; x++) {
                 for(int y = 0; y < 8; y++) {
                     uint8_t xF = sprite.options.xFlip ? 7 - x : x;
-                    uint8_t colour_n = mmu->tiles[sprite.tile + tile_num].pixels[y][xF];
+                    uint8_t yF = sprite.options.yFlip ? 7 - y : y;
+
+                    int tile = sprite.tile & (ppu->control->spriteSize ? 0xFE : 0xFF);
+                    uint8_t colour_n = mmu->tiles[tile + tile_num].pixels[yF][xF];
+
                     if(!colour_n)
                         continue;
-                    int xi = (mmu->read_byte(0xff43) + sprite.x + x);// % 256;
+                    int xi = (mmu->read_byte(0xff43) + sprite.x + x) % 256;
                     int yi = (mmu->read_byte(0xff42) + y_pos + y) % 256;
                     int offset = 4 * ( yi * background_width + xi);
 

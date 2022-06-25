@@ -10,7 +10,7 @@ class PPU{
     void render_scan_line_background(bool* row_pixels); 
     void render_scan_line_window(); 
     void render_scan_line_sprites(bool* row_pixels); 
-    void render_sprite_scanline(bool* row_pixels, MMU::Sprite *sprite, uint8_t sprite_pos_y, uint8_t tile_id); 
+
     public:
         Registers* registers;
         MMU* mmu;
