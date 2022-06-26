@@ -8,6 +8,7 @@ PPU::PPU(Registers *registers, Interrupts* interrupts, MMU* mmu){
     this->interrupts = interrupts; 
     // TODO: Rewrite this to use mmu->read_byte(0xff40)
     control = (Control*)&mmu->memory[0xff40];
+    stat = (Stat*)&mmu->memory[0xff41];
     scrollY = &mmu->memory[0xff42];
     scrollX = &mmu->memory[0xff43];
     scanline = &mmu->memory[0xff44];
@@ -15,92 +16,73 @@ PPU::PPU(Registers *registers, Interrupts* interrupts, MMU* mmu){
 
 void PPU::step(){
     modeclock += mmu->clock.t_instr;
-    if(!this->control){
+
+    if (!control->lcdEnable) {
+        mode = 0;
+        if(modeclock >= 70224)
+            modeclock -= 70224;
         return;
     }
-    if (!control->lcdEnable) {return;}
     switch (mode) {
         case 0: // HBLANK
             if(modeclock >= 204){
                 modeclock -= 204;
                 mode = 2;
-                *this->scanline+=1;
 
-                mmu->write_byte(0xff41, mmu->read_byte(0xff41) & ~(1));
+                *scanline += 1;
                 compare_ly_lyc();
-                // if(*this->scanline == mmu->read_byte(0xff45)){// && *this->scanline > 0){
-                //     mmu->write_byte(0xff41, mmu->read_byte(0xff41) | (1 << 2));
-                // }else{
-                //     mmu->write_byte(0xff41, mmu->read_byte(0xff41) & ~(1 << 2));
-                // }
-                if(*this->scanline == 144){
-                    // if(this->interrupts->is_interrupt_enabled(INTERRUPT_VBLANK)){
-                        this->interrupts->set_interrupt_flag(INTERRUPT_VBLANK);
-                        can_render = true;
-                        // exit(1);
-                    // }
-                    can_render = true;
+ 
+                if(*scanline == 144){
                     mode = 1;
-                }
-                
-                // render_scan_lines();
+                    can_render = true;
+                    interrupts->set_interrupt_flag(INTERRUPT_VBLANK);
+                    if(stat->vblank_interrupt)
+                        interrupts->set_interrupt_flag(INTERRUPT_LCD);
+                } else if(stat->oam_interrupt)
+                        interrupts->set_interrupt_flag(INTERRUPT_LCD);
 
-                // std::cout << "SCANLINE: "<< +(*this->scanline) << std::endl;
-                // if(*this->scanline == mmu->read_byte(0xff45) && *this->scanline > 0){
-                //     mmu->write_byte(0xFF41, mmu->read_byte(0xFF41) | (1 << 2));
-                // }else{
-                //     mmu->write_byte(0xFF41, mmu->read_byte(0xFF41) & ~(1 << 2));
-                // }
+                mmu->write_byte(0xff41, (mmu->read_byte(0xff41) & 0xFC) | (mode & 3));
             }
             break;
         case 1: // VBLANK
             if(modeclock >= 456) {
-                // modeclock = 0;
-                *this->scanline+=1;
-
-                if(*this->scanline > 153){
-                    //Restart scanning modes
-                    *this->scanline = 0;
+                modeclock -= 456;
+                *scanline += 1;
+                compare_ly_lyc();
+                if(*scanline == 153){
+                    *scanline = 0;
                     mode = 2;
+                    mmu->write_byte(0xff41, (mmu->read_byte(0xff41) & 0xFC) | (mode & 3));
+                    if(stat->oam_interrupt)
+                        interrupts->set_interrupt_flag(INTERRUPT_LCD);
                 }
-                mmu->write_byte(0xff41, mmu->read_byte(0xff41) | 1);
-                if(*this->scanline == mmu->read_byte(0xff45) && *this->scanline > 0){
-                    mmu->write_byte(0xff41, mmu->read_byte(0xff41) | (1 << 2));
-                }else{
-                    mmu->write_byte(0xff41, mmu->read_byte(0xff41) & ~(1 << 2));
-                }
-                modeclock -=456;
             }
+            
             break;
         case 2: // OAM
             if(modeclock >= 80){
                 modeclock -=80;
                 mode = 3;
+                mmu->write_byte(0xff41, (mmu->read_byte(0xff41) & 0xFC) | (mode & 3));
             }
             break;
         case 3: // VRAM
             if(modeclock >= 172){
+                modeclock-=172;
                 mode = 0;
                 render_scan_lines();
+                mmu->write_byte(0xff41, (mmu->read_byte(0xff41) & 0xFC) | (mode & 3));
 
-                modeclock -= 172;
+                if(stat->hblank_interrupt)
+                    interrupts->set_interrupt_flag(INTERRUPT_LCD);
             }
             break;
-            
     }
 }
 
+
 void PPU::compare_ly_lyc(){
-    mmu->write_byte(0xff41, mmu->read_byte(0xff41) & ~(1 << 2));
-
-    uint8_t lyc = mmu->read_byte(0xFF45);
-    uint8_t stat = mmu->read_byte(0xFF41);
-
-    if (lyc == *scanline) {
-        stat |= 1 << 2;
-        if (stat & (1 << 6))
-            this->interrupts->set_interrupt_flag(INTERRUPT_LCD);
-    }
+    stat->coincidence_flag = int(mmu->read_byte(0xFF45) == *scanline);
 }
 
 void PPU::render_scan_lines(){

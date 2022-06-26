@@ -56,7 +56,7 @@ void Joypad::check(int last_instr_cycles){
                 case SDLK_SPACE:  key_press(JOYPAD_START); break;
                 case SDLK_RETURN: key_press(JOYPAD_SELECT); break;
                 case SDLK_ESCAPE: status->isRunning = false; break;
-                case SDLK_c:      status->colorMode = (1 + status->colorMode) % 2; break;
+                case SDLK_c:      status->colorMode = (1 + status->colorMode) % 3; break;
                 case SDLK_s:  if(status->debug) status->doStep = true; break;
             }
             break;

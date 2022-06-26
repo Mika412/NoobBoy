@@ -57,6 +57,10 @@ void Renderer::render(){
             break;
         case RETRO:
             SDL_SetTextureColorMod(viewport_texture, 155, 188, 15);
+            break;
+        case GRAY:
+            SDL_SetTextureColorMod(viewport_texture, 224, 219, 205);
+            break;
     }
 
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
