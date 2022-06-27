@@ -1,12 +1,10 @@
-#include <iostream>
-
 #include "ppu.h"
 
 PPU::PPU(Registers *registers, Interrupts* interrupts, MMU* mmu){
     this->registers = registers;
     this->mmu = mmu;
     this->interrupts = interrupts; 
-    // TODO: Rewrite this to use mmu->read_byte(0xff40)
+
     control = (Control*)&mmu->memory[0xff40];
     stat = (Stat*)&mmu->memory[0xff41];
     scrollY = &mmu->memory[0xff42];
@@ -19,10 +17,10 @@ void PPU::step(){
 
     if (!control->lcdEnable) {
         mode = 0;
-        if(modeclock >= 70224)
-            modeclock -= 70224;
+        if(modeclock >= 70224) modeclock -= 70224;
         return;
     }
+
     switch (mode) {
         case 0: // HBLANK
             if(modeclock >= 204){
@@ -82,13 +80,14 @@ void PPU::step(){
 
 
 void PPU::compare_ly_lyc(){
-    stat->coincidence_flag = int(mmu->read_byte(0xFF45) == *scanline);
+    uint8_t lyc = mmu->read_byte(0xFF45);
+    stat->coincidence_flag = int(lyc == *scanline);
+
+    if (lyc == *scanline && stat->coincidence_interrupt)
+        this->interrupts->set_interrupt_flag(INTERRUPT_LCD);
 }
 
 void PPU::render_scan_lines(){
-    if(!this->control->lcdEnable)
-        return;
-
     bool row_pixels[160] = {0};
     this->render_scan_line_background(row_pixels);
     this->render_scan_line_window();

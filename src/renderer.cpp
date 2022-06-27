@@ -1,6 +1,5 @@
 #include "renderer.h"
-#include <iostream>
-#include <vector>
+
 Renderer::Renderer(Status *status, CPU *cpu, PPU *gpu, Registers *registers, Interrupts *interrupts, MMU *mmu){
     this->cpu = cpu;
     this->ppu = gpu;
@@ -18,16 +17,16 @@ Renderer::Renderer(Status *status, CPU *cpu, PPU *gpu, Registers *registers, Int
     SDL_RenderSetLogicalSize(this->renderer, this->window_width, this->window_height);
     SDL_SetWindowResizable(this->window, SDL_TRUE);
     //
-    std::vector< unsigned char > viewport_pixels(this->viewport_width * this->viewport_height * 4, 0xFF );
+    std::vector<uint8_t> viewport_pixels(this->viewport_width * this->viewport_height * 4, 0xFF );
     this->viewport_pixels = viewport_pixels;
 
-    std::vector< unsigned char > background_pixels(this->background_width * this->background_height * 4, 0xFF );
+    std::vector<uint8_t> background_pixels(this->background_width * this->background_height * 4, 0xFF );
     this->background_pixels = background_pixels;
 
-    std::vector< unsigned char > tilemap_pixels(this->tilemap_width * this->tilemap_height * 4, 0xFF );
+    std::vector<uint8_t> tilemap_pixels(this->tilemap_width * this->tilemap_height * 4, 0xFF );
     this->tilemap_pixels = tilemap_pixels;
 
-    std::vector< unsigned char > spritemap_pixels(this->spritemap_width * this->spritemap_height * 4, 0xFF );
+    std::vector<uint8_t> spritemap_pixels(this->spritemap_width * this->spritemap_height * 4, 0xFF );
     this->spritemap_pixels = spritemap_pixels;
 
     this->viewport_texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, this->viewport_width, this->viewport_height);
@@ -42,7 +41,7 @@ Renderer::Renderer(Status *status, CPU *cpu, PPU *gpu, Registers *registers, Int
     font = TTF_OpenFont("fonts/VT323-Regular.ttf", 18);
 }
 
-std::string to_hex_string( const unsigned int i ) {
+std::string to_hex_string( const uint i ) {
     std::stringstream s;
     s << "0x" <<  std::setfill('0') << std::setw(2) << std::uppercase << std::hex << i;
     return s.str();
@@ -166,13 +165,13 @@ void Renderer::draw_background_overflow(){
     this->draw_rectangle(background_rect.x + *ppu->scrollX,  viewport_height + *ppu->scrollY, viewport_width - overflowX, viewport_height, {255,255,255,100});
 
     if(overflowX)
-        this->draw_rectangle(background_rect.x,  viewport_height + *ppu->scrollY, overflowX, viewport_height, {255,0,0,100});
+        this->draw_rectangle(background_rect.x,  viewport_height + *ppu->scrollY, overflowX, viewport_height, {255,255,255,100});
 
     if(overflowY)
-        this->draw_rectangle(background_rect.x + *ppu->scrollX,  viewport_height, viewport_width - overflowX, overflowY, {0,255,0,100});
+        this->draw_rectangle(background_rect.x + *ppu->scrollX,  viewport_height, viewport_width - overflowX, overflowY, {255,255,255,100});
 
     if(overflowX && overflowY)
-        this->draw_rectangle(background_rect.x,  viewport_height, overflowX, overflowY, {0,0,255,100});
+        this->draw_rectangle(background_rect.x,  viewport_height, overflowX, overflowY, {255,255,255,100});
 }
 
 void Renderer::draw_viewport(){
@@ -238,28 +237,21 @@ void Renderer::draw_spritemap(){
 }
 
 void Renderer::draw_background(){
-    int sp = 0;
-    // for(unsigned short i = 0x9C00; i <= 0x9FFF; i++) {
-    for(unsigned short i = 0x9800; i <= 0x9bff; i++) {
-        int tile = mmu->read_byte(i);
+    for(int i = 0; i <= 1023; i++) {
+        int tile = mmu->read_byte(0x9800 + i);
         if(!this->ppu->control->bgWindowDataSelect && tile < 128)
             tile += 256;
-
-        if ( tile == 0){
-            sp++;
-            continue;
-        }
+        
         for(int y = 0; y < 8; y++) {
             for(int x = 0; x < 8; x++) {
-                unsigned char color = mmu->tiles[tile].pixels[y][x];
-                int xi = (sp % 32) * 8 + x;
-                int yi = (sp / 32) * 8 + y;
+                uint8_t color = mmu->tiles[tile].pixels[y][x];
+                int xi = (i % 32) * 8 + x;
+                int yi = (i / 32) * 8 + y;
                 int offset = 4 * ( yi * background_width + xi);
                 Colour colour = mmu->palette_BGP[color];
                 std::copy(colour.colours, colour.colours + 4, background_pixels.begin() + offset);
             }
         }
-        sp++;
     }
 
     // Draw sprites

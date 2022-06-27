@@ -2,6 +2,8 @@
 
 #include <stdint.h>
 #include <fstream>
+#include <iostream>
+
 enum RegisterFlags { FLAG_ZERO = (1 << 7), FLAG_SUBTRACT = (1 << 6), FLAG_HALF_CARRY = (1 << 5), FLAG_CARRY = (1 << 4)};
 
 class Registers {
@@ -14,7 +16,7 @@ class Registers {
                 struct {
                     uint8_t f;
                     uint8_t a;
-            };
+                };
                 uint16_t af;
             };
         }; 

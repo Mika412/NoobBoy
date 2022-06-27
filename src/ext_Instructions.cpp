@@ -1,11 +1,7 @@
-#include <iostream>
-
 #include "instructions.h"
 
-using namespace std;
-
 void InstructionSet::extended_execute(uint8_t opcode){
-    mmu->clock.t += extendedInstructionTicks[opcode];
+    mmu->clock.t_instr += extendedInstructionTicks[opcode];
 
     switch (opcode) {
         case 0x00: // RLC B
@@ -906,129 +902,8 @@ void InstructionSet::extended_execute(uint8_t opcode){
         case 0xFF: // SET 7, A
             set(1 << 7, &registers->a);
             break;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        // case 0x8E: // RES 1, (HL)
-        //     {
-        //         uint8_t value = mmu->read_byte(registers->hl);
-        //         res(1 << 1, &value);
-        //         mmu->write_byte(registers->hl, value);
-        //         break;
-        //     }
-        // case 0x96: // RES 2, (HL)
-        //     {
-        //         uint8_t value = mmu->read_byte(registers->hl);
-        //         res(1 << 2, &value);
-        //         mmu->write_byte(registers->hl, value);
-        //         break;
-        //     }
-        // case 0x9E: // RES 3, (HL)
-        //     {
-        //         uint8_t value = mmu->read_byte(registers->hl);
-        //         res(1 << 3, &value);
-        //         mmu->write_byte(registers->hl, value);
-        //         break;
-        //     }
-        // case 0xA6: // RES 4, (HL)
-        //     {
-        //         uint8_t value = mmu->read_byte(registers->hl);
-        //         res(1 << 4, &value);
-        //         mmu->write_byte(registers->hl, value);
-        //         break;
-        //     }
-        // case 0xAE: // RES 5, (HL)
-        //     {
-        //         uint8_t value = mmu->read_byte(registers->hl);
-        //         res(1 << 5, &value);
-        //         mmu->write_byte(registers->hl, value);
-        //         break;
-        //     }
-        // case 0xB6: // RES 6, (HL)
-        //     {
-        //         uint8_t value = mmu->read_byte(registers->hl);
-        //         res(1 << 6, &value);
-        //         mmu->write_byte(registers->hl, value);
-        //         break;
-        //     }
-        // case 0xBE: // RES 7, (HL)
-        //     {
-        //         uint8_t value = mmu->read_byte(registers->hl);
-        //         res(1 << 7, &value);
-        //         mmu->write_byte(registers->hl, value);
-        //         break;
-        //     }
-        // case 0xC6: // SET 0, (HL)
-        //     {
-        //         uint8_t value = mmu->read_byte(registers->hl);
-        //         set(1 << 0, &value);
-        //         mmu->write_byte(registers->hl, value);
-        //         break;
-        //     }
-        // case 0xCE: // SET 1, (HL)
-        //     {
-        //         uint8_t value = mmu->read_byte(registers->hl);
-        //         set(1 << 1, &value);
-        //         mmu->write_byte(registers->hl, value);
-        //         break;
-        //     }
-        // case 0xD6: // SET 2, (HL)
-        //     {
-        //         uint8_t value = mmu->read_byte(registers->hl);
-        //         set(1 << 2, &value);
-        //         mmu->write_byte(registers->hl, value);
-        //         break;
-        //     }
-        // case 0xDE: // SET 3, (HL)
-        //     {
-        //         uint8_t value = mmu->read_byte(registers->hl);
-        //         set(1 << 3, &value);
-        //         mmu->write_byte(registers->hl, value);
-        //         break;
-        //     }
-        // case 0xE6: // SET 4, (HL)
-        //     {
-        //         uint8_t value = mmu->read_byte(registers->hl);
-        //         set(1 << 4, &value);
-        //         mmu->write_byte(registers->hl, value);
-        //         break;
-        //     }
-        // case 0xEE: // SET 5, (HL)
-        //     {
-        //         uint8_t value = mmu->read_byte(registers->hl);
-        //         set(1 << 5, &value);
-        //         mmu->write_byte(registers->hl, value);
-        //         break;
-        //     }
-        // case 0xF6: // SET 6, (HL)
-        //     {
-        //         uint8_t value = mmu->read_byte(registers->hl);
-        //         set(1 << 6, &value);
-        //         mmu->write_byte(registers->hl, value);
-        //         break;
-        //     }
-        // case 0xFE: // SET 7, (HL)
-        //     {
-        //         uint8_t value = mmu->read_byte(registers->hl);
-        //         set(1 << 7, &value);
-        //         mmu->write_byte(registers->hl, value);
-        //         break;
-        //     }
         default:
             printf("Unsupported CB opcode: 0x%02x at 0x%04x\n\n\n", opcode, this->registers->pc);
-            std::exit(EXIT_FAILURE);
             return;
             break;
     }

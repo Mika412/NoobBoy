@@ -1,12 +1,10 @@
 #pragma once
 
-#include "Registers.h"
+#include "registers.h"
 #include "mmu.h"
 #include "interrupt.h"
 
-class PPU
-{
-
+class PPU {
     void render_scan_lines();
     void render_scan_line_background(bool *row_pixels);
     void render_scan_line_window();
@@ -19,14 +17,11 @@ public:
     uint8_t *scrollX;
     uint8_t *scrollY;
     uint8_t *scanline;
-    unsigned long tick;
+    uint32_t tick;
 
-    struct Control
-    {
-        union
-        {
-            struct
-            {
+    struct Control {
+        union {
+            struct {
                 uint8_t bgDisplay : 1;
                 uint8_t spriteDisplayEnable : 1;
                 uint8_t spriteSize : 1; // True means 8x16 tiles
@@ -37,13 +32,11 @@ public:
                 uint8_t lcdEnable : 1;
             };
         };
-    } * control;
-    struct Stat
-    {
-        union
-        {
-            struct
-            {
+    } *control;
+
+    struct Stat {
+        union {
+            struct {
                 uint8_t mode_flag : 2;
                 uint8_t coincidence_flag : 1;
                 uint8_t hblank_interrupt : 1;
@@ -52,10 +45,10 @@ public:
                 uint8_t coincidence_interrupt : 1;
             };
         };
-    } * stat;
+    } *stat;
 
     Colour framebuffer[160 * 144];
-    // WTF: This line is unused, but removing her breaks some games
+    // WTF: This variable is unused, but removing her breaks some games
     uint8_t background[32 * 32];
 
     int mode = 0;

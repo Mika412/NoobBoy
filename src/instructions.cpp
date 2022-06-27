@@ -1,20 +1,13 @@
-#include <cstdint>
-#include <iostream>
-
-#include "Registers.h"
 #include "instructions.h"
 
-using namespace std;
-
-InstructionSet::InstructionSet(Registers *registers, Interrupts* interrupts,  MMU *mmu, bool *stopped){
+InstructionSet::InstructionSet(Registers *registers, Interrupts* interrupts,  MMU *mmu){
     this->registers = registers;
     this->mmu = mmu;
     this->interrupts = interrupts;
-    this->stopped = stopped;
 }
 void InstructionSet::execute(uint8_t opcode) {
-    mmu->clock.t += instructionTicks[opcode];
-    // this->registers->m = instructionTicks[opcode] / 4;
+    mmu->clock.t_instr += instructionTicks[opcode];
+
     switch (opcode) {
         case 0x00: // NOP
             break;
@@ -68,7 +61,6 @@ void InstructionSet::execute(uint8_t opcode) {
             registers->unset_register_flags(FLAG_ZERO);
             break;
         case 0x10: // STOP
-            // TODO: Implement STOP
             break;
         case 0x11: // LD DE, nn
             registers->de = mmu->read_short(registers->pc);
@@ -93,14 +85,10 @@ void InstructionSet::execute(uint8_t opcode) {
             rl(&registers->a);
             registers->unset_register_flags(FLAG_ZERO);
             break;
-        // case 0x18: // JR n
-        //     registers->pc += (signed char)(mmu->read_byte(registers->pc++));
-        //     break;
-
         case 0x18: // JR nn
         {
             uint8_t operand = mmu->read_byte(registers->pc++);
-            registers->pc += (signed char)(operand);
+            registers->pc += (int8_t)(operand);
         }
         break;
         case 0x19: // ADD HL, DE
@@ -147,7 +135,6 @@ void InstructionSet::execute(uint8_t opcode) {
         case 0x26: // LD H, n
             registers->h = mmu->read_byte(registers->pc++);
             break;
-        // // TODO: NOT WORKING
         case 0x27: // DAA
             {
                 uint16_t value = registers->a;
@@ -213,7 +200,6 @@ void InstructionSet::execute(uint8_t opcode) {
             break;
         case 0x32: // LD (HLD), A | LD (HL-), A | LDD (HL), A
             mmu->write_byte(registers->hl--, registers->a);
-            // registers->hl--;
             break;
         case 0x33: // INC SP
             registers->sp++;
@@ -424,6 +410,8 @@ void InstructionSet::execute(uint8_t opcode) {
             break;
         case 0x76: // HALT
             mmu->is_halted = true;
+            if (!interrupts->is_master_enabled() && (mmu->read_byte(0xFF0F) & mmu->read_byte(0xFFFF) & 0x1F))
+                mmu->trigger_halt_bug = true;
             break;
         case 0x77: // LD (HL), A
             mmu->write_byte(registers->hl, registers->a);
@@ -653,7 +641,6 @@ void InstructionSet::execute(uint8_t opcode) {
             jump(!registers->is_set_register_flag(FLAG_ZERO));
             break ;
         case 0xC3: // JP nn
-            // std::cout << "JUMPING TO " << +mmu->read_short(registers->pc) << "\n";
             registers->pc = mmu->read_short(registers->pc);
             break;
         case 0xC4: // CALL NZ, nn
@@ -685,21 +672,8 @@ void InstructionSet::execute(uint8_t opcode) {
         case 0xCC: // CALL Z, nn
             call(registers->is_set_register_flag(FLAG_ZERO));
             break;
-        // case 0xCD: // CALL nn
-        //     // write_short_stack(registers->pc);
-        //     // registers->pc = memory->read_short(registers->pc);
-        //     // {
-        //     // uint16_t operand = mmu->read_short(registers->pc);
-        //     // registers->pc +=2;
-        //     // mmu->write_short_stack(&registers->sp, registers->pc + 2);
-        //     mmu->write_short_stack(&registers->sp, registers->pc + 2);
-        //     registers->pc = mmu->read_short(registers->pc);
-        //     // }
-        //     break;
 
         case 0xCD: // CALL nn
-        // write_short_stack(registers->pc);
-        // registers->pc = memory->read_short(registers->pc);
         {
             uint16_t operand = mmu->read_short(registers->pc);
             registers->pc +=2;
@@ -776,7 +750,7 @@ void InstructionSet::execute(uint8_t opcode) {
             registers->pc = 0x0020;
            break;
         case 0xE8: // ADD SP, n
-            add(&registers->sp,(signed char) mmu->read_byte(registers->pc++)); 
+            add(&registers->sp,(int8_t) mmu->read_byte(registers->pc++)); 
             break;
         case 0xE9: // JP HL
             registers->pc = registers->hl;
@@ -835,22 +809,13 @@ void InstructionSet::execute(uint8_t opcode) {
             mmu->write_short_stack(&registers->sp, registers->pc++);
             registers->pc = 0x0038;
             break;
-        // // case 0xFA: // LD A, n
-        // //     registers->a = mmu->read_byte(registers->pc++);
-        // //     break;
-        case 0xFC: // ERROR: INVALID OPERATION
-            break;
-        // case 0xec: // ERROR: INVALID OPERATION
-        //     break;
         default:
             std::cout << "FF40: " << +(mmu->read_byte(0xFF40)) << " FF41: " << +(mmu->read_byte(0xFF41)) << " FF42: " << +(mmu->read_byte(0xFF42)) << " FF44: " << +(mmu->read_byte(0xFF44)) << std::endl;
             registers->print_flags();
             registers->print_registers();
-            // printf("Unsupported opcode: 0x%02x at 0x%04x\n\n\n", opcode, this->registers->pc);
             printf("Unsupported opcode: 0x%02x at 0x%04x\n", opcode, this->registers->pc);
             printf("DIV: %d\n", mmu->timer.div);
             printf("Cycles: %d \n\n\n", mmu->clock.t);
-            std::exit(EXIT_FAILURE);
             return;
             break;
     }
@@ -864,139 +829,48 @@ uint16_t InstructionSet::read_short_stack() {
     return mmu->read_short_stack(&registers->sp);
     
 }
-// 8 bit arithmetics
-// void InstructionSet::adc(uint8_t value) {
-//     value += registers->is_set_register_flags(FLAG_CARRY) ? 1 : 0;
-    
-//     int result = registers->a + value;
-    
-//     if(result & 0xff00) registers->set_register_flags(FLAG_CARRY);
-//     else registers->unset_register_flags(FLAG_CARRY);
-    
-//     if(value == registers->a) registers->set_register_flags(FLAG_ZERO);
-//     else registers->unset_register_flags(FLAG_ZERO);
-    
-//     if(((value & 0x0f) + (registers->a & 0x0f)) > 0x0f) registers->set_register_flags(FLAG_HALF_CARRY);
-//     else registers->unset_register_flags(FLAG_HALF_CARRY);
-    
-//     registers->set_register_flags(FLAG_SUBTRACT);
-    
-//     registers->a = (unsigned char)(result & 0xff);
-// }
-
-
-
-// void InstructionSet::add(uint16_t* destination, uint16_t value){
-//     int result = *destination + value;
-//     
-//     // if(!registers->is_set_register_flags(FLAG_ZERO)){
-//     //     registers->unset_register_flags(FLAG_CARRY);
-//     //     registers->unset_register_flags(FLAG_ZERO);
-//     //     registers->unset_register_flags(FLAG_HALF_CARRY);
-//     //     registers->unset_register_flags(FLAG_SUBTRACT);
-//     // }
-//     registers->unset_register_flags(FLAG_CARRY);
-//     // registers->unset_register_flags(FLAG_ZERO);
-//     registers->unset_register_flags(FLAG_HALF_CARRY);
-//     registers->unset_register_flags(FLAG_SUBTRACT);
-//
-//     if(result & 0x10000) registers->set_register_flags(FLAG_CARRY);
-//
-//
-//     if((*destination ^ value ^ (result & 0xFFFF)) & 0x10000) registers->set_register_flags(FLAG_HALF_CARRY);
-//
-//
-//     // if(*destination)registers->unset_register_flags(FLAG_ZERO);
-//     // else registers->set_register_flags(FLAG_ZERO);
-//     
-//     // registers->unset_register_flags(FLAG_SUBTRACT);
-//
-//     *destination = (uint16_t)(result & 0xffff);
-// }
-
-
-/* void InstructionSet::add(uint16_t* destination, uint16_t value){
-    int result = *destination + value;
-    if(registers->is_set_register_flags(FLAG_ZERO)){
-        registers->set_register_flags(FLAG_ZERO);
-    }else{
-        registers->unset_register_flags(FLAG_SUBTRACT);
-        registers->unset_register_flags(FLAG_CARRY);
-        registers->unset_register_flags(FLAG_HALF_CARRY);
-        registers->unset_register_flags(FLAG_ZERO);
-    }
-
-    if(result & 0x10000) registers->set_register_flags(FLAG_CARRY);
-
-    if ((*destination ^ value ^ (result & 0xFFFF)) & 0x1000) registers->set_register_flags(FLAG_HALF_CARRY);
-
-    *destination = (unsigned short)(result & 0xffff);
-} */
-
-
-
-
 
 void InstructionSet::call(bool condition){
     uint16_t operand = mmu->read_short(registers->pc);
     registers->pc += 2;
     
-    mmu->clock.t += 12;
+    mmu->clock.t_instr += 12;
     if(condition){
         mmu->write_short_stack(&registers->sp, registers->pc);
         registers->pc = operand;
-        mmu->clock.t += 12;
+        mmu->clock.t_instr += 12;
     }
-    // if(!registers->is_set_register_flag(FLAG_ZERO)){
-    //     registers->pc = (signed short)(mmu->read_short(registers->pc));
-    // }else{
-    //     registers->pc+=2;
-    // }
 }
-
 
 void InstructionSet::ret(bool condition){
     if(condition){
         registers->pc = mmu->read_short_stack(&registers->sp);
-        mmu->clock.t += 20;
+        mmu->clock.t_instr += 20;
     }else{
-        mmu->clock.t += 8;
+        mmu->clock.t_instr += 8;
     }
 }
 
 void InstructionSet::jump_add(bool condition){
     if(condition){
-        registers->pc += 1 + (signed char)(mmu->read_byte(registers->pc));
-        // registers->pc++;
-        mmu->clock.t += 12;
+        registers->pc += 1 + (int8_t)(mmu->read_byte(registers->pc));
+        mmu->clock.t_instr += 12;
     }else{
         registers->pc++;
-        mmu->clock.t += 8;
+        mmu->clock.t_instr += 8;
     }
 }
 
 void InstructionSet::jump(bool condition){
     if(condition){
         registers->pc = mmu->read_short(registers->pc);
-        mmu->clock.t += 16;
+        mmu->clock.t_instr += 16;
     }else{
         registers->pc+=2;
-        mmu->clock.t += 12;
+        mmu->clock.t_instr += 12;
     }
 }
 void InstructionSet::inc(uint8_t *value){
-    // *value += 1;
-
-    // if((*value & 0x0F) == 0x00) registers->set_register_flags(FLAG_HALF_CARRY);
-    // else registers->unset_register_flags(FLAG_HALF_CARRY);
-    
-    
-    // if(*value) registers->unset_register_flags(FLAG_ZERO);
-    // else registers->set_register_flags(FLAG_ZERO);
-
-    // registers->unset_register_flags(FLAG_SUBTRACT);
-    //
-    // TODO: Change this
     if((*value & 0x0f) == 0x0f) registers->set_register_flags(FLAG_HALF_CARRY);
     else registers->unset_register_flags(FLAG_HALF_CARRY);
     
@@ -1066,9 +940,8 @@ void InstructionSet::add(uint16_t *destination, uint16_t value){
     registers->unset_register_flags(FLAG_SUBTRACT);
 }
 
-// TODO: Change signed char to another type
-void InstructionSet::add(uint16_t *destination, signed char value){
-    uint16_t result = *destination + (signed char)value;
+void InstructionSet::add(uint16_t *destination, int8_t value){
+    uint16_t result = *destination + value;
 
     registers->unset_register_flags(FLAG_SUBTRACT | FLAG_ZERO | FLAG_CARRY | FLAG_HALF_CARRY);
 
@@ -1080,8 +953,7 @@ void InstructionSet::add(uint16_t *destination, signed char value){
 
     *destination = result & 0xFFFF;
 }
-// TODO: Change signed char to another type
-void InstructionSet::ldhl(signed char value){
+void InstructionSet::ldhl(int8_t value){
     uint16_t result = registers->sp + value;
 
     registers->unset_register_flags(FLAG_SUBTRACT | FLAG_ZERO | FLAG_CARRY | FLAG_HALF_CARRY);
@@ -1095,32 +967,11 @@ void InstructionSet::ldhl(signed char value){
     registers->hl = result;
 }
 
-
-
-// void InstructionSet::adc(uint8_t value){
-//     bool is_carry = registers->is_set_register_flag(FLAG_CARRY);
-//     uint16_t result = registers->a + value + is_carry;
-
-//     if(result > 0xff) registers->set_register_flags(FLAG_CARRY);
-//     else registers->unset_register_flags(FLAG_CARRY);
-
-//     if(((registers->a & 0x0f) + (value & 0x0f) + is_carry) > 0x0f) registers->set_register_flags(FLAG_HALF_CARRY);
-//     else registers->unset_register_flags(FLAG_HALF_CARRY);
-
-//     registers->a = (uint8_t) result;
-
-//     if(registers->a) registers->unset_register_flags(FLAG_ZERO);
-//     else registers->set_register_flags(FLAG_ZERO);
-
-//     registers->unset_register_flags(FLAG_SUBTRACT);
-// }
-
-
 void InstructionSet::adc(uint8_t value) {
     int carry = registers->is_set_register_flag(FLAG_CARRY) ? 1 : 0;
     int result = registers->a + value + carry;
     
-    if((unsigned char) result) registers->unset_register_flags(FLAG_ZERO);
+    if((int8_t) result) registers->unset_register_flags(FLAG_ZERO);
     else registers->set_register_flags(FLAG_ZERO);
 
     if(result > 0xFF) registers->set_register_flags(FLAG_CARRY);
@@ -1131,7 +982,7 @@ void InstructionSet::adc(uint8_t value) {
 
     registers->unset_register_flags(FLAG_SUBTRACT);
     
-    registers->a = (unsigned char)(result & 0xff);
+    registers->a = (int8_t)(result & 0xff);
 }
 
 void InstructionSet::and_(uint8_t value){
@@ -1143,24 +994,13 @@ void InstructionSet::and_(uint8_t value){
     registers->unset_register_flags(FLAG_SUBTRACT | FLAG_CARRY);
 }
 
-// void InstructionSet::or_(uint8_t value){
-//     uint8_t temp_val = registers->a | value;
-//     if(temp_val) registers->unset_register_flags(FLAG_ZERO);
-//     else registers->set_register_flags(FLAG_ZERO);
-
-//     registers->a = temp_val;
-
-//     registers->unset_register_flags(FLAG_SUBTRACT | FLAG_HALF_CARRY | FLAG_CARRY);
-// }
 void InstructionSet::or_(uint8_t value) {
     registers->a |= value;
     
     if(registers->a) registers->unset_register_flags(FLAG_ZERO);
     else registers->set_register_flags(FLAG_ZERO);
     
-    registers->unset_register_flags(FLAG_CARRY);
-    registers->unset_register_flags(FLAG_SUBTRACT);
-    registers->unset_register_flags(FLAG_HALF_CARRY);
+    registers->unset_register_flags(FLAG_CARRY | FLAG_SUBTRACT | FLAG_HALF_CARRY);
 }
 
 void InstructionSet::sub(uint8_t value){

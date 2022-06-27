@@ -1,5 +1,4 @@
-#include <iostream>
-#include "Registers.h"
+#include "registers.h"
 
 void Registers::set_register_flags(uint8_t flags) {
     this->f |= flags;
@@ -10,7 +9,7 @@ void Registers::unset_register_flags(uint8_t flags) {
 }
 
 bool Registers::is_set_register_flag(uint8_t flag) {
-    return (this->f & flag);
+    return this->f & flag;
 }
 
 void Registers::print_flags(){

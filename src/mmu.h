@@ -1,8 +1,8 @@
 #pragma once
+#include "registers.h"
 
 #include <iostream>
 
-#include "Registers.h"
 
 struct Colour {
     union {
@@ -17,38 +17,33 @@ class MMU {
     public:
         uint8_t memory[0xFFFF];
 
+        // WTF: This variable is unused, but removing her breaks some games
         int mbcType = 0;
         bool mbcRamEnabled = false;
-        // bool mbc2ramEnabled = false;
         uint8_t mbcRomMode = 0;
         uint8_t mbcRomNumber = 1;
         uint8_t mbcRamNumber = 0;
-        // uint8_t mbc2romNumber = 0;
         uint8_t ROMbanks[0x7F][0x4000];
         uint8_t RAMbanks[0x7F][0x2000];
-        uint8_t banksLoaded;
 
         uint8_t joypad = 0xFF;
 
         struct clock {
-            int m = 0;
             int t = 0;
-            int t_prev = 0;
             int t_instr = 0;
-            int last_instr = 0;
         } clock;
 
         struct timer{
             uint16_t div = 0;
-            unsigned char tima = 0;
-            unsigned char tma = 0;
-            unsigned char tac = 0;
+            uint8_t tima = 0;
+            uint8_t tma = 0;
+            uint8_t tac = 0;
         } timer;
 
         struct Sprite {
             bool ready;
-            uint8_t y;
-            uint8_t x;
+            int y;
+            int x;
             uint8_t tile;
             Colour *colourPalette;
             struct {
@@ -70,7 +65,7 @@ class MMU {
 
         struct Tile {
             uint8_t  pixels[8][8] = {0};
-        }tiles[384];
+        } tiles[384];
 
         const Colour palette_colours[4] = {
                 { 255, 255, 255, 255},
@@ -102,6 +97,7 @@ class MMU {
 
         bool romDisabled = false;
         bool is_halted = false;
+        bool trigger_halt_bug = false;
 
         void load_boot_rom(std::string location);
         void load_cartrige_rom(std::string location);
@@ -115,6 +111,7 @@ class MMU {
         void write_short_stack(uint16_t *sp, uint16_t value);
         uint16_t read_short_stack(uint16_t *sp);
 
-        void updateTile(uint16_t address, uint8_t value);
-        void updateSprite(uint16_t address, uint8_t value);
+        void UpdateTile(uint16_t address, uint8_t value);
+        void UpdateSprite(uint16_t address, uint8_t value);
+        void UpdatePalette(Colour *palette, uint8_t value);
 };

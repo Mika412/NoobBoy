@@ -1,6 +1,4 @@
 #include "interrupt.h"
-#include <iostream>
-
 
 Interrupts::Interrupts(Registers *registers, MMU *mmu) {
     this->mmu = mmu;
@@ -42,10 +40,6 @@ bool Interrupts::check() {
     if (!this->IME)
         return false;
 
-    if(mmu->read_byte(0xff41) & (1 << 2)){
-        this->set_interrupt_flag(INTERRUPT_LCD);
-    }
-
     // Check if VBLANK
     if(this->is_interrupt_enabled(INTERRUPT_VBLANK) && this->is_interrupt_flag_set(INTERRUPT_VBLANK)) {
         this->trigger_interrupt(INTERRUPT_VBLANK, 0x40);
@@ -81,9 +75,5 @@ void Interrupts::trigger_interrupt(InterruptFlags interrupt, uint8_t jump_pc) {
     this->unset_interrupt_flag(interrupt);
     mmu->is_halted = false;
 
-    // TODO: Pretify this
     mmu->clock.t_instr = 20;
-    mmu->clock.t_prev = mmu->clock.t;
-    mmu->clock.t += 20;
-    mmu->clock.last_instr = 0;
 }

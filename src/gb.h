@@ -7,6 +7,14 @@
 #include "joypad.h"
 #include "status.h"
 
+#include <iostream>
+#include <cstdint>
+#include <unistd.h>
+#include <set>
+#include <chrono>
+#include <thread>
+#include <getopt.h>
+
 class GB{
     public:
         Status status;

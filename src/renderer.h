@@ -45,25 +45,25 @@ class Renderer{
         // Viewport 
         int viewport_width = 160;
         int viewport_height = 144;
-        std::vector<unsigned char> viewport_pixels;
+        std::vector<uint8_t> viewport_pixels;
         SDL_Rect viewport_rect = {0,0,viewport_width,viewport_height};
 
         // Tilemap
         int tilemap_width = 128;
         int tilemap_height = 256;
-        std::vector<unsigned char> tilemap_pixels;
+        std::vector<uint8_t> tilemap_pixels;
         SDL_Rect tilemap_rect = {0, viewport_height, tilemap_width, tilemap_height};
 
         // Spritemap
         int spritemap_height = 64;
         int spritemap_width = 40;
-        std::vector<unsigned char> spritemap_pixels;
+        std::vector<uint8_t> spritemap_pixels;
         SDL_Rect spritemap_rect = {tilemap_width, viewport_height, spritemap_width * 2, spritemap_height * 2};
 
         // VRAM  
         int background_width = 256;
         int background_height = 256;
-        std::vector<unsigned char> background_pixels;
+        std::vector<uint8_t> background_pixels;
         SDL_Rect background_rect = {tilemap_width + spritemap_width * 2, viewport_height, background_width, background_height};
 
         int debug_texture_height = viewport_height + background_height;
