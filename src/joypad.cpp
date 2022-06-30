@@ -43,6 +43,7 @@ void Joypad::check(int last_instr_cycles){
                 case SDLK_SPACE:  key_release(JOYPAD_START); break;
                 case SDLK_RETURN: key_release(JOYPAD_SELECT); break;
                 case SDLK_p:  if(status->debug) status->isPaused = !status->isPaused; break;
+                case SDLK_s:  mmu->write_save_state(); break;
             }
             break;
         case SDL_KEYDOWN:

@@ -1,6 +1,6 @@
 #include "gb.h"
 
-void GB::init(std::string rom, std::string bootrom, bool debug){
+void GB::init(std::string rom, std::string bootrom, std::string save_file, bool debug){
     interrupts = new Interrupts(&registers, &mmu);
     cpu = new CPU(&registers, interrupts, &mmu);
     ppu = new PPU(&registers, interrupts, &mmu);
@@ -16,6 +16,9 @@ void GB::init(std::string rom, std::string bootrom, bool debug){
         cpu->no_bootrom_init();
 
     mmu.load_cartrige_rom(rom);
+
+    if(!save_file.empty())
+        mmu.load_save_state(save_file);
 }
 
 void GB::run(){
@@ -43,17 +46,19 @@ void GB::run(){
 int main(int argc, char *argv[]){
     std::string rom = "";
     std::string bootrom = "";
+    std::string save_file = "";
     int debug_flag = 0;
 
     static struct option long_options[] = {
             {"debug",   no_argument,       &debug_flag, true},
             {"bootrom", required_argument, 0, 'b'},
             {"rom",     required_argument, 0, 'r'},
+            {"load-save",     required_argument, 0, 'l'},
         };
 
     int opt;
     int option_index = 0;
-    while ((opt = getopt_long (argc, argv, "b:r:", long_options, &option_index)) != EOF){
+    while ((opt = getopt_long (argc, argv, "b:r:l:", long_options, &option_index)) != EOF){
         if (-1 == opt)
             break;
         switch (opt) {
@@ -81,6 +86,13 @@ int main(int argc, char *argv[]){
                     exit(1);
                 }
                 break;
+            case 'l':
+                save_file = std::string(optarg);
+                if(access(save_file.c_str(), F_OK ) == -1){
+                    std::cout << "The save file doesn't exist" << std::endl;
+                    exit(1);
+                }
+                break;
             default:
                 abort ();
         }
@@ -100,7 +112,7 @@ int main(int argc, char *argv[]){
 
     GB gameboy;
      
-    gameboy.init(rom, bootrom, debug_flag);
+    gameboy.init(rom, bootrom, save_file, debug_flag);
     gameboy.run(); 
     
     return 0;

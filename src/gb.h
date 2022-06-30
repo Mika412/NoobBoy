@@ -28,6 +28,6 @@ class GB{
         Renderer *renderer;
         Joypad *joypad;
 
-    void init(std::string rom, std::string bootrom, bool debug);
+    void init(std::string rom, std::string bootrom, std::string save_file, bool debug);
     void run();
 };

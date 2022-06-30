@@ -3,6 +3,7 @@ CMakeFiles
 cmake_install.cmake
 GameBoy
 roms
+saves
 .cache
 build.sh
 Makefile

@@ -15,12 +15,13 @@ $ make
     
 ### Running
 ```
-usage: ./GameBoy --rom <rom_file> [--bootrom <bootrom_file>] [--debug]
+usage: ./GameBoy --rom <rom_file> [--bootrom <bootrom_file>] [--load-save <save_file>] [--debug]
 
 arguments:
   --rom                     Standard GameBoy rom
   --bootrom                 Official DMG bootrom
   --debug                   Enable the debugger
+  --load-save               Save file to load
 ```
 
 
@@ -60,8 +61,10 @@ arguments:
 - VRAM rendering with X/Y scroll overlay
 - Memory Bank Controller (MBC)
 - Debug mode
+- Save states (dump of external RAM banks)
 
 Currently, the main missing feature is `sound`, which I refuse to touch. Additionally, the `halt bug` is missing because of the incorrect interrupt timings.
+
 
 ## Game Screenshots
 

@@ -2,7 +2,13 @@
 #include "registers.h"
 
 #include <iostream>
+#include <iomanip>
+#include <ctime>
+#include <filesystem>
 
+#include <string>
+#include <sstream>
+#include <cstring>
 
 struct Colour {
     union {
@@ -15,6 +21,8 @@ struct Colour {
 
 class MMU {
     public:
+        char rom_title[16];
+
         uint8_t memory[0xFFFF];
 
         // WTF: This variable is unused, but removing her breaks some games
@@ -114,4 +122,6 @@ class MMU {
         void UpdateTile(uint16_t address, uint8_t value);
         void UpdateSprite(uint16_t address, uint8_t value);
         void UpdatePalette(Colour *palette, uint8_t value);
+        void write_save_state();
+        void load_save_state(std::string save_file);
 };

@@ -9,6 +9,48 @@ void MMU::load_boot_rom(std::string location) {
     DMG_ROM.read((char*)memory, 0x100);
 }
 
+void MMU::load_save_state(std::string save_file){
+    std::ifstream SAVE(save_file, std::ios::binary);
+    SAVE.seekg(0, std::ios::end);
+
+    long size = SAVE.tellg();
+    if(size != (0x7f * 0x2000 + sizeof(rom_title))){
+        std::cout << "Save file possibly corrupted. Save not loaded." << std::endl;
+        return;
+    }
+    char save_title[16];
+    SAVE.seekg(0, std::ios::beg);
+    SAVE.read((char*)save_title, sizeof(save_title));
+    std::cout << "Save file " << save_title << std::endl;
+    if(strcmp(rom_title, save_title) != 0 ){
+        std::cout << "This save file is not for this rom. Save not loaded." << std::endl;
+        return;
+    }
+    SAVE.seekg(sizeof(save_title));
+    SAVE.read((char*)RAMbanks, 0x7f * 0x2000);
+
+    std::cout << "Save file loaded successfully" << std::endl;
+}
+
+void MMU::write_save_state(){
+    std::filesystem::create_directory("saves");
+
+    auto t = std::time(nullptr);
+    auto tm = *std::localtime(&t);
+    std::ostringstream oss;
+    oss << "saves/" 
+        << reinterpret_cast<char *>(rom_title) 
+        << "_" 
+        << std::put_time(&tm, "%d-%m-%Y %H-%M-%S") 
+        << ".save";
+    std::string filename = oss.str();
+
+    std::ofstream out(filename, std::ios_base::binary);
+    out.write((char*)rom_title, sizeof(rom_title));
+    out.write((char*)RAMbanks, sizeof(uint8_t)*(0x7f * 0x2000));
+
+    std::cout << "Saved state to: " << filename << std::endl;
+}
 
 void MMU::load_cartrige_rom(std::string location) {
     std::ifstream GAME_ROM(location, std::ios::binary);
@@ -24,6 +66,10 @@ void MMU::load_cartrige_rom(std::string location) {
         GAME_ROM.seekg(i * 0x4000);
         GAME_ROM.read((char*)ROMbanks[i], 0x4000);
     }
+    
+    std::copy(ROMbanks[0] + 0x134, ROMbanks[0] + 0x143, rom_title);
+    
+    std::cout << "Rom Title: " << +rom_title << std::endl;
 }
 
 void MMU::UpdateTile(uint16_t laddress, uint8_t value) {
