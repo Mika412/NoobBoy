@@ -1,6 +1,6 @@
-# GameBoy Emulator
+# NoobBoy - GameBoy Emulator
 
-This is a simple gameboy emulator that I'm writing to learn more about the world of emulation. This emulator has nothing special and has no extra features compared to other DMG emulators.
+NoobBoy is a simple gameboy emulator that I'm writing to learn more about the world of emulation. This emulator has nothing special and has no extra features compared to other DMG emulators.
 
 <img src="screenshots/mario_debug.png" width="800">
 
