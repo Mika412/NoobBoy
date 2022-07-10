@@ -20,8 +20,8 @@ void CPU::no_bootrom_init() {
     registers->sp = 0xfffe;
     registers->pc = 0x0100;
 
-    registers->set_register_flags(FLAG_ZERO | FLAG_HALF_CARRY | FLAG_CARRY);
-    registers->unset_register_flags(FLAG_SUBTRACT);
+    registers->set_flags(FLAG_ZERO | FLAG_HALF_CARRY | FLAG_CARRY, true);
+    registers->set_flags(FLAG_SUBTRACT, false);
 
     memory->romDisabled = true;
     memory->memory[0xFF0F] = 0xE1;

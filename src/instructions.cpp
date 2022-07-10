@@ -32,7 +32,7 @@ void InstructionSet::execute(uint8_t opcode) {
             break;
         case 0x07: // RLCA
             rlc(&registers->a);
-            registers->unset_register_flags(FLAG_ZERO);
+            registers->set_flags(FLAG_ZERO, false);
             break;
         case 0x08: // LD (nn), SP
             mmu->write_short(mmu->read_short(registers->pc), registers->sp);
@@ -58,7 +58,7 @@ void InstructionSet::execute(uint8_t opcode) {
             break;
         case 0x0F: // RRCA
             rrc(&registers->a);
-            registers->unset_register_flags(FLAG_ZERO);
+            registers->set_flags(FLAG_ZERO, false);
             break;
         case 0x10: // STOP
             break;
@@ -83,7 +83,7 @@ void InstructionSet::execute(uint8_t opcode) {
             break;
         case 0x17: // RLA
             rl(&registers->a);
-            registers->unset_register_flags(FLAG_ZERO);
+            registers->set_flags(FLAG_ZERO, false);
             break;
         case 0x18: // JR nn
         {
@@ -111,10 +111,10 @@ void InstructionSet::execute(uint8_t opcode) {
             break;
         case 0x1F: // RRA
             rr(&registers->a);
-            registers->unset_register_flags(FLAG_ZERO);
+            registers->set_flags(FLAG_ZERO, false);
             break;
         case 0x20: // JR NZ, *
-            jump_add(!registers->is_set_register_flag(FLAG_ZERO));
+            jump_add(!registers->is_flag_set(FLAG_ZERO));
             break;
         case 0x21: // LD HL, nn
             registers->hl = mmu->read_short(registers->pc);
@@ -139,35 +139,33 @@ void InstructionSet::execute(uint8_t opcode) {
             {
                 uint16_t value = registers->a;
 
-                if(registers->is_set_register_flag(FLAG_SUBTRACT)){
-                    if(registers->is_set_register_flag(FLAG_CARRY)) {
+                if(registers->is_flag_set(FLAG_SUBTRACT)){
+                    if(registers->is_flag_set(FLAG_CARRY)) {
                         value -= 0x60;
                     }
 
-                    if(registers->is_set_register_flag(FLAG_HALF_CARRY)) {
+                    if(registers->is_flag_set(FLAG_HALF_CARRY)) {
                         value -= 0x6;
                     }
                 }else{
-                    if(registers->is_set_register_flag(FLAG_CARRY) || value > 0x99) {
+                    if(registers->is_flag_set(FLAG_CARRY) || value > 0x99) {
                         value += 0x60;
-                        registers->set_register_flags(FLAG_CARRY);
+                        registers->set_flags(FLAG_CARRY, true);
                     }
 
-                    if(registers->is_set_register_flag(FLAG_HALF_CARRY) || (value & 0xF) > 0x9) {
+                    if(registers->is_flag_set(FLAG_HALF_CARRY) || (value & 0xF) > 0x9) {
                         value += 0x6;
                     }
 
                 }
                 registers->a = value;
 
-                if(registers->a) registers->unset_register_flags(FLAG_ZERO); 
-                else registers->set_register_flags(FLAG_ZERO);
-
-                registers->unset_register_flags(FLAG_HALF_CARRY);
+                registers->set_flags(FLAG_ZERO, !registers->a);
+                registers->set_flags(FLAG_HALF_CARRY, false);
                 break;
             }
         case 0x28: // JR Z, *
-            jump_add(registers->is_set_register_flag(FLAG_ZERO));
+            jump_add(registers->is_flag_set(FLAG_ZERO));
             break;
         case 0x29: // ADD HL, HL
             add(&registers->hl, registers->hl);
@@ -189,10 +187,10 @@ void InstructionSet::execute(uint8_t opcode) {
             break;
         case 0x2F: // CPL
             registers->a = ~registers->a; 
-            registers->set_register_flags(FLAG_SUBTRACT | FLAG_HALF_CARRY);
+            registers->set_flags(FLAG_SUBTRACT | FLAG_HALF_CARRY, true);
             break;
         case 0x30: // JR NC, *
-            jump_add(!registers->is_set_register_flag(FLAG_CARRY));
+            jump_add(!registers->is_flag_set(FLAG_CARRY));
             break;
         case 0x31: // LD SP, nn
             registers->sp = mmu->read_short(registers->pc);
@@ -222,11 +220,11 @@ void InstructionSet::execute(uint8_t opcode) {
             mmu->write_byte(registers->hl, mmu->read_byte(registers->pc++));
             break;
         case 0x37: // SCF
-            registers->set_register_flags(FLAG_CARRY);
-            registers->unset_register_flags(FLAG_SUBTRACT | FLAG_HALF_CARRY);
+            registers->set_flags(FLAG_CARRY, true);
+            registers->set_flags(FLAG_SUBTRACT | FLAG_HALF_CARRY, false);
             break;
         case 0x38: // JR C, *
-            jump_add(registers->is_set_register_flag(FLAG_CARRY));
+            jump_add(registers->is_flag_set(FLAG_CARRY));
             break;
         case 0x39: // ADD HL, SP
             add(&registers->hl, registers->sp);
@@ -247,10 +245,9 @@ void InstructionSet::execute(uint8_t opcode) {
             registers->a = mmu->read_byte(registers->pc++);
             break;
         case 0x3F: // CCF
-            if(registers->is_set_register_flag(FLAG_CARRY)) registers->unset_register_flags(FLAG_CARRY);
-            else registers->set_register_flags(FLAG_CARRY);
+            registers->set_flags(FLAG_CARRY, !registers->is_flag_set(FLAG_CARRY));
 
-            registers->unset_register_flags(FLAG_SUBTRACT | FLAG_HALF_CARRY);
+            registers->set_flags(FLAG_SUBTRACT | FLAG_HALF_CARRY, false);
             break;
         case 0x40: // LD B, B
             break;
@@ -632,19 +629,19 @@ void InstructionSet::execute(uint8_t opcode) {
             cp(registers->a);
             break;
         case 0xC0: // RET NZ
-            ret(!registers->is_set_register_flag(FLAG_ZERO));
+            ret(!registers->is_flag_set(FLAG_ZERO));
             break;
         case 0xC1: // POP BC
             registers->bc = mmu->read_short_stack(&registers->sp);
             break;
         case 0xC2: // JP NZ, nn
-            jump(!registers->is_set_register_flag(FLAG_ZERO));
+            jump(!registers->is_flag_set(FLAG_ZERO));
             break ;
         case 0xC3: // JP nn
             registers->pc = mmu->read_short(registers->pc);
             break;
         case 0xC4: // CALL NZ, nn
-            call(!registers->is_set_register_flag(FLAG_ZERO));
+            call(!registers->is_flag_set(FLAG_ZERO));
             break;
         case 0xC5: // PUSH BC
             mmu->write_short_stack(&registers->sp, registers->bc);
@@ -657,20 +654,20 @@ void InstructionSet::execute(uint8_t opcode) {
             registers->pc = 0x0000;
             break;
         case 0xC8: // RET Z
-            ret(registers->is_set_register_flag(FLAG_ZERO));
+            ret(registers->is_flag_set(FLAG_ZERO));
             break;
         case 0xC9: // RET
             registers->pc = mmu->read_short_stack(&registers->sp);
             break;
         case 0xCA: // JP Z, nn
-            jump(registers->is_set_register_flag(FLAG_ZERO));
+            jump(registers->is_flag_set(FLAG_ZERO));
             break;
         case 0xCB:
             extended_execute(mmu->read_byte(registers->pc++));
             // registers->pc++;
             break;
         case 0xCC: // CALL Z, nn
-            call(registers->is_set_register_flag(FLAG_ZERO));
+            call(registers->is_flag_set(FLAG_ZERO));
             break;
 
         case 0xCD: // CALL nn
@@ -689,16 +686,16 @@ void InstructionSet::execute(uint8_t opcode) {
             registers->pc = 0x0008;
             break;
         case 0xD0: // RET NC
-            ret(!registers->is_set_register_flag(FLAG_CARRY));
+            ret(!registers->is_flag_set(FLAG_CARRY));
             break;
         case 0xD1: // POP DE
             registers->de = mmu->read_short_stack(&registers->sp);
             break;
         case 0xD2: // JP NC, nn
-            jump(!registers->is_set_register_flag(FLAG_CARRY));
+            jump(!registers->is_flag_set(FLAG_CARRY));
             break;
         case 0xD4: // CALL NC, nn
-            call(!registers->is_set_register_flag(FLAG_CARRY));
+            call(!registers->is_flag_set(FLAG_CARRY));
             break;
         case 0xD5: // PUSH DE
             mmu->write_short_stack(&registers->sp, registers->de);
@@ -711,17 +708,17 @@ void InstructionSet::execute(uint8_t opcode) {
             registers->pc = 0x0010;
             break;
         case 0xD8: // RET C
-            ret(registers->is_set_register_flag(FLAG_CARRY));
+            ret(registers->is_flag_set(FLAG_CARRY));
             break;
         case 0xD9: // RETI
             interrupts->set_master_flag(true);
             registers->pc = mmu->read_short_stack(&registers->sp);
             break;
         case 0xDA: // JP C, nn
-            jump(registers->is_set_register_flag(FLAG_CARRY));
+            jump(registers->is_flag_set(FLAG_CARRY));
             break;
         case 0xDC: // CALL C, nn
-            call(registers->is_set_register_flag(FLAG_CARRY));
+            call(registers->is_flag_set(FLAG_CARRY));
             break;
         case 0xDE: // SUB n
             sbc(mmu->read_byte(registers->pc++)); 
@@ -871,187 +868,136 @@ void InstructionSet::jump(bool condition){
     }
 }
 void InstructionSet::inc(uint8_t *value){
-    if((*value & 0x0f) == 0x0f) registers->set_register_flags(FLAG_HALF_CARRY);
-    else registers->unset_register_flags(FLAG_HALF_CARRY);
-    
-    *value += 1;
-    
-    if(*value) registers->unset_register_flags(FLAG_ZERO);
-    else registers->set_register_flags(FLAG_ZERO);
+    registers->set_flags(FLAG_HALF_CARRY, (*value & 0x0f) == 0x0f);
 
-    registers->unset_register_flags(FLAG_SUBTRACT);
+    *value += 1;
+
+    registers->set_flags(FLAG_ZERO, !*value);
+    registers->set_flags(FLAG_SUBTRACT, false);
 }
 
 void InstructionSet::dec(uint8_t *value){
-    if(*value & 0x0f) registers->unset_register_flags(FLAG_HALF_CARRY);
-    else registers->set_register_flags(FLAG_HALF_CARRY);
+    registers->set_flags(FLAG_HALF_CARRY, !(*value & 0x0f));
     
     *value -= 1;
 
-    if(*value) registers->unset_register_flags(FLAG_ZERO);
-    else registers->set_register_flags(FLAG_ZERO);
-
-    registers->set_register_flags(FLAG_SUBTRACT);
+    registers->set_flags(FLAG_ZERO, !*value);
+    registers->set_flags(FLAG_SUBTRACT, true);
 }
 
 void InstructionSet::cp(uint8_t value){
     uint8_t temp_val = registers->a;
-    if(value > temp_val) registers->set_register_flags(FLAG_CARRY);
-    else registers->unset_register_flags(FLAG_CARRY);
-    
-    if((value & 0x0f) > (temp_val & 0x0f)) registers->set_register_flags(FLAG_HALF_CARRY);
-    else registers->unset_register_flags(FLAG_HALF_CARRY);
+    registers->set_flags(FLAG_CARRY, value > temp_val);
+    registers->set_flags(FLAG_HALF_CARRY, (value & 0x0f) > (temp_val & 0x0f));
     
     temp_val -= value;
     
-    if(temp_val) registers->unset_register_flags(FLAG_ZERO);
-    else registers->set_register_flags(FLAG_ZERO);
-
-    registers->set_register_flags(FLAG_SUBTRACT);
+    registers->set_flags(FLAG_ZERO, !temp_val);
+    registers->set_flags(FLAG_SUBTRACT, true);
 }
 
 void InstructionSet::add(uint8_t *destination, uint8_t value){
     uint16_t result = *destination + value;
 
-    if(result > 0xff) registers->set_register_flags(FLAG_CARRY);
-    else registers->unset_register_flags(FLAG_CARRY);
-
-    if(((*destination & 0x0f) + (value & 0x0f)) > 0x0f) registers->set_register_flags(FLAG_HALF_CARRY);
-    else registers->unset_register_flags(FLAG_HALF_CARRY);
+    registers->set_flags(FLAG_CARRY, result > 0xff);
+    registers->set_flags(FLAG_HALF_CARRY, ((*destination & 0x0f) + (value & 0x0f)) > 0x0f);
 
     *destination = result;
-    if(*destination) registers->unset_register_flags(FLAG_ZERO);
-    else registers->set_register_flags(FLAG_ZERO);
 
-    registers->unset_register_flags(FLAG_SUBTRACT);
+    registers->set_flags(FLAG_ZERO, !*destination);
+    registers->set_flags(FLAG_SUBTRACT, false);
 }
 
 void InstructionSet::add(uint16_t *destination, uint16_t value){
     uint32_t result = *destination + value;
     
-    if(result > 0xffff) registers->set_register_flags(FLAG_CARRY);
-    else registers->unset_register_flags(FLAG_CARRY);
-    
-    if(((*destination & 0x0fff) + (value & 0x0fff)) > 0x0fff) registers->set_register_flags(FLAG_HALF_CARRY);
-    else registers->unset_register_flags(FLAG_HALF_CARRY);
+    registers->set_flags(FLAG_CARRY, result > 0xffff);
+    registers->set_flags(FLAG_HALF_CARRY, ((*destination & 0x0fff) + (value & 0x0fff)) > 0x0fff);
 
     *destination = (uint16_t)result;
 
-    registers->unset_register_flags(FLAG_SUBTRACT);
+    registers->set_flags(FLAG_SUBTRACT, false);
 }
 
 void InstructionSet::add(uint16_t *destination, int8_t value){
     uint16_t result = *destination + value;
 
-    registers->unset_register_flags(FLAG_SUBTRACT | FLAG_ZERO | FLAG_CARRY | FLAG_HALF_CARRY);
-
-    if (((registers->sp ^ value ^ (result & 0xFFFF)) & 0x100) == 0x100)
-        registers->set_register_flags(FLAG_CARRY);
-    
-    if (((registers->sp ^ value ^ (result & 0xFFFF)) & 0x10) == 0x10)
-        registers->set_register_flags(FLAG_HALF_CARRY);
+    registers->set_flags(FLAG_CARRY, ((registers->sp ^ value ^ (result & 0xFFFF)) & 0x100) == 0x100);
+    registers->set_flags(FLAG_HALF_CARRY, ((registers->sp ^ value ^ (result & 0xFFFF)) & 0x10) == 0x10);
 
     *destination = result & 0xFFFF;
+
+    registers->set_flags(FLAG_SUBTRACT | FLAG_ZERO, false);
 }
 void InstructionSet::ldhl(int8_t value){
     uint16_t result = registers->sp + value;
 
-    registers->unset_register_flags(FLAG_SUBTRACT | FLAG_ZERO | FLAG_CARRY | FLAG_HALF_CARRY);
-
-    if (((registers->sp ^ value ^ result) & 0x100) == 0x100)
-        registers->set_register_flags(FLAG_CARRY);
-    
-    if (((registers->sp ^ value ^ result) & 0x10) == 0x10)
-        registers->set_register_flags(FLAG_HALF_CARRY);
+    registers->set_flags(FLAG_CARRY, ((registers->sp ^ value ^ result) & 0x100) == 0x100);
+    registers->set_flags(FLAG_HALF_CARRY, ((registers->sp ^ value ^ result) & 0x10) == 0x10);
 
     registers->hl = result;
+
+    registers->set_flags(FLAG_SUBTRACT | FLAG_ZERO, false);
 }
 
 void InstructionSet::adc(uint8_t value) {
-    int carry = registers->is_set_register_flag(FLAG_CARRY) ? 1 : 0;
+    int carry = registers->is_flag_set(FLAG_CARRY) ? 1 : 0;
     int result = registers->a + value + carry;
     
-    if((int8_t) result) registers->unset_register_flags(FLAG_ZERO);
-    else registers->set_register_flags(FLAG_ZERO);
-
-    if(result > 0xFF) registers->set_register_flags(FLAG_CARRY);
-    else registers->unset_register_flags(FLAG_CARRY);
-
-    if(((registers->a & 0x0F) + (value & 0x0f) + carry) > 0x0F) registers->set_register_flags(FLAG_HALF_CARRY);
-    else registers->unset_register_flags(FLAG_HALF_CARRY);
-
-    registers->unset_register_flags(FLAG_SUBTRACT);
+    registers->set_flags(FLAG_ZERO, !(int8_t) result);
+    registers->set_flags(FLAG_CARRY, result > 0xff);
+    registers->set_flags(FLAG_HALF_CARRY, ((registers->a & 0x0F) + (value & 0x0f) + carry) > 0x0F);
+    registers->set_flags(FLAG_SUBTRACT, false);
     
     registers->a = (int8_t)(result & 0xff);
 }
 
 void InstructionSet::and_(uint8_t value){
     registers->a = registers->a & value;
-    if(registers->a) registers->unset_register_flags(FLAG_ZERO);
-    else registers->set_register_flags(FLAG_ZERO);
 
-    registers->set_register_flags(FLAG_HALF_CARRY);
-    registers->unset_register_flags(FLAG_SUBTRACT | FLAG_CARRY);
+    registers->set_flags(FLAG_ZERO, !registers->a);
+    registers->set_flags(FLAG_HALF_CARRY, true);
+    registers->set_flags(FLAG_SUBTRACT | FLAG_CARRY, false);
 }
 
 void InstructionSet::or_(uint8_t value) {
     registers->a |= value;
-    
-    if(registers->a) registers->unset_register_flags(FLAG_ZERO);
-    else registers->set_register_flags(FLAG_ZERO);
-    
-    registers->unset_register_flags(FLAG_CARRY | FLAG_SUBTRACT | FLAG_HALF_CARRY);
+
+    registers->set_flags(FLAG_ZERO, !registers->a);
+    registers->set_flags(FLAG_CARRY | FLAG_SUBTRACT | FLAG_HALF_CARRY, false);
 }
 
 void InstructionSet::sub(uint8_t value){
-    if(value > registers->a) registers->set_register_flags(FLAG_CARRY);
-    else registers->unset_register_flags(FLAG_CARRY);
-    
-    if((value & 0x0f) > (registers->a & 0x0f)) registers->set_register_flags(FLAG_HALF_CARRY);
-    else registers->unset_register_flags(FLAG_HALF_CARRY);
-    
-    registers->a -= value;
-    
-    if(registers->a) registers->unset_register_flags(FLAG_ZERO);
-    else registers->set_register_flags(FLAG_ZERO);
+    registers->set_flags(FLAG_CARRY, value > registers->a);
+    registers->set_flags(FLAG_HALF_CARRY, (value & 0x0f) > (registers->a & 0x0f));
 
-    registers->set_register_flags(FLAG_SUBTRACT);
+    registers->a -= value;
+
+    registers->set_flags(FLAG_ZERO, !registers->a);
+    registers->set_flags(FLAG_SUBTRACT, true);
 }
 
 void InstructionSet::sbc(uint8_t value){
-    bool is_carry = registers->is_set_register_flag(FLAG_CARRY);
+    bool is_carry = registers->is_flag_set(FLAG_CARRY);
+    
+    registers->set_flags(FLAG_CARRY, (value + is_carry) > registers->a);
+    registers->set_flags(FLAG_HALF_CARRY, ((value & 0x0f) + is_carry) > (registers->a & 0x0f));
 
-    if((value + is_carry) > registers->a) registers->set_register_flags(FLAG_CARRY);
-    else registers->unset_register_flags(FLAG_CARRY);
-    
-    if(((value & 0x0f) + is_carry) > (registers->a & 0x0f)) registers->set_register_flags(FLAG_HALF_CARRY);
-    else registers->unset_register_flags(FLAG_HALF_CARRY);
-    
     registers->a -= (value + is_carry);
-    
-    if(registers->a) registers->unset_register_flags(FLAG_ZERO);
-    else registers->set_register_flags(FLAG_ZERO);
 
-    registers->set_register_flags(FLAG_SUBTRACT);
+    registers->set_flags(FLAG_ZERO, !registers->a);
+    registers->set_flags(FLAG_SUBTRACT, true);
 }
 void InstructionSet::xor_(uint8_t value){
     registers->a ^= value;
 
-    if(registers->a) registers->unset_register_flags(FLAG_ZERO);
-    else registers->set_register_flags(FLAG_ZERO);
-
-    registers->unset_register_flags(FLAG_CARRY | FLAG_SUBTRACT | FLAG_HALF_CARRY);
+    registers->set_flags(FLAG_ZERO, !registers->a);
+    registers->set_flags(FLAG_CARRY | FLAG_SUBTRACT | FLAG_HALF_CARRY, false);
 }
 
 void InstructionSet::cp_n(uint8_t operand) {
-    registers->set_register_flags(FLAG_SUBTRACT);
-    
-    if(registers->a == operand) registers->set_register_flags(FLAG_ZERO);
-    else  registers->unset_register_flags(FLAG_ZERO);
-    
-    if(operand > registers->a) registers->set_register_flags(FLAG_CARRY);
-    else registers->unset_register_flags(FLAG_CARRY);
-    
-    if((operand & 0x0f) > (registers->a & 0x0f)) registers->set_register_flags(FLAG_HALF_CARRY);
-    else registers->unset_register_flags(FLAG_HALF_CARRY);
+    registers->set_flags(FLAG_SUBTRACT, true);
+    registers->set_flags(FLAG_ZERO, registers->a == operand);
+    registers->set_flags(FLAG_CARRY, operand > registers->a);
+    registers->set_flags(FLAG_HALF_CARRY, (operand & 0x0f) > (registers->a & 0x0f));
 }

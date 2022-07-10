@@ -174,7 +174,7 @@ void PPU::render_scan_line_sprites(bool* row_pixels){
     bool visible_sprites[40];
     int sprite_row_count = 0;
 
-    for (int i = 0; i < 40; i++) {
+    for (int i = 39; i >= 0; i--) {
         auto sprite = mmu->sprites[i];
 
         if (!sprite.ready) {

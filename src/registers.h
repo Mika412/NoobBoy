@@ -50,12 +50,9 @@ class Registers {
                 uint16_t hl;
             };
         };  
-        
 
-        // void set_register_flags(FlagsRegister flags);
-        void set_register_flags(uint8_t flags);
-        void unset_register_flags(uint8_t flags);
-        bool is_set_register_flag(uint8_t flag);
+        void set_flags(uint8_t flags, bool state);
+        bool is_flag_set(uint8_t flag);
 
         // Debug
         void print_flags();

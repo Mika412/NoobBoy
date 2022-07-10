@@ -910,11 +910,9 @@ void InstructionSet::extended_execute(uint8_t opcode){
 }
 
 void InstructionSet::bit(uint8_t bit, uint8_t value){
-    if(value & bit) registers->unset_register_flags(FLAG_ZERO);
-    else registers->set_register_flags(FLAG_ZERO);
-    
-    registers->unset_register_flags(FLAG_SUBTRACT);
-    registers->set_register_flags(FLAG_HALF_CARRY);
+    registers->set_flags(FLAG_ZERO, !(value & bit));
+    registers->set_flags(FLAG_HALF_CARRY, true);
+    registers->set_flags(FLAG_SUBTRACT, false);
 }
 
 void InstructionSet::res(uint8_t bit, uint8_t *rgst){
@@ -926,105 +924,84 @@ void InstructionSet::set(uint8_t bit, uint8_t *rgst){
 }
 
 void InstructionSet::rl(uint8_t *value){
-    int carry = registers->is_set_register_flag(FLAG_CARRY);
+    int carry = registers->is_flag_set(FLAG_CARRY);
    
-    if(*value & (1 << 7)) registers->set_register_flags(FLAG_CARRY);
-    else registers->unset_register_flags(FLAG_CARRY);
+    registers->set_flags(FLAG_CARRY, *value & (1 << 7));
     
     *value <<= 1;
     *value += carry;
     
-    if(*value) registers->unset_register_flags(FLAG_ZERO);
-    else registers->set_register_flags(FLAG_ZERO);
-    
-    registers->unset_register_flags(FLAG_SUBTRACT | FLAG_HALF_CARRY);
+    registers->set_flags(FLAG_ZERO, !*value);
+    registers->set_flags(FLAG_SUBTRACT | FLAG_HALF_CARRY, false);
 }
 
 void InstructionSet::rlc(uint8_t *value){
     int carry = (*value >> 7) & 0x01;
     
-    if(*value & (1 << 7)) registers->set_register_flags(FLAG_CARRY);
-    else registers->unset_register_flags(FLAG_CARRY);
-    
+    registers->set_flags(FLAG_CARRY, *value & (1 << 7));
+
     *value <<= 1;
     *value += carry;
     
-    if(*value) registers->unset_register_flags(FLAG_ZERO);
-    else registers->set_register_flags(FLAG_ZERO);
-    
-    registers->unset_register_flags(FLAG_SUBTRACT | FLAG_HALF_CARRY);
+    registers->set_flags(FLAG_ZERO, !*value);
+    registers->set_flags(FLAG_SUBTRACT | FLAG_HALF_CARRY, false);
 }
 
 void InstructionSet::rr(uint8_t *value){
-    int carry = registers->is_set_register_flag(FLAG_CARRY);
+    int carry = registers->is_flag_set(FLAG_CARRY);
     
-    if(*value & 0x01) registers->set_register_flags(FLAG_CARRY);
-    else registers->unset_register_flags(FLAG_CARRY);
+    registers->set_flags(FLAG_CARRY, *value & 0x01);
     
     *value >>= 1;
     *value |= (carry << 7);
     
-    if(*value) registers->unset_register_flags(FLAG_ZERO);
-    else registers->set_register_flags(FLAG_ZERO);
-    
-    registers->unset_register_flags(FLAG_SUBTRACT | FLAG_HALF_CARRY);
+    registers->set_flags(FLAG_ZERO, !*value);
+    registers->set_flags(FLAG_SUBTRACT | FLAG_HALF_CARRY, false);
 }
 
 void InstructionSet::rrc(uint8_t *value){
     int carry = *value & 0x01;
     
-    if(carry) registers->set_register_flags(FLAG_CARRY);
-    else registers->unset_register_flags(FLAG_CARRY);
-    
+    registers->set_flags(FLAG_CARRY, carry);
+
     *value >>= 1;
     *value |= (carry << 7);
     
-    if(*value) registers->unset_register_flags(FLAG_ZERO);
-    else registers->set_register_flags(FLAG_ZERO);
-    
-    registers->unset_register_flags(FLAG_SUBTRACT | FLAG_HALF_CARRY);
+    registers->set_flags(FLAG_ZERO, !*value);
+    registers->set_flags(FLAG_SUBTRACT | FLAG_HALF_CARRY, false);
 }
 
 
 // Shift n left into Carry
 void InstructionSet::sla(uint8_t *value){
-    if(*value & (1 << 7)) registers->set_register_flags(FLAG_CARRY);
-    else registers->unset_register_flags(FLAG_CARRY);
+    registers->set_flags(FLAG_CARRY, *value & (1 << 7));
     
     *value <<= 1;
     
-    if(*value) registers->unset_register_flags(FLAG_ZERO);
-    else registers->set_register_flags(FLAG_ZERO);
-    
-    registers->unset_register_flags(FLAG_SUBTRACT | FLAG_HALF_CARRY);
+    registers->set_flags(FLAG_ZERO, !*value);
+    registers->set_flags(FLAG_SUBTRACT | FLAG_HALF_CARRY, false);
 }
 
 // Shift n right into Carry. Don't change MSB
 void InstructionSet::sra(uint8_t *value){
-    if(*value & 0x01) registers->set_register_flags(FLAG_CARRY);
-    else registers->unset_register_flags(FLAG_CARRY);
+    registers->set_flags(FLAG_CARRY, *value & 0x01);
     
     int msb = *value & (1 << 7);
     *value >>= 1;
     *value |= msb;
 
-    if(*value) registers->unset_register_flags(FLAG_ZERO);
-    else registers->set_register_flags(FLAG_ZERO);
-    
-    registers->unset_register_flags(FLAG_SUBTRACT | FLAG_HALF_CARRY);
+    registers->set_flags(FLAG_ZERO, !*value);
+    registers->set_flags(FLAG_SUBTRACT | FLAG_HALF_CARRY, false);
 }
 
 // Shift n right into Carry. Reset MSB
 void InstructionSet::srl(uint8_t *value){
-    if(*value & 0x01) registers->set_register_flags(FLAG_CARRY);
-    else registers->unset_register_flags(FLAG_CARRY);
-    
+    registers->set_flags(FLAG_CARRY, *value & 0x01);
+
     *value >>= 1;
     
-    if(*value) registers->unset_register_flags(FLAG_ZERO);
-    else registers->set_register_flags(FLAG_ZERO);
-    
-    registers->unset_register_flags(FLAG_SUBTRACT | FLAG_HALF_CARRY);
+    registers->set_flags(FLAG_ZERO, !*value);
+    registers->set_flags(FLAG_SUBTRACT | FLAG_HALF_CARRY, false);
 }
 
 
@@ -1033,8 +1010,6 @@ void InstructionSet::swap(uint8_t *value){
     uint8_t lower = *value << 4;
     *value = (*value >> 4) | lower;
     
-    if(*value) registers->unset_register_flags(FLAG_ZERO);
-    else registers->set_register_flags(FLAG_ZERO);
-    
-    registers->unset_register_flags(FLAG_SUBTRACT | FLAG_HALF_CARRY | FLAG_CARRY);
+    registers->set_flags(FLAG_ZERO, !*value);
+    registers->set_flags(FLAG_SUBTRACT | FLAG_HALF_CARRY | FLAG_CARRY, false);
 }

@@ -1,19 +1,15 @@
 #include "registers.h"
 
-void Registers::set_register_flags(uint8_t flags) {
-    this->f |= flags;
-}
-
-void Registers::unset_register_flags(uint8_t flags) {
-    this->f &= ~flags;
-}
-
-bool Registers::is_set_register_flag(uint8_t flag) {
+bool Registers::is_flag_set(uint8_t flag) {
     return this->f & flag;
 }
 
+void Registers::set_flags(uint8_t flags, bool state) {
+    this->f = state ? (this->f | flags) : (this->f & ~flags);
+}
+
 void Registers::print_flags(){
-    std::cout << "Z: " << std::hex << +is_set_register_flag(FLAG_ZERO) << " N: " << std::hex << +is_set_register_flag(FLAG_SUBTRACT) << " H: " << std::hex << +is_set_register_flag(FLAG_HALF_CARRY) << " C: " << std::hex << +is_set_register_flag(FLAG_CARRY) << std::endl;
+    std::cout << "Z: " << std::hex << +is_flag_set(FLAG_ZERO) << " N: " << std::hex << +is_flag_set(FLAG_SUBTRACT) << " H: " << std::hex << +is_flag_set(FLAG_HALF_CARRY) << " C: " << std::hex << +is_flag_set(FLAG_CARRY) << std::endl;
 }
 
 void Registers::print_registers(){
