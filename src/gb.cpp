@@ -8,8 +8,6 @@ void GB::init(std::string rom, std::string bootrom, std::string save_file, bool 
     joypad = new Joypad(&status, interrupts, &mmu);
     status.debug = debug;
 
-    renderer = new Renderer(&status, cpu, ppu, &registers, interrupts, &mmu);
-
     if(!bootrom.empty())
         mmu.load_boot_rom(bootrom);
     else
@@ -19,6 +17,8 @@ void GB::init(std::string rom, std::string bootrom, std::string save_file, bool 
 
     if(!save_file.empty())
         mmu.load_save_state(save_file);
+
+    renderer = new Renderer(&status, cpu, ppu, &registers, interrupts, &mmu);
 }
 
 void GB::run(){
