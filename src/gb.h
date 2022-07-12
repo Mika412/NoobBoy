@@ -3,6 +3,7 @@
 #include "ppu.h"
 #include "timer.h"
 #include "renderer.h"
+#include "cartridge.h"
 #include "interrupt.h"
 #include "joypad.h"
 #include "status.h"
@@ -20,7 +21,7 @@ class GB{
         Status status;
 
         Registers registers;
-        MMU mmu;
+        MMU *mmu;
         CPU *cpu;
         PPU *ppu;
         Interrupts *interrupts;
@@ -28,6 +29,7 @@ class GB{
         Renderer *renderer;
         Joypad *joypad;
 
-    void init(std::string rom, std::string bootrom, std::string save_file, bool debug);
+    void init(std::string rom, std::string bootrom = "", std::string save_file = "", bool debug = false);
+    void init(Cartridge *cartridge, std::string bootrom = "", bool debug = false);
     void run();
 };

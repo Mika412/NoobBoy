@@ -1,14 +1,13 @@
 #pragma once
-#include "registers.h"
+#include "cartridge.h"
 
 #include <iostream>
 #include <iomanip>
 #include <ctime>
-#include <filesystem>
+#include <fstream>
 
 #include <string>
 #include <sstream>
-#include <cstring>
 
 struct Colour {
     union {
@@ -21,20 +20,12 @@ struct Colour {
 
 class MMU {
     public:
-        char rom_title[16];
-
         uint8_t memory[0xFFFF];
-
-        // WTF: This variable is unused, but removing her breaks some games
-        int mbcType = 0;
-        bool mbcRamEnabled = false;
-        uint8_t mbcRomMode = 0;
-        uint8_t mbcRomNumber = 1;
-        uint8_t mbcRamNumber = 0;
-        uint8_t ROMbanks[0x7F][0x4000];
-        uint8_t RAMbanks[0x7F][0x2000];
+		Cartridge *cartridge;
 
         uint8_t joypad = 0xFF;
+
+		bool cgb_mode = false;
 
         struct clock {
             int t = 0;
@@ -107,8 +98,9 @@ class MMU {
         bool is_halted = false;
         bool trigger_halt_bug = false;
 
+        MMU(Cartridge *cartridge);
+
         void load_boot_rom(std::string location);
-        void load_cartrige_rom(std::string location);
 
         void write_byte(uint16_t address, uint8_t value);
         uint8_t read_byte(uint16_t address);
@@ -122,6 +114,6 @@ class MMU {
         void UpdateTile(uint16_t address, uint8_t value);
         void UpdateSprite(uint16_t address, uint8_t value);
         void UpdatePalette(Colour *palette, uint8_t value);
-        void write_save_state();
-        void load_save_state(std::string save_file);
+
+        void save_game_state();
 };

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "registers.h"
 #include "mmu.h"
 
 enum InterruptFlags { INTERRUPT_VBLANK = (1 << 0), INTERRUPT_LCD = (1 << 1), INTERRUPT_TIMER = (1 << 2), INTERRUPT_SERIAL = (1 << 3), INTERRUPT_JOYPAD = (1 << 4)};

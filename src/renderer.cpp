@@ -16,7 +16,7 @@ Renderer::Renderer(Status *status, CPU *cpu, PPU *gpu, Registers *registers, Int
     SDL_CreateWindowAndRenderer(this->window_width*2, this->window_height*2, 0, &this->window, &this->renderer);
     SDL_RenderSetLogicalSize(this->renderer, this->window_width, this->window_height);
     SDL_SetWindowResizable(this->window, SDL_TRUE);
-    SDL_SetWindowTitle(this->window, mmu->rom_title);
+    SDL_SetWindowTitle(this->window, mmu->cartridge->rom_title);
 
     std::vector<uint8_t> viewport_pixels(this->viewport_width * this->viewport_height * 4, 0xFF );
     this->viewport_pixels = viewport_pixels;

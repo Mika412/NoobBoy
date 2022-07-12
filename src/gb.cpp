@@ -1,30 +1,33 @@
 #include "gb.h"
 
 void GB::init(std::string rom, std::string bootrom, std::string save_file, bool debug){
-    interrupts = new Interrupts(&registers, &mmu);
-    cpu = new CPU(&registers, interrupts, &mmu);
-    ppu = new PPU(&registers, interrupts, &mmu);
-    timer = new Timer(&mmu, interrupts);
-    joypad = new Joypad(&status, interrupts, &mmu);
+    Cartridge* cartridge = new Cartridge(rom, save_file);
+	this->init(cartridge, bootrom, debug);
+}
+
+void GB::init(Cartridge *cartridge, std::string bootrom, bool debug){
+    mmu = new MMU(cartridge);
+
+    interrupts = new Interrupts(&registers, mmu);
+    cpu = new CPU(&registers, interrupts, mmu);
+    ppu = new PPU(&registers, interrupts, mmu);
+    timer = new Timer(mmu, interrupts);
+    joypad = new Joypad(&status, interrupts, mmu);
     status.debug = debug;
 
     if(!bootrom.empty())
-        mmu.load_boot_rom(bootrom);
+        mmu->load_boot_rom(bootrom);
     else
         cpu->no_bootrom_init();
 
-    mmu.load_cartrige_rom(rom);
 
-    if(!save_file.empty())
-        mmu.load_save_state(save_file);
-
-    renderer = new Renderer(&status, cpu, ppu, &registers, interrupts, &mmu);
+    renderer = new Renderer(&status, cpu, ppu, &registers, interrupts, mmu);
 }
 
 void GB::run(){
     while(status.isRunning) {
         if(!status.isPaused || status.doStep){
-            mmu.clock.t_instr = 0;
+            mmu->clock.t_instr = 0;
             bool interrupted = interrupts->check();
             if(!interrupted)
                 cpu->step();
@@ -39,7 +42,7 @@ void GB::run(){
         }
 
         status.doStep = false;
-        joypad->check(mmu.clock.t_instr);
+        joypad->check(mmu->clock.t_instr);
     }
 }
 

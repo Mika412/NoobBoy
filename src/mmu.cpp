@@ -1,6 +1,10 @@
 #include "mmu.h"
 #include "ppu.h"
 
+MMU::MMU(Cartridge *cartridge) {
+	this->cartridge = cartridge;
+}
+
 void MMU::load_boot_rom(std::string location) {
     std::ifstream DMG_ROM(location, std::ios::binary);
     DMG_ROM.seekg(0, std::ios::end);
@@ -9,67 +13,9 @@ void MMU::load_boot_rom(std::string location) {
     DMG_ROM.read((char*)memory, 0x100);
 }
 
-void MMU::load_save_state(std::string save_file){
-    std::ifstream SAVE(save_file, std::ios::binary);
-    SAVE.seekg(0, std::ios::end);
 
-    long size = SAVE.tellg();
-    if(size != (0x7f * 0x2000 + sizeof(rom_title))){
-        std::cout << "Save file possibly corrupted. Save not loaded." << std::endl;
-        return;
-    }
-    char save_title[16];
-    SAVE.seekg(0, std::ios::beg);
-    SAVE.read((char*)save_title, sizeof(save_title));
-    std::cout << "Save file " << save_title << std::endl;
-    if(strcmp(rom_title, save_title) != 0 ){
-        std::cout << "This save file is not for this rom. Save not loaded." << std::endl;
-        return;
-    }
-    SAVE.seekg(sizeof(save_title));
-    SAVE.read((char*)RAMbanks, 0x7f * 0x2000);
-
-    std::cout << "Save file loaded successfully" << std::endl;
-}
-
-void MMU::write_save_state(){
-    std::filesystem::create_directory("saves");
-
-    auto t = std::time(nullptr);
-    auto tm = *std::localtime(&t);
-    std::ostringstream oss;
-    oss << "saves/" 
-        << reinterpret_cast<char *>(rom_title) 
-        << "_" 
-        << std::put_time(&tm, "%d-%m-%Y %H-%M-%S") 
-        << ".save";
-    std::string filename = oss.str();
-
-    std::ofstream out(filename, std::ios_base::binary);
-    out.write((char*)rom_title, sizeof(rom_title));
-    out.write((char*)RAMbanks, sizeof(uint8_t)*(0x7f * 0x2000));
-
-    std::cout << "Saved state to: " << filename << std::endl;
-}
-
-void MMU::load_cartrige_rom(std::string location) {
-    std::ifstream GAME_ROM(location, std::ios::binary);
-    GAME_ROM.seekg(0, std::ios::end);
-    long size = GAME_ROM.tellg();
-    if (size % (16 * 1024) != 0) {
-        std::cout << "Size must be a multiple of 16 KB" << std::endl;
-        return;
-    }
-
-    GAME_ROM.seekg(0, std::ios::beg);
-    for (long i = 0; i < size / 0x4000; i++) {
-        GAME_ROM.seekg(i * 0x4000);
-        GAME_ROM.read((char*)ROMbanks[i], 0x4000);
-    }
-    
-    std::copy(ROMbanks[0] + 0x134, ROMbanks[0] + 0x143, rom_title);
-    
-    std::cout << "Rom Title: " << +rom_title << std::endl;
+void MMU::save_game_state(){
+	cartridge->write_save_state();
 }
 
 void MMU::UpdateTile(uint16_t laddress, uint8_t value) {
@@ -136,14 +82,12 @@ uint8_t MMU::read_byte(uint16_t address) {
     if (address < 0x100 && !romDisabled) return memory[address];
     
     // Switchable ROM banks
-    if (address < 0x4000)
-        return ROMbanks[0][address];
-    else if(address >= 0x4000 && address < 0x8000)
-        return ROMbanks[mbcRomNumber][address - 0x4000];
+    if (address < 0x8000)
+		return cartridge->mbc_rom_read(address);
     
     // Switchable RAM banks
     if (address >= 0xA000 && address <= 0xBFFF)
-        return RAMbanks[mbcRamNumber][address - 0xA000];
+		return cartridge->mbc_ram_read(address - 0xA000);
     
     return memory[address];
 }
@@ -161,13 +105,13 @@ void MMU::write_byte(uint16_t address, uint8_t value) {
         return;
 
     // Copy Sprites from ROM to RAM (OAM)
-    if(address == 0xFF46){ 
+    if(address == 0xFF46)
         for(uint16_t i = 0; i < 160; i++) write_byte(0xFE00 + i, read_byte((value << 8) + i));
-    }
 
-    if(address == 0xff50){
+
+    if(address == 0xff50)
         romDisabled = true;
-    }
+    
     //Timers
     else if(address == 0xff04) timer.div = 0;
     else if(address == 0xff05) timer.tima = value;
@@ -179,22 +123,14 @@ void MMU::write_byte(uint16_t address, uint8_t value) {
     else if(address == 0xff48) UpdatePalette(palette_OBP0, value);               
     else if(address == 0xff49) UpdatePalette(palette_OBP1, value);
     
-    // MBC
-    if (address < 0x2000)
-        mbcRamEnabled = value > 0;
-    else if (address >= 0x2000 && address < 0x4000) 
-        mbcRomNumber  = ((value ? value & 63 : 1));
-    else if (address < 0x6000) 
-        mbcRamNumber = value & 3;
-    // else if (address >= 0x6000 && address < 0x8000) {
-    //     mbcRomMode = value > 0;
-    // }
+    // Switchable ROM banks
+    if (address < 0x8000)
+		cartridge->mbc_rom_write(address, value);
     else
         memory[address] = value;
 
     if(address >= 0xA000 && address < 0xC000)
-        if(this->mbcRamEnabled)
-            this->RAMbanks[this->mbcRamNumber][address - 0xA000] = value;
+		cartridge->mbc_ram_write(address - 0xA000, value);
 
     if(address >= 0x8000 && address < 0x9800)
         UpdateTile(address, value);
