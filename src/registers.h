@@ -8,7 +8,7 @@ enum RegisterFlags { FLAG_ZERO = (1 << 7), FLAG_SUBTRACT = (1 << 6), FLAG_HALF_C
 
 class Registers {
     public:  
-        uint16_t pc; // Program Counter/Pointer
+        uint16_t pc = 0; // Program Counter/Pointer
         uint16_t sp; // Stack pointer
 
         struct {

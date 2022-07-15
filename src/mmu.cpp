@@ -83,11 +83,11 @@ uint8_t MMU::read_byte(uint16_t address) {
     
     // Switchable ROM banks
     if (address < 0x8000)
-		return cartridge->mbc_rom_read(address);
+        return cartridge->mbc_read(address);
     
     // Switchable RAM banks
     if (address >= 0xA000 && address <= 0xBFFF)
-		return cartridge->mbc_ram_read(address - 0xA000);
+		return cartridge->mbc_read(address);
     
     return memory[address];
 }
@@ -125,12 +125,12 @@ void MMU::write_byte(uint16_t address, uint8_t value) {
     
     // Switchable ROM banks
     if (address < 0x8000)
-		cartridge->mbc_rom_write(address, value);
+		cartridge->mbc_write(address, value);
+	else if (address >= 0xA000 && address < 0xC000)
+		cartridge->mbc_write(address, value);
     else
         memory[address] = value;
 
-    if(address >= 0xA000 && address < 0xC000)
-		cartridge->mbc_ram_write(address - 0xA000, value);
 
     if(address >= 0x8000 && address < 0x9800)
         UpdateTile(address, value);
