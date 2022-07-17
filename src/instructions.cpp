@@ -406,9 +406,11 @@ void InstructionSet::execute(uint8_t opcode) {
             mmu->write_byte(registers->hl, registers->l);
             break;
         case 0x76: // HALT
-            mmu->is_halted = true;
-            if (!interrupts->is_master_enabled() && (mmu->read_byte(0xFF0F) & mmu->read_byte(0xFFFF) & 0x1F))
+            if(!interrupts->is_master_enabled() && (mmu->read_byte(0xFF0F) & mmu->read_byte(0xFFFF) & 0x1F)) {
                 mmu->trigger_halt_bug = true;
+                mmu->is_halted = false;
+            } else
+                mmu->is_halted = true;
             break;
         case 0x77: // LD (HL), A
             mmu->write_byte(registers->hl, registers->a);

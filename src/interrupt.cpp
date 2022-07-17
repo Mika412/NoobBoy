@@ -34,10 +34,10 @@ bool Interrupts::is_interrupt_flag_set(uint8_t flag) {
 }
 
 bool Interrupts::check() {
-    if (mmu->read_byte(0xFF0F) & 0x0F)
-        this->mmu->is_halted = false;
+    if(mmu->read_byte(0xFFFF) & mmu->read_byte(0xFF0F) & 0x0F)
+        mmu->is_halted = false;
 
-    if (!this->IME)
+    if (!this->is_master_enabled())
         return false;
 
     // Check if VBLANK

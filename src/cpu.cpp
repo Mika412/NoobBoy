@@ -40,7 +40,12 @@ void CPU::step(){
         return;
     }
 
-    uint8_t instruction = this->memory->read_byte(registers->pc++);
+    uint8_t instruction = this->memory->read_byte(registers->pc);
+
+    if (!memory->trigger_halt_bug)
+        registers->pc++;
+
+    memory->trigger_halt_bug = false;
 
     instructions->execute(instruction);
 }     
