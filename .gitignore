@@ -8,3 +8,4 @@ saves
 build.sh
 Makefile
 .DS_Store
+.vscode
