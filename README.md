@@ -44,9 +44,10 @@ arguments:
 
 | Action | Key |
 | --- | --- |
+| Save game | <kbd>s</kbd> |
 | Toggle color palette | <kbd>c</kbd> |
 | Pause/Resume | <kbd>p</kbd> |
-| Step | <kbd>s</kbd> |
+| CPU step | <kbd>n</kbd> |
 | Exit | <kbd>Escape</kbd> |
 
 </td></tr> </table>
