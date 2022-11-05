@@ -8,21 +8,38 @@ Renderer::Renderer(Status *status, CPU *cpu, PPU *gpu, Registers *registers, Int
     this->interrupts = interrupts;
     this->status = status;
 }
-void Renderer::init() {
-    SDL_Init(SDL_INIT_VIDEO);
 
-    SDL_CreateWindowAndRenderer(this->window_width * 2, window_height * 2, 0, &this->window, &this->renderer);
-    SDL_RenderSetLogicalSize(this->renderer, this->window_width, this->window_height);
-    SDL_SetWindowResizable(this->window, SDL_TRUE);
-    SDL_SetWindowTitle(this->window, mmu->cartridge->rom_title);
+void Renderer::init() {
+    viewport_pixels.fill(0xFF);
+
+    this->init_window(this->window_width, this->window_height);
 
     this->viewport_texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, this->viewport_width, this->viewport_height);
+}
+
+void Renderer::init_window(int window_width, int window_height){
+    SDL_Init(SDL_INIT_VIDEO);
+
+    SDL_CreateWindowAndRenderer(window_width * 2, window_height * 2, 0, &this->window, &this->renderer);
+    SDL_RenderSetLogicalSize(this->renderer, window_width, window_height);
+    SDL_SetWindowResizable(this->window, SDL_TRUE);
+    SDL_SetWindowTitle(this->window, mmu->cartridge->rom_title);
 
     //  //Initialize SDL_ttf
     if (TTF_Init() == -1)
         printf("SDL_ttf could not initialize! SDL_ttf Error: %s\n", TTF_GetError());
 
     font = TTF_OpenFont("fonts/VT323-Regular.ttf", 18);
+
+}
+
+void Renderer::check_framerate() {
+    endFrame = std::chrono::steady_clock::now();
+    auto timeTook = std::chrono::duration_cast<std::chrono::milliseconds>(endFrame - startFrame).count();
+    if (timeTook < framerate_time)
+        std::this_thread::sleep_for(std::chrono::milliseconds(framerate_time - timeTook));
+
+    startFrame = std::chrono::steady_clock::now();
 }
 
 void Renderer::render() {
@@ -43,19 +60,11 @@ void Renderer::render() {
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
     SDL_RenderClear(renderer);
     SDL_SetRenderTarget(renderer, viewport_texture);
+
     draw();
 
     SDL_RenderCopy(renderer, viewport_texture, NULL, &this->viewport_rect);
     SDL_RenderPresent(renderer);
-}
-
-void Renderer::check_framerate() {
-    endFrame = std::chrono::steady_clock::now();
-    auto timeTook = std::chrono::duration_cast<std::chrono::milliseconds>(endFrame - startFrame).count();
-    if (timeTook < framerate_time)
-        std::this_thread::sleep_for(std::chrono::milliseconds(framerate_time - timeTook));
-
-    startFrame = std::chrono::steady_clock::now();
 }
 
 void Renderer::draw() {
@@ -65,7 +74,7 @@ void Renderer::draw() {
 void Renderer::draw_viewport() {
     for (int i = 0; i < 144 * 160; i++) {
         Colour colour = ppu->framebuffer[i];
-        std::copy(colour.colours, colour.colours + 4, viewport_pixels + i * 4);
+        std::copy(colour.colours, colour.colours + 4, viewport_pixels.begin() + i * 4);
     }
-    SDL_UpdateTexture(viewport_texture, NULL, viewport_pixels, this->viewport_width * 4);
+    SDL_UpdateTexture(viewport_texture, NULL, viewport_pixels.data(), this->viewport_width * 4);
 }

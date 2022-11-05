@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include <array>
 #include <bitset>
 #include <chrono>
 #include <iomanip>
@@ -12,7 +13,7 @@
 #include <sstream>
 #include <string>
 #include <thread>
-#include <vector>
+#include <algorithm>
 
 #include "cpu.h"
 #include "interrupt.h"
@@ -34,27 +35,25 @@ class Renderer {
     MMU *mmu;
     Status *status;
 
-    int status_width = 160;
-    int status_height = 144;
-
     // Viewport
     int viewport_width = 160;
     int viewport_height = 144;
-    uint8_t *viewport_pixels = new uint8_t[viewport_height * viewport_width * 4]{0xFF};
+    std::array<uint8_t, 160 * 144 * 4> viewport_pixels;
     SDL_Rect viewport_rect = {0, 0, viewport_width, viewport_height};
 
     int window_height = viewport_height;
     int window_width = viewport_width;
 
     TTF_Font *font;
+    
 
     int framerate_time = 1000 / 60;
     std::chrono::steady_clock::time_point startFrame;
     std::chrono::steady_clock::time_point endFrame;
-
-    void draw_viewport();
-
     void check_framerate();
+
+    void init_window(int window_width, int window_height);
+    void draw_viewport();
 
    public:
     Renderer(Status *status, CPU *cpu, PPU *ppu, Registers *registers,
@@ -74,20 +73,20 @@ class DebugRenderer : public Renderer {
     // Tilemap
     int tilemap_width = 128;
     int tilemap_height = 256;
-    uint8_t *tilemap_pixels = new uint8_t[tilemap_height * tilemap_width * 4]{0xFF};
+    std::array<uint8_t, 128 * 256 * 4> tilemap_pixels;
     SDL_Rect tilemap_rect = {0, viewport_height, tilemap_width, tilemap_height};
 
     // Spritemap
     int spritemap_height = 64;
     int spritemap_width = 40;
-    uint8_t *spritemap_pixels = new uint8_t[spritemap_height * spritemap_width * 4]{0xFF};
+    std::array<uint8_t, 64 * 40 * 4> spritemap_pixels;
     SDL_Rect spritemap_rect = {tilemap_width, viewport_height,
                                spritemap_width * 2, spritemap_height * 2};
 
     // VRAM
     int background_width = 256;
     int background_height = 256;
-    uint8_t *background_pixels = new uint8_t[background_height * background_width * 4]{0xFF};
+    std::array<uint8_t, 256 * 256 * 4> background_pixels;
     SDL_Rect background_rect = {tilemap_width + spritemap_width * 2,
                                 viewport_height, background_width,
                                 background_height};

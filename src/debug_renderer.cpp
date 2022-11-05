@@ -1,23 +1,17 @@
 #include "renderer.h"
 
 void DebugRenderer::init() {
-    SDL_Init(SDL_INIT_VIDEO);
+    viewport_pixels.fill(0xFF);
+    tilemap_pixels.fill(0xFF);
+    spritemap_pixels.fill(0xFF);
+    background_pixels.fill(0xFF);
 
-    SDL_CreateWindowAndRenderer(this->window_width * 2, window_height * 2, 0, &this->window, &this->renderer);
-    SDL_RenderSetLogicalSize(this->renderer, this->window_width, this->window_height);
-    SDL_SetWindowResizable(this->window, SDL_TRUE);
-    SDL_SetWindowTitle(this->window, mmu->cartridge->rom_title);
+    init_window(window_width, window_height);
 
     this->viewport_texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, this->viewport_width, this->viewport_height);
     this->background_texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, this->background_width, this->background_height);
     this->spritemap_texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, this->spritemap_width, this->spritemap_height);
     this->tilemap_texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, this->tilemap_width, this->tilemap_height);
-
-    //  //Initialize SDL_ttf
-    if (TTF_Init() == -1)
-        printf("SDL_ttf could not initialize! SDL_ttf Error: %s\n", TTF_GetError());
-
-    font = TTF_OpenFont("fonts/VT323-Regular.ttf", 18);
 }
 
 void DebugRenderer::draw() {
@@ -53,7 +47,7 @@ void DebugRenderer::draw_background() {
                 int yi = (i / 32) * 8 + y;
                 int offset = 4 * (yi * background_width + xi);
                 Colour colour = mmu->palette_BGP[color];
-                std::copy(colour.colours, colour.colours + 4, background_pixels + offset);
+                std::copy(colour.colours, colour.colours + 4, background_pixels.begin() + offset);
             }
         }
     }
@@ -79,13 +73,15 @@ void DebugRenderer::draw_background() {
                     int yi = (mmu->read_byte(0xff42) + y_pos + y) % 256;
                     int offset = 4 * (yi * background_width + xi);
 
+                    if(offset >= background_pixels.size())
+                        continue;
                     Colour colour = sprite.colourPalette[colour_n];
-                    std::copy(colour.colours, colour.colours + 4, background_pixels + offset);
+                    std::copy(colour.colours, colour.colours + 4, background_pixels.begin() + offset);
                 }
             }
         }
     }
-    SDL_UpdateTexture(background_texture, NULL, background_pixels, this->background_width * 4);
+    SDL_UpdateTexture(background_texture, NULL, background_pixels.data(), this->background_width * 4);
 }
 
 void DebugRenderer::draw_tilemap() {
@@ -98,11 +94,11 @@ void DebugRenderer::draw_tilemap() {
                 int offset = 4 * (offsetY * tilemap_width + offsetX);
 
                 Colour colour = mmu->palette_BGP[colour_n];
-                std::copy(colour.colours, colour.colours + 4, tilemap_pixels + offset);
+                std::copy(colour.colours, colour.colours + 4, tilemap_pixels.begin() + offset);
             }
         }
     }
-    SDL_UpdateTexture(this->tilemap_texture, NULL, tilemap_pixels, this->tilemap_width * 4);
+    SDL_UpdateTexture(this->tilemap_texture, NULL, tilemap_pixels.data(), this->tilemap_width * 4);
 }
 
 void DebugRenderer::draw_text(int x_pos, int y_pos, std::string text) {
@@ -193,7 +189,7 @@ void DebugRenderer::draw_spritemap() {
                 int offset = 4 * (offsetY * spritemap_width + offsetX);
 
                 Colour colour = sprite.colourPalette[colour_n];
-                std::copy(colour.colours, colour.colours + 4, spritemap_pixels + offset);
+                std::copy(colour.colours, colour.colours + 4, spritemap_pixels.begin() + offset);
             }
         }
     };
@@ -214,5 +210,5 @@ void DebugRenderer::draw_spritemap() {
         }
     }
 
-    SDL_UpdateTexture(spritemap_texture, NULL, spritemap_pixels, this->spritemap_width * 4);
+    SDL_UpdateTexture(spritemap_texture, NULL, spritemap_pixels.data(), this->spritemap_width * 4);
 }
