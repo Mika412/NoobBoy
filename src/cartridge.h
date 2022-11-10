@@ -16,13 +16,17 @@ class Cartridge {
     
         MBC *mbc;
 
-        uint8_t memory[0x7F * 0x4000];
-        uint8_t ram[0x7F * 0x2000];
+        uint8_t *memory;
+        uint8_t *ram;
+
+        int rom_banks_count;
+        int ram_banks_count;
 
         Cartridge(std::string rom, std::string save_file = "");
 
         void load_game_rom(std::string location);
         void detect_mbc_type(uint8_t type);
+        int get_ram_banks_count(uint8_t type);
 
         uint8_t mbc_read(uint16_t address){ return mbc->read_byte(address); };
         void mbc_write(uint16_t address, uint8_t value) { mbc->write_byte(address, value); };

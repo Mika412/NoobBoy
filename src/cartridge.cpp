@@ -13,9 +13,16 @@ void Cartridge::load_game_rom(std::string location) {
         std::cout << "Size must be a multiple of 16 KB" << std::endl;
         return;
     }
+   
+    memory = new uint8_t[size];
     
     GAME_ROM.seekg(std::ios::beg);
     GAME_ROM.read((char*)memory, size);
+
+    rom_banks_count = size / 0x4000;
+    ram_banks_count = get_ram_banks_count(memory[0x149]);
+
+    ram = new uint8_t[ram_banks_count * 0x2000];
 
     std::copy(memory + 0x134, memory + 0x143, rom_title);
     cgb_game = memory[0x143] == 0x80 || memory[0x143] == 0xC0;
@@ -24,7 +31,8 @@ void Cartridge::load_game_rom(std::string location) {
     std::cout << "Rom Title: " << +rom_title << std::endl;
     std::cout << "CGB Game : " << +cgb_game << std::endl;
     std::cout << "MBC: " << +memory[0x147] << std::endl;
-
+    std::cout << "ROM banks: " << +rom_banks_count << std::endl;
+    std::cout << "RAM banks: " << +ram_banks_count << std::endl;
 }
 
 void Cartridge::detect_mbc_type(uint8_t type) {
@@ -37,18 +45,18 @@ void Cartridge::detect_mbc_type(uint8_t type) {
         case 0x01:
         case 0x02:
         case 0x03:
-            mbc = new MBC1(memory, ram);
+            mbc = new MBC1(memory, ram, rom_banks_count, ram_banks_count);
             break;
         case 0x05:
         case 0x06:
-            mbc = new MBC2(memory, ram);
+            mbc = new MBC2(memory, ram, rom_banks_count, ram_banks_count);
             break;
         case 0x0F:
         case 0x10:
         case 0x11:
         case 0x12:
         case 0x13:
-            mbc = new MBC3(memory, ram);
+            mbc = new MBC3(memory, ram, rom_banks_count, ram_banks_count);
             break;
         case 0x19:
         case 0x1A:
@@ -56,10 +64,24 @@ void Cartridge::detect_mbc_type(uint8_t type) {
         case 0x1C:
         case 0x1D:
         case 0x1E:
-            mbc = new MBC5(memory, ram);
+            mbc = new MBC5(memory, ram, rom_banks_count, ram_banks_count);
             break;
         default:
 			std::cout << "Unsupported MBC type: " << type << std::endl;
+            exit(1);
+    }
+}
+
+int Cartridge::get_ram_banks_count(uint8_t type){
+    switch(type){
+        case 0x00: return 0; break;
+        case 0x01: return 0; break;
+        case 0x02: return 1; break;
+        case 0x03: return 4; break;
+        case 0x04: return 16; break;
+        case 0x05: return 8; break;
+        default:
+			std::cout << "Incorrect RAM type: " << type << std::endl;
             exit(1);
     }
 }
@@ -76,6 +98,7 @@ void Cartridge::load_save_state(std::string save_file){
         std::cout << "Save file possibly corrupted. Save not loaded." << std::endl;
         return;
     }
+
     char save_title[16];
     SAVE.seekg(0, std::ios::beg);
     SAVE.read((char*)save_title, sizeof(save_title));
