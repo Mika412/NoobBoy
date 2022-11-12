@@ -18,31 +18,37 @@ uint8_t MBC0::read_byte(uint16_t address){
 
 uint8_t MBC1::read_byte(uint16_t address){
     if (address < 0x4000){
-        return rom[address];
+        int bank = mode * (ram_bank << 5) % rom_banks_count;
+        return rom[bank * 0x4000 + address];
     } else if (address < 0x8000){
-        return rom[rom_bank * 0x4000 + address - 0x4000];
+        int bank = ((ram_bank << 5) | rom_bank) % rom_banks_count;
+        return rom[bank * 0x4000 + address - 0x4000];
 	} else if(address >= 0xA000 && address < 0xC000) {
-        if (ram_enabled)
-            return ram[ram_bank * mode * 0x2000 + address - 0xA000];
+        if (ram_enabled){
+            int bank = mode * ram_bank % ram_banks_count;
+            return ram[bank * 0x2000 + address - 0xA000];
+        }
 	}
     return 0xFF;
 }
 
 void MBC1::write_byte(uint16_t address, uint8_t value){
     if (address < 0x2000){
-        ram_enabled = (value & 0x0f) == 0x0a;
+        ram_enabled = (value & 0x0F) == 0x0A;
     } else if (address < 0x4000){
-        value &= 0x1f;
+        value &= 0x1F;
         if(value == 0)
             value = 1;
-        rom_bank = value % rom_banks_count;
+        rom_bank = value;
     } else if (address < 0x6000){
-        ram_bank = (value & 0x3) % ram_banks_count;
+        ram_bank = value & 0x3;
     } else if (address < 0x8000) {
         mode = value & 0x1;
     } else if(address >= 0xA000 && address < 0xC000) {
-        if(ram_enabled)
-            ram[ram_bank * mode * 0x2000 + address - 0xA000] = value;
+        if(ram_enabled){
+            int bank = (ram_bank * mode) % ram_banks_count;
+            ram[bank * 0x2000 + address - 0xA000] = value;
+        }
     }
 }
 
