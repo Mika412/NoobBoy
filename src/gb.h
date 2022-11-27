@@ -1,6 +1,7 @@
 // #include <cstring>
 #include "cpu.h"
 #include "ppu.h"
+#include "apu.h"
 #include "timer.h"
 #include "renderer.h"
 #include "cartridge.h"
@@ -24,6 +25,7 @@ class GB{
         MMU *mmu;
         CPU *cpu;
         PPU *ppu;
+        APU *apu;
         Interrupts *interrupts;
         Timer *timer;
         Renderer *renderer;

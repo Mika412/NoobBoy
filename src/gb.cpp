@@ -11,6 +11,7 @@ void GB::init(Cartridge *cartridge, std::string bootrom, bool debug) {
     interrupts = new Interrupts(&registers, mmu);
     cpu = new CPU(&registers, interrupts, mmu);
     ppu = new PPU(&registers, interrupts, mmu);
+    apu = new APU(mmu);
     timer = new Timer(mmu, interrupts);
     joypad = new Joypad(&status, interrupts, mmu);
     status.debug = debug;
