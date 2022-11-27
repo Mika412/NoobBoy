@@ -7,7 +7,7 @@ Timer::Timer(MMU* mmu, Interrupts* interrupts){
 
 void Timer::inc(){
     mmu->clock.t += mmu->clock.t_instr;
-    mmu->clock.t %= 4194304;
+    mmu->clock.t %= gameboy_ticks;
 
     div += mmu->clock.t_instr;
 

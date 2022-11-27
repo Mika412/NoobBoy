@@ -8,6 +8,8 @@ class Timer{
     MMU *mmu;
     Interrupts *interrupts;
 
+    int gameboy_ticks = 4 * 1024 * 1024; // 4194304
+    
     int div = 0;
     int tac = 0;
     int tima = 0;
