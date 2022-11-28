@@ -47,6 +47,17 @@ struct Envelop{
     int timer = 0;
 };
 
+struct Wave {
+    union NR30 {
+        struct {
+            uint8_t unused : 7;
+            uint8_t dac_power : 1;
+        };
+        uint8_t value;
+    } nr30;
+    uint8_t sample = 0;
+};
+
 class APU {
 public:
     MMU *mmu;
@@ -64,8 +75,12 @@ public:
 
     Frequency ch1_frequency;
     Frequency ch2_frequency;
+    Frequency ch3_frequency;
     NRx1 nr11;
     NRx1 nr21;
+    
+    // Channels
+    Wave wave;
 
     APU(MMU *mmu);
 
@@ -73,11 +88,12 @@ public:
 
     uint8_t get_ch1_sample();
     uint8_t get_ch2_sample();
+    uint8_t get_ch3_sample();
     uint8_t get_next_sample();
 
     // Actions
-    uint8_t duty_action(Frequency *envelop, NRx1 *nrx1);
-    void timer_action(Frequency *envelop);
+    uint8_t timer_action(Frequency *envelop);
+    uint8_t duty_action(Frequency *envelop, NRx1 *nrx1, uint8_t stepped_timer);
 };
 
 void audio_callback(void *, uint8_t *, int);
