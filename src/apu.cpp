@@ -68,6 +68,7 @@ uint8_t APU::get_ch2_sample() {
 // Wave: Timer -> Wave -> Length Counter -> Volume -> Mixer
 uint8_t APU::get_ch3_sample() {
     wave.nr30.value = mmu->read_byte(0xFF1A);
+    wave.nr32.value = mmu->read_byte(0xFF1C); // NR32
     ch3_frequency.nrx3.value = mmu->read_byte(0xFF1D); // NR33
     ch3_frequency.nrx4.value = mmu->read_byte(0xFF1E); // NR34
     
@@ -88,11 +89,14 @@ uint8_t APU::get_ch3_sample() {
         sample = (sample & 0x0F) << 4;
     else
         sample &= 0xF0;
-
+    
     // Volume action
-    sample *= 0x0F;
+    if(wave.nr32.volume == 0)
+        sample = 0;
+    else
+        sample >>= wave.nr32.volume - 1;
 
-    return sample;
+    return sample * 0x0F;
 }
 
 uint8_t APU::get_next_sample() {

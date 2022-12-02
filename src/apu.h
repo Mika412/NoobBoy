@@ -55,6 +55,14 @@ struct Wave {
         };
         uint8_t value;
     } nr30;
+    union NR32 {
+        struct {
+            uint8_t empty : 5;
+            uint8_t volume : 2;
+            uint8_t empty2 : 1;
+        };
+        uint8_t value;
+    } nr32;
     uint8_t sample = 0;
 };
 
