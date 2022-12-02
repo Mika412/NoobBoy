@@ -48,6 +48,7 @@ arguments:
 | Toggle color palette | <kbd>c</kbd> |
 | Pause/Resume | <kbd>p</kbd> |
 | CPU step | <kbd>n</kbd> |
+| Toggle sound | <kbd>m</kbd> |
 | Exit | <kbd>Escape</kbd> |
 
 </td></tr> </table>
@@ -55,6 +56,7 @@ arguments:
 
 ## Features
 
+- Sound (WIP)
 - Correct instructions and PPU timings
 - Correct scanline timing
 - Sprites with correct row limitations

@@ -46,6 +46,7 @@ void Joypad::check(int last_instr_cycles){
                 case SDLK_p:  		if(status->debug) status->isPaused = !status->isPaused; break;
                 case SDLK_s:  		mmu->save_game_state(); break;
                 case SDLK_n:  		if(status->debug) status->doStep = true; break;
+                case SDLK_m:  		status->soundEnabled = !status->soundEnabled; break;
             }
             break;
         case SDL_KEYDOWN:

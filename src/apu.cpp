@@ -4,7 +4,8 @@
 #include <stdio.h>
 #include <cmath>
 
-APU::APU(MMU* mmu){
+APU::APU(Status *status, MMU* mmu){
+    this->status = status;
     this->mmu = mmu;
     init_audio();
 }
@@ -143,6 +144,9 @@ uint8_t APU::get_next_sample() {
     uint8_t ch1 = get_ch1_sample();
     uint8_t ch2 = get_ch2_sample();
     uint8_t ch3 = get_ch3_sample();
+
+    if(status->isPaused || !status->soundEnabled)
+        return 0x00;
 
     return (ch1+ch2+ch3)/3;
 }

@@ -1,7 +1,9 @@
 #pragma once
 
-#include <SDL2/SDL.h>
 #include "mmu.h"
+#include "status.h"
+
+#include <SDL2/SDL.h>
 #include <vector>
 
 union NRx1{
@@ -69,6 +71,7 @@ struct Wave {
 
 class APU {
 public:
+    Status *status;
     MMU *mmu;
 
     uint8_t duties[4][8] = {
@@ -93,7 +96,7 @@ public:
     // Channels
     Wave wave;
 
-    APU(MMU *mmu);
+    APU(Status *status, MMU *mmu);
 
     void init_audio();
 
