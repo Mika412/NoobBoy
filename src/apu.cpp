@@ -23,7 +23,20 @@ void APU::init_audio() {
     SDL_OpenAudio(&audio_spec, &obtainedSpec);
     SDL_PauseAudio(0);
 }
-
+uint8_t APU::envelope_action(Envelope *envelope, uint8_t sample, uint8_t stepped_timer){
+    if(envelope->nrx2.period){
+        envelope->timer -= sample_rate;
+        if(envelope->timer <= 0) {
+            envelope->timer = envelope->nrx2.period * (gameboy_ticks/64);
+            int direction = envelope->nrx2.direction ? 1 : -1;
+            if((envelope->volume <= 0 and direction == -1) || (envelope->volume >= 0x0F and direction == 1))
+                envelope->enabled = false;
+            else
+                envelope->volume += direction;
+        }
+    }
+    return sample * envelope->volume * envelope->enabled;
+}
 
 uint8_t APU::timer_action(Frequency *frequency){
     uint16_t wavelen = ((frequency->nrx4.frequency_msb << 8) | frequency->nrx3.frequency_lsb);
@@ -44,25 +57,49 @@ uint8_t APU::duty_action(Frequency *frequency, NRx1 *nrx1, uint8_t stepped_timer
 uint8_t APU::get_ch1_sample() {
     // mmu->read_byte(0xFF15)// NR20
     nr11.value = mmu->read_byte(0xFF11); // NR11
+    ch1_envelope.nrx2.value = mmu->read_byte(0xFF12); // NR12
     ch1_frequency.nrx3.value = mmu->read_byte(0xFF13); // NR13
     ch1_frequency.nrx4.value = mmu->read_byte(0xFF14); // NR14
     //
     uint8_t stepped_timer = timer_action(&ch1_frequency);
-    uint8_t sample = duty_action(&ch1_frequency, &nr11, stepped_timer);
-    return sample * 0xFF;
+
+    uint8_t sample = duty_action(&ch1_frequency, &nr11, stepped_timer) * 0x0F;
+
+    sample = envelope_action(&ch1_envelope, sample, stepped_timer);
+    if(ch1_frequency.nrx4.trigger){
+        // Reset trigger
+        ch1_frequency.nrx4.trigger = 0;
+        mmu->write_byte(0xFF14, ch1_frequency.nrx4.value);
+
+        ch1_envelope.volume = ch1_envelope.nrx2.init_vol; // volume reloaded from NRx2
+        ch1_envelope.enabled = true;
+    }
+
+    return sample;
 }
 
 // Timer -> Duty -> Length Counter -> Envelope -> Mixer
 uint8_t APU::get_ch2_sample() {
     // mmu->read_byte(0xFF15)// NR20
     nr21.value = mmu->read_byte(0xFF16); // NR21
+    ch2_envelope.nrx2.value = mmu->read_byte(0xFF17); // NR22
     ch2_frequency.nrx3.value = mmu->read_byte(0xFF18); // NR23
     ch2_frequency.nrx4.value = mmu->read_byte(0xFF19); // NR24
    
 
     uint8_t stepped_timer = timer_action(&ch2_frequency);
-    uint8_t sample = duty_action(&ch2_frequency, &nr21, stepped_timer);
-    return sample * 0xFF;
+    uint8_t sample = duty_action(&ch2_frequency, &nr21, stepped_timer) *0x0F;
+    sample = envelope_action(&ch2_envelope, sample, stepped_timer);
+
+    if(ch2_frequency.nrx4.trigger){
+        // Reset trigger
+        ch2_frequency.nrx4.trigger = 0;
+        mmu->write_byte(0xFF19, ch2_frequency.nrx4.value);
+
+        ch2_envelope.volume = ch2_envelope.nrx2.init_vol; // volume reloaded from NRx2
+        ch2_envelope.enabled = true;
+    }
+    return sample;
 }
 
 // Wave: Timer -> Wave -> Length Counter -> Volume -> Mixer
@@ -96,7 +133,7 @@ uint8_t APU::get_ch3_sample() {
     else
         sample >>= wave.nr32.volume - 1;
 
-    return sample * 0x0F;
+    return sample;
 }
 
 uint8_t APU::get_next_sample() {

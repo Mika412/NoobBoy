@@ -30,11 +30,11 @@ struct Frequency{
         uint8_t value;
     } nrx4;
 
-    int duty = 0;
-    int freq_timer = 0;
+    uint8_t duty = 0;
+    uint16_t freq_timer = 0;
 };
 
-struct Envelop{
+struct Envelope{
     union NRx2{
         struct {
             uint8_t period : 3;
@@ -45,6 +45,7 @@ struct Envelop{
     } nrx2;
     int volume = 0;
     int timer = 0;
+    bool enabled = false;
 };
 
 struct Wave {
@@ -81,6 +82,8 @@ public:
     int gameboy_ticks = 4 * 1024 * 1024; // 4194304
     int sample_rate = gameboy_ticks / audio_freq;
 
+    Envelope ch1_envelope;
+    Envelope ch2_envelope;
     Frequency ch1_frequency;
     Frequency ch2_frequency;
     Frequency ch3_frequency;
@@ -102,6 +105,7 @@ public:
     // Actions
     uint8_t timer_action(Frequency *envelop);
     uint8_t duty_action(Frequency *envelop, NRx1 *nrx1, uint8_t stepped_timer);
+    uint8_t envelope_action(Envelope *envelope, uint8_t sample, uint8_t stepped_timer);
 };
 
 void audio_callback(void *, uint8_t *, int);
