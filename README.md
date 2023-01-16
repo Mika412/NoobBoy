@@ -15,13 +15,14 @@ $ make
     
 ### Running
 ```
-usage: ./GameBoy --rom <rom_file> [--bootrom <bootrom_file>] [--load-save <save_file>] [--debug]
+usage: ./GameBoy --rom <rom_file> [--bootrom <bootrom_file>] [--load-save <save_file>] [--debug] [--sound]
 
 arguments:
   --rom                     Standard GameBoy rom
   --bootrom                 Official DMG bootrom
   --debug                   Enable the debugger
   --load-save               Save file to load
+  --sound                   Enable experimental sound
 ```
 
 

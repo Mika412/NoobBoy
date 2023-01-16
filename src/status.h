@@ -12,6 +12,7 @@ struct Status {
     bool isRunning = true;
     bool isPaused = false;
     bool doStep = false;
+    bool soundEnabled = true;
 
     int colorMode = NORMAL;
 };
