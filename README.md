@@ -15,7 +15,7 @@ $ make
     
 ### Running
 ```
-usage: ./GameBoy --rom <rom_file> [--bootrom <bootrom_file>] [--load-save <save_file>] [--debug] [--sound]
+usage: ./NoobBoy --rom <rom_file> [--bootrom <bootrom_file>] [--load-save <save_file>] [--debug] [--sound]
 
 arguments:
   --rom                     Standard GameBoy rom
