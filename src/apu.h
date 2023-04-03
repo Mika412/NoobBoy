@@ -36,6 +36,17 @@ struct Frequency{
     uint16_t freq_timer = 0;
 };
 
+struct FrameSequencer{
+    int frame_timer;
+    int frame_sequence;
+
+    int length_timer = 0;
+
+    bool trigger_length = 0;
+    bool trigger_envelope = 0;
+    bool trigger_sweep = 0;
+};
+
 struct Envelope{
     union NRx2{
         struct {
@@ -58,6 +69,12 @@ struct Wave {
         };
         uint8_t value;
     } nr30;
+    union NR31 {
+        struct {
+            uint16_t length_load : 8;
+        };
+        uint8_t value;
+    } nr31;
     union NR32 {
         struct {
             uint8_t empty : 5;
@@ -66,7 +83,39 @@ struct Wave {
         };
         uint8_t value;
     } nr32;
+    FrameSequencer sequencer;
+    Frequency frequency;
     uint8_t sample = 0;
+
+    bool enabled;
+};
+
+struct Square {
+    FrameSequencer sequencer;
+    Envelope envelope;
+    Frequency frequency;
+
+    NRx1 nrx1;
+    bool enabled;
+};
+
+struct Noise {
+    union NR43 {
+        struct {
+            uint8_t divisor : 3;
+            uint8_t width_mode : 1;
+            uint8_t clock_shift : 4;
+        };
+        uint8_t value;
+    } nr43;
+    FrameSequencer sequencer;
+    Envelope envelope;
+    Frequency frequency;
+
+    NRx1 nrx1;
+    uint16_t lfsr;
+
+    bool enabled;
 };
 
 class APU {
@@ -80,21 +129,18 @@ public:
         {1,0,0,0,0,1,1,1},
         {0,1,1,1,1,1,1,0}
     };
+    uint8_t divisor[8] = { 8, 16, 32, 48, 64, 80, 96, 112 };
 
     int audio_freq = 44100;
     int gameboy_ticks = 4 * 1024 * 1024; // 4194304
     int sample_rate = gameboy_ticks / audio_freq;
 
-    Envelope ch1_envelope;
-    Envelope ch2_envelope;
-    Frequency ch1_frequency;
-    Frequency ch2_frequency;
-    Frequency ch3_frequency;
-    NRx1 nr11;
-    NRx1 nr21;
-    
     // Channels
+    Square ch1;
+    Square ch2;
     Wave wave;
+    Noise noise;
+    Noise ch4;
 
     APU(Status *status, MMU *mmu);
 
@@ -103,12 +149,21 @@ public:
     uint8_t get_ch1_sample();
     uint8_t get_ch2_sample();
     uint8_t get_ch3_sample();
+    uint8_t get_ch4_sample();
+
     uint8_t get_next_sample();
 
+    void reset_ch1();
+    void reset_ch2();
+    void reset_ch3();
+    void reset_ch4();
+
     // Actions
-    uint8_t timer_action(Frequency *envelop);
-    uint8_t duty_action(Frequency *envelop, NRx1 *nrx1, uint8_t stepped_timer);
-    uint8_t envelope_action(Envelope *envelope, uint8_t sample, uint8_t stepped_timer);
+    void frame_sequencer_action(FrameSequencer *fs);
+    bool timer_action(Frequency *frequency);
+    void duty_action(Frequency *frequency);
+    bool length_timer_action(Frequency *frequency, FrameSequencer *fs);
+    void envelope_action(Envelope *envelope, FrameSequencer *fs);
 };
 
 void audio_callback(void *, uint8_t *, int);
