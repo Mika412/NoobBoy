@@ -10,12 +10,15 @@ void MMU::load_boot_rom(std::string location) {
     DMG_ROM.seekg(0, std::ios::end);
     long size = DMG_ROM.tellg();
     DMG_ROM.seekg(0, std::ios::beg);
-    DMG_ROM.read((char*)memory, 0x100);
+    DMG_ROM.read((char *)memory, 0x100);
 }
 
+void MMU::load_default_boot_rom() {
+    std::copy(noobboy_boot_rom, noobboy_boot_rom + sizeof(noobboy_boot_rom), memory);
+}
 
 void MMU::save_game_state(){
-	cartridge->write_save_state();
+	  cartridge->write_save_state();
 }
 
 void MMU::UpdateTile(uint16_t laddress, uint8_t value) {

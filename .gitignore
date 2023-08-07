@@ -9,3 +9,5 @@ build.sh
 Makefile
 .DS_Store
 .vscode
+bootrom/bin
+bootrom/obj

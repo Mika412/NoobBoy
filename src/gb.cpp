@@ -1,11 +1,11 @@
 #include "gb.h"
 
-void GB::init(std::string rom, std::string bootrom, std::string save_file, bool debug, bool sound) {
+void GB::init(std::string rom, bool no_bootrom, std::string bootrom, std::string save_file, bool debug, bool sound) {
     Cartridge *cartridge = new Cartridge(rom, save_file);
-    this->init(cartridge, bootrom, debug, sound);
+    this->init(cartridge, no_bootrom, bootrom, debug, sound);
 }
 
-void GB::init(Cartridge *cartridge, std::string bootrom, bool debug, bool sound) {
+void GB::init(Cartridge *cartridge, bool no_bootrom, std::string bootrom, bool debug, bool sound) {
     mmu = new MMU(cartridge);
 
     interrupts = new Interrupts(&registers, mmu);
@@ -14,11 +14,13 @@ void GB::init(Cartridge *cartridge, std::string bootrom, bool debug, bool sound)
     timer = new Timer(mmu, interrupts);
     joypad = new Joypad(&status, interrupts, mmu);
     status.debug = debug;
-
-    if (!bootrom.empty())
+  
+    if(no_bootrom)
+        cpu->no_bootrom_init();
+    else if (!bootrom.empty())
         mmu->load_boot_rom(bootrom);
     else
-        cpu->no_bootrom_init();
+        mmu->load_default_boot_rom();
 
     if (sound)
         apu = new APU(&status, mmu);
@@ -59,10 +61,12 @@ int main(int argc, char *argv[]) {
     std::string save_file = "";
     int debug_flag = 0;
     int sound_flag = 0;
+    int no_bootrom = 0;
 
     static struct option long_options[] = {
         {"debug", no_argument, &debug_flag, true},
         {"sound", no_argument, &sound_flag, true},
+        {"no-bootrom", no_argument, &no_bootrom, true},
         {"bootrom", required_argument, 0, 'b'},
         {"rom", required_argument, 0, 'r'},
         {"load-save", required_argument, 0, 'l'},
@@ -124,7 +128,7 @@ int main(int argc, char *argv[]) {
 
     GB gameboy;
 
-    gameboy.init(rom, bootrom, save_file, debug_flag, sound_flag);
+    gameboy.init(rom, no_bootrom, bootrom, save_file, debug_flag, sound_flag);
     gameboy.run();
 
     return 0;

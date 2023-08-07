@@ -31,7 +31,7 @@ class GB{
         Renderer *renderer;
         Joypad *joypad;
 
-    void init(std::string rom, std::string bootrom = "", std::string save_file = "", bool debug = false, bool sound = false);
-    void init(Cartridge *cartridge, std::string bootrom = "", bool debug = false, bool sound = false);
+    void init(std::string rom, bool no_bootrom = false, std::string bootrom = "", std::string save_file = "", bool debug = false, bool sound = false);
+    void init(Cartridge *cartridge, bool no_bootrom = false, std::string bootrom = "", bool debug = false, bool sound = false);
     void run();
 };

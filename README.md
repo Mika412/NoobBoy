@@ -15,14 +15,15 @@ $ make
     
 ### Running
 ```
-usage: ./NoobBoy --rom <rom_file> [--bootrom <bootrom_file>] [--load-save <save_file>] [--debug] [--sound]
+usage: ./NoobBoy --rom <rom_file> [--bootrom <bootrom_file>] [--load-save <save_file>] [--debug] [--sound] [--no-bootrom]
 
 arguments:
   --rom                     Standard GameBoy rom
-  --bootrom                 Official DMG bootrom
+  --bootrom                 Load a custom DMG bootrom
   --debug                   Enable the debugger
   --load-save               Save file to load
   --sound                   Enable experimental sound
+  --no-bootrom              Start without bootrom
 ```
 
 
@@ -66,8 +67,9 @@ arguments:
 - Memory Bank Controller (MBC)
 - Debug mode
 - Save states (dump of external RAM banks)
+- Custom bootrom (Based on [ISSOtm/gb-bootroms](https://github.com/ISSOtm/gb-bootroms/) work)
 
-Currently, the main missing feature is `sound`, which I refuse to touch. Additionally, the `halt bug` is missing because of the incorrect interrupt timings.
+Currently, the `halt bug` is missing because of some incorrect interrupt timings.
 
 
 ## Game Screenshots
