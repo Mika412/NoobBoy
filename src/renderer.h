@@ -45,7 +45,6 @@ class Renderer {
     int window_width = viewport_width;
 
     TTF_Font *font;
-    
 
     int framerate_time = 1000 / 60;
     std::chrono::steady_clock::time_point startFrame;
@@ -56,8 +55,7 @@ class Renderer {
     void draw_viewport();
 
    public:
-    Renderer(Status *status, CPU *cpu, PPU *ppu, Registers *registers,
-             Interrupts *interrupts, MMU *mmu);
+    Renderer(Status *status, CPU *cpu, PPU *ppu, Registers *registers, Interrupts *interrupts, MMU *mmu);
     void render();
     virtual void init();
     virtual void draw();
@@ -80,15 +78,13 @@ class DebugRenderer : public Renderer {
     int spritemap_height = 64;
     int spritemap_width = 40;
     std::array<uint8_t, 64 * 40 * 4> spritemap_pixels;
-    SDL_Rect spritemap_rect = {tilemap_width, viewport_height,
-                               spritemap_width * 2, spritemap_height * 2};
+    SDL_Rect spritemap_rect = {tilemap_width, viewport_height, spritemap_width * 2, spritemap_height * 2};
 
     // VRAM
     int background_width = 256;
     int background_height = 256;
     std::array<uint8_t, 256 * 256 * 4> background_pixels;
-    SDL_Rect background_rect = {tilemap_width + spritemap_width * 2,
-                                viewport_height, background_width,
+    SDL_Rect background_rect = {tilemap_width + spritemap_width * 2, viewport_height, background_width,
                                 background_height};
 
     int window_height = viewport_height + background_height;

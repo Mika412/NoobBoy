@@ -17,21 +17,23 @@
 #include <thread>
 #include <getopt.h>
 
-class GB{
-    public:
-        Status status;
+class GB {
+   public:
+    Status status;
 
-        Registers registers;
-        MMU *mmu;
-        CPU *cpu;
-        PPU *ppu;
-        APU *apu;
-        Interrupts *interrupts;
-        Timer *timer;
-        Renderer *renderer;
-        Joypad *joypad;
+    Registers registers;
+    MMU *mmu;
+    CPU *cpu;
+    PPU *ppu;
+    APU *apu;
+    Interrupts *interrupts;
+    Timer *timer;
+    Renderer *renderer;
+    Joypad *joypad;
 
-    void init(std::string rom, bool no_bootrom = false, std::string bootrom = "", std::string save_file = "", bool debug = false, bool sound = false);
-    void init(Cartridge *cartridge, bool no_bootrom = false, std::string bootrom = "", bool debug = false, bool sound = false);
+    void init(std::string rom, bool no_bootrom = false, std::string bootrom = "", std::string save_file = "",
+              bool debug = false, bool sound = false);
+    void init(Cartridge *cartridge, bool no_bootrom = false, std::string bootrom = "", bool debug = false,
+              bool sound = false);
     void run();
 };

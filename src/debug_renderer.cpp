@@ -8,10 +8,14 @@ void DebugRenderer::init() {
 
     init_window(window_width, window_height);
 
-    this->viewport_texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, this->viewport_width, this->viewport_height);
-    this->background_texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, this->background_width, this->background_height);
-    this->spritemap_texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, this->spritemap_width, this->spritemap_height);
-    this->tilemap_texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, this->tilemap_width, this->tilemap_height);
+    this->viewport_texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING,
+                                               this->viewport_width, this->viewport_height);
+    this->background_texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING,
+                                                 this->background_width, this->background_height);
+    this->spritemap_texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING,
+                                                this->spritemap_width, this->spritemap_height);
+    this->tilemap_texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING,
+                                              this->tilemap_width, this->tilemap_height);
 }
 
 void DebugRenderer::draw() {
@@ -73,7 +77,7 @@ void DebugRenderer::draw_background() {
                     int yi = (mmu->read_byte(0xff42) + y_pos + y) % 256;
                     int offset = 4 * (yi * background_width + xi);
 
-                    if(offset >= background_pixels.size())
+                    if (offset >= background_pixels.size())
                         continue;
                     Colour colour = sprite.colourPalette[colour_n];
                     std::copy(colour.colours, colour.colours + 4, background_pixels.begin() + offset);
@@ -134,13 +138,27 @@ void DebugRenderer::draw_status() {
     draw_text(viewport_width + 10, 120, "IME: " + std::to_string(+interrupts->is_master_enabled()));
     draw_text(viewport_width + 80, 120, "HALT: " + std::to_string(+mmu->is_halted));
 
-    draw_text(viewport_width + 150, 0, "IE:   " + to_hex_string(mmu->read_byte(0xFFFF)) + " (" + std::bitset<8>(mmu->read_byte(0xFFFF)).to_string() + ")");
-    draw_text(viewport_width + 150, 20, "IF:   " + to_hex_string(mmu->read_byte(0xFF0F)) + " (" + std::bitset<8>(mmu->read_byte(0xFF0F)).to_string() + ")");
-    draw_text(viewport_width + 150, 40, "LCDC: " + to_hex_string(mmu->read_byte(0xFF40)) + " (" + std::bitset<8>(mmu->read_byte(0xFF40)).to_string() + ")");
-    draw_text(viewport_width + 150, 60, "DIV:  " + to_hex_string(mmu->read_byte(0xFF04)) + " (" + std::bitset<8>(mmu->read_byte(0xFF04)).to_string() + ")");
-    draw_text(viewport_width + 150, 80, "TIMA: " + to_hex_string(mmu->read_byte(0xFF05)) + " (" + std::bitset<8>(mmu->read_byte(0xFF05)).to_string() + ")");
-    draw_text(viewport_width + 150, 100, "TMA:  " + to_hex_string(mmu->read_byte(0xFF06)) + " (" + std::bitset<8>(mmu->read_byte(0xFF06)).to_string() + ")");
-    draw_text(viewport_width + 150, 120, "TAC:  " + to_hex_string(mmu->read_byte(0xFF07)) + " (" + std::bitset<8>(mmu->read_byte(0xFF07)).to_string() + ")");
+    draw_text(viewport_width + 150, 0,
+              "IE:   " + to_hex_string(mmu->read_byte(0xFFFF)) + " (" +
+                  std::bitset<8>(mmu->read_byte(0xFFFF)).to_string() + ")");
+    draw_text(viewport_width + 150, 20,
+              "IF:   " + to_hex_string(mmu->read_byte(0xFF0F)) + " (" +
+                  std::bitset<8>(mmu->read_byte(0xFF0F)).to_string() + ")");
+    draw_text(viewport_width + 150, 40,
+              "LCDC: " + to_hex_string(mmu->read_byte(0xFF40)) + " (" +
+                  std::bitset<8>(mmu->read_byte(0xFF40)).to_string() + ")");
+    draw_text(viewport_width + 150, 60,
+              "DIV:  " + to_hex_string(mmu->read_byte(0xFF04)) + " (" +
+                  std::bitset<8>(mmu->read_byte(0xFF04)).to_string() + ")");
+    draw_text(viewport_width + 150, 80,
+              "TIMA: " + to_hex_string(mmu->read_byte(0xFF05)) + " (" +
+                  std::bitset<8>(mmu->read_byte(0xFF05)).to_string() + ")");
+    draw_text(viewport_width + 150, 100,
+              "TMA:  " + to_hex_string(mmu->read_byte(0xFF06)) + " (" +
+                  std::bitset<8>(mmu->read_byte(0xFF06)).to_string() + ")");
+    draw_text(viewport_width + 150, 120,
+              "TAC:  " + to_hex_string(mmu->read_byte(0xFF07)) + " (" +
+                  std::bitset<8>(mmu->read_byte(0xFF07)).to_string() + ")");
 
     // Draw paused message
     if (this->status->isPaused) {
@@ -163,13 +181,16 @@ void DebugRenderer::draw_background_overflow() {
     int overflowX = std::max(*ppu->scrollX + viewport_width - background_width, 0);
     int overflowY = std::max(*ppu->scrollY + viewport_height - background_height, 0);
 
-    this->draw_rectangle(background_rect.x + *ppu->scrollX, viewport_height + *ppu->scrollY, viewport_width - overflowX, viewport_height, {255, 255, 255, 100});
+    this->draw_rectangle(background_rect.x + *ppu->scrollX, viewport_height + *ppu->scrollY, viewport_width - overflowX,
+                         viewport_height, {255, 255, 255, 100});
 
     if (overflowX)
-        this->draw_rectangle(background_rect.x, viewport_height + *ppu->scrollY, overflowX, viewport_height, {255, 255, 255, 100});
+        this->draw_rectangle(background_rect.x, viewport_height + *ppu->scrollY, overflowX, viewport_height,
+                             {255, 255, 255, 100});
 
     if (overflowY)
-        this->draw_rectangle(background_rect.x + *ppu->scrollX, viewport_height, viewport_width - overflowX, overflowY, {255, 255, 255, 100});
+        this->draw_rectangle(background_rect.x + *ppu->scrollX, viewport_height, viewport_width - overflowX, overflowY,
+                             {255, 255, 255, 100});
 
     if (overflowX && overflowY)
         this->draw_rectangle(background_rect.x, viewport_height, overflowX, overflowY, {255, 255, 255, 100});

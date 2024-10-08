@@ -10,27 +10,27 @@
 #include <sstream>
 
 class Cartridge {
-    public:
-        char rom_title[16];
-		bool cgb_game = false;
-    
-        MBC *mbc;
+   public:
+    char rom_title[16];
+    bool cgb_game = false;
 
-        uint8_t *memory;
-        uint8_t *ram;
+    MBC *mbc;
 
-        int rom_banks_count;
-        int ram_banks_count;
+    uint8_t *memory;
+    uint8_t *ram;
 
-        Cartridge(std::string rom, std::string save_file = "");
+    int rom_banks_count;
+    int ram_banks_count;
 
-        void load_game_rom(std::string location);
-        void detect_mbc_type(uint8_t type);
-        int get_ram_banks_count(uint8_t type);
+    Cartridge(std::string rom, std::string save_file = "");
 
-        uint8_t mbc_read(uint16_t address){ return mbc->read_byte(address); };
-        void mbc_write(uint16_t address, uint8_t value) { mbc->write_byte(address, value); };
+    void load_game_rom(std::string location);
+    void detect_mbc_type(uint8_t type);
+    int get_ram_banks_count(uint8_t type);
 
-        void load_save_state(std::string save_file);
-        void write_save_state();
+    uint8_t mbc_read(uint16_t address) { return mbc->read_byte(address); };
+    void mbc_write(uint16_t address, uint8_t value) { mbc->write_byte(address, value); };
+
+    void load_save_state(std::string save_file);
+    void write_save_state();
 };

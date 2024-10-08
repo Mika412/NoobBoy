@@ -6,26 +6,26 @@
 #include <SDL2/SDL.h>
 #include <vector>
 
-union NRx1{
+union NRx1 {
     struct {
         uint8_t length_load : 6;
         uint8_t duty : 2;
-    } ;
+    };
     uint8_t value;
 };
 
-struct Frequency{
-    union NRx3{
+struct Frequency {
+    union NRx3 {
         struct {
             uint8_t frequency_lsb : 8;
         };
         uint8_t value;
     } nrx3;
 
-    union NRx4{
+    union NRx4 {
         struct {
             uint8_t frequency_msb : 3;
-            uint8_t empty: 3;
+            uint8_t empty : 3;
             uint8_t length_enable : 1;
             uint8_t trigger : 1;
         };
@@ -36,7 +36,7 @@ struct Frequency{
     uint16_t freq_timer = 0;
 };
 
-struct FrameSequencer{
+struct FrameSequencer {
     int frame_timer;
     int frame_sequence;
 
@@ -47,8 +47,8 @@ struct FrameSequencer{
     bool trigger_sweep = 0;
 };
 
-struct Envelope{
-    union NRx2{
+struct Envelope {
+    union NRx2 {
         struct {
             uint8_t period : 3;
             uint8_t direction : 1;
@@ -119,20 +119,16 @@ struct Noise {
 };
 
 class APU {
-public:
+   public:
     Status *status;
     MMU *mmu;
 
     uint8_t duties[4][8] = {
-        {0,0,0,0,0,0,0,1},
-        {1,0,0,0,0,0,0,1},
-        {1,0,0,0,0,1,1,1},
-        {0,1,1,1,1,1,1,0}
-    };
-    uint8_t divisor[8] = { 8, 16, 32, 48, 64, 80, 96, 112 };
+        {0, 0, 0, 0, 0, 0, 0, 1}, {1, 0, 0, 0, 0, 0, 0, 1}, {1, 0, 0, 0, 0, 1, 1, 1}, {0, 1, 1, 1, 1, 1, 1, 0}};
+    uint8_t divisor[8] = {8, 16, 32, 48, 64, 80, 96, 112};
 
     int audio_freq = 44100;
-    int gameboy_ticks = 4 * 1024 * 1024; // 4194304
+    int gameboy_ticks = 4 * 1024 * 1024;  // 4194304
     int sample_rate = gameboy_ticks / audio_freq;
 
     // Channels

@@ -10,7 +10,7 @@ class PPU {
     void render_scan_line_window();
     void render_scan_line_sprites(bool *row_pixels);
 
-public:
+   public:
     Registers *registers;
     MMU *mmu;
     Interrupts *interrupts;
@@ -24,7 +24,7 @@ public:
             struct {
                 uint8_t bgDisplay : 1;
                 uint8_t spriteDisplayEnable : 1;
-                uint8_t spriteSize : 1; // True means 8x16 tiles
+                uint8_t spriteSize : 1;  // True means 8x16 tiles
                 uint8_t bgDisplaySelect : 1;
                 uint8_t bgWindowDataSelect : 1;
                 uint8_t windowEnable : 1;
@@ -32,7 +32,7 @@ public:
                 uint8_t lcdEnable : 1;
             };
         };
-    } *control;
+    } * control;
 
     struct Stat {
         union {
@@ -45,7 +45,7 @@ public:
                 uint8_t coincidence_interrupt : 1;
             };
         };
-    } *stat;
+    } * stat;
 
     Colour framebuffer[160 * 144];
     // WTF: This variable is unused, but removing her breaks some games

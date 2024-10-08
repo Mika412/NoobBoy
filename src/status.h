@@ -1,10 +1,6 @@
 #pragma once
 
-enum ColorModes { 
-    NORMAL = 0,
-    RETRO = 1,
-    GRAY = 2
-};
+enum ColorModes { NORMAL = 0, RETRO = 1, GRAY = 2 };
 
 struct Status {
     bool debug = false;

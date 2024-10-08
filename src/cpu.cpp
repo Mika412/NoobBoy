@@ -1,6 +1,6 @@
 #include "cpu.h"
 
-CPU::CPU(Registers *registers, Interrupts* interrupts, MMU* memory){
+CPU::CPU(Registers* registers, Interrupts* interrupts, MMU* memory) {
     this->memory = memory;
     this->interrupts = interrupts;
     this->registers = registers;
@@ -34,8 +34,8 @@ void CPU::no_bootrom_init() {
     memory->timer.tac = 0xF8;
 }
 
-void CPU::step(){
-    if(memory->is_halted){
+void CPU::step() {
+    if (memory->is_halted) {
         memory->clock.t_instr = 4;
         return;
     }
@@ -48,4 +48,4 @@ void CPU::step(){
     memory->trigger_halt_bug = false;
 
     instructions->execute(instruction);
-}     
+}

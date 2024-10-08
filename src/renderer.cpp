@@ -14,10 +14,11 @@ void Renderer::init() {
 
     this->init_window(this->window_width, this->window_height);
 
-    this->viewport_texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, this->viewport_width, this->viewport_height);
+    this->viewport_texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING,
+                                               this->viewport_width, this->viewport_height);
 }
 
-void Renderer::init_window(int window_width, int window_height){
+void Renderer::init_window(int window_width, int window_height) {
     SDL_Init(SDL_INIT_VIDEO);
 
     SDL_CreateWindowAndRenderer(window_width * 2, window_height * 2, 0, &this->window, &this->renderer);
@@ -30,7 +31,6 @@ void Renderer::init_window(int window_width, int window_height){
         printf("SDL_ttf could not initialize! SDL_ttf Error: %s\n", TTF_GetError());
 
     font = TTF_OpenFont("fonts/VT323-Regular.ttf", 18);
-
 }
 
 void Renderer::check_framerate() {
@@ -67,9 +67,7 @@ void Renderer::render() {
     SDL_RenderPresent(renderer);
 }
 
-void Renderer::draw() {
-    draw_viewport();
-}
+void Renderer::draw() { draw_viewport(); }
 
 void Renderer::draw_viewport() {
     for (int i = 0; i < 144 * 160; i++) {

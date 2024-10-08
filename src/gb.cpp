@@ -14,8 +14,8 @@ void GB::init(Cartridge *cartridge, bool no_bootrom, std::string bootrom, bool d
     timer = new Timer(mmu, interrupts);
     joypad = new Joypad(&status, interrupts, mmu);
     status.debug = debug;
-  
-    if(no_bootrom)
+
+    if (no_bootrom)
         cpu->no_bootrom_init();
     else if (!bootrom.empty())
         mmu->load_boot_rom(bootrom);
@@ -120,8 +120,7 @@ int main(int argc, char *argv[]) {
 
     if (optind < argc) {
         printf("Invalid option: ");
-        while (optind < argc)
-            printf("%s ", argv[optind++]);
+        while (optind < argc) printf("%s ", argv[optind++]);
         putchar('\n');
         exit(1);
     }
