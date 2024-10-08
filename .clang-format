@@ -1,0 +1,12 @@
+---
+BasedOnStyle:  Google
+ColumnLimit:    120
+MaxEmptyLinesToKeep: 1
+SortIncludes: false
+
+Standard:        Auto
+IndentWidth:     4
+TabWidth:        4
+UseTab:          Never
+
+AllowShortIfStatementsOnASingleLine: false
