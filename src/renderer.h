@@ -44,8 +44,6 @@ class Renderer {
     int window_height = viewport_height;
     int window_width = viewport_width;
 
-    TTF_Font *font;
-
     int framerate_time = 1000 / 60;
     std::chrono::steady_clock::time_point startFrame;
     std::chrono::steady_clock::time_point endFrame;
@@ -67,6 +65,8 @@ class DebugRenderer : public Renderer {
     SDL_Texture *background_texture;
     SDL_Texture *tilemap_texture;
     SDL_Texture *spritemap_texture;
+
+    TTF_Font *font;
 
     // Tilemap
     int tilemap_width = 128;

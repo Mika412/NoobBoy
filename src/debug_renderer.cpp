@@ -8,6 +8,12 @@ void DebugRenderer::init() {
 
     init_window(window_width, window_height);
 
+    // Initialize SDL_ttf
+    if (TTF_Init() == -1)
+        printf("SDL_ttf could not initialize! SDL_ttf Error: %s\n", TTF_GetError());
+
+    font = TTF_OpenFont("fonts/VT323-Regular.ttf", 18);
+
     this->viewport_texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING,
                                                this->viewport_width, this->viewport_height);
     this->background_texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING,

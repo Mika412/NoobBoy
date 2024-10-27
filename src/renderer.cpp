@@ -24,13 +24,7 @@ void Renderer::init_window(int window_width, int window_height) {
     SDL_CreateWindowAndRenderer(window_width * 2, window_height * 2, 0, &this->window, &this->renderer);
     SDL_RenderSetLogicalSize(this->renderer, window_width, window_height);
     SDL_SetWindowResizable(this->window, SDL_TRUE);
-    SDL_SetWindowTitle(this->window, mmu->cartridge->rom_title);
-
-    //  //Initialize SDL_ttf
-    if (TTF_Init() == -1)
-        printf("SDL_ttf could not initialize! SDL_ttf Error: %s\n", TTF_GetError());
-
-    font = TTF_OpenFont("fonts/VT323-Regular.ttf", 18);
+    SDL_SetWindowTitle(this->window, mmu->cartridge->rom_title.c_str());
 }
 
 void Renderer::check_framerate() {

@@ -32,7 +32,7 @@ class PPU {
                 uint8_t lcdEnable : 1;
             };
         };
-    } * control;
+    } *control;
 
     struct Stat {
         union {
@@ -45,7 +45,7 @@ class PPU {
                 uint8_t coincidence_interrupt : 1;
             };
         };
-    } * stat;
+    } *stat;
 
     Colour framebuffer[160 * 144];
     // WTF: This variable is unused, but removing her breaks some games

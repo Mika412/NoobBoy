@@ -11,8 +11,9 @@
 
 class Cartridge {
    public:
-    char rom_title[16];
+    std::string rom_title;
     bool cgb_game = false;
+    uint8_t mbc_type = 0x0;
 
     MBC *mbc;
 
@@ -33,4 +34,6 @@ class Cartridge {
 
     void load_save_state(std::string save_file);
     void write_save_state();
+
+    void printInfo();
 };

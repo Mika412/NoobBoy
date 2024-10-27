@@ -24,15 +24,13 @@ void Cartridge::load_game_rom(std::string location) {
 
     ram = new uint8_t[ram_banks_count * 0x2000];
 
-    std::copy(memory + 0x134, memory + 0x143, rom_title);
+    rom_title = std::string(memory + 0x134, memory + 0x143);
     cgb_game = memory[0x143] == 0x80 || memory[0x143] == 0xC0;
+    mbc_type = memory[0x147];
+
     detect_mbc_type(memory[0x147]);
 
-    std::cout << "Rom Title: " << +rom_title << std::endl;
-    std::cout << "CGB Game : " << +cgb_game << std::endl;
-    std::cout << "MBC: " << +memory[0x147] << std::endl;
-    std::cout << "ROM banks: " << +rom_banks_count << std::endl;
-    std::cout << "RAM banks: " << +ram_banks_count << std::endl;
+    this->printInfo();
 }
 
 void Cartridge::detect_mbc_type(uint8_t type) {
@@ -115,7 +113,7 @@ void Cartridge::load_save_state(std::string save_file) {
     SAVE.seekg(0, std::ios::beg);
     SAVE.read((char *)save_title, sizeof(save_title));
     std::cout << "Save file " << save_title << std::endl;
-    if (strcmp(rom_title, save_title) != 0) {
+    if (rom_title != save_title) {
         std::cout << "This save file is not for this rom. Save not loaded." << std::endl;
         return;
     }
@@ -131,12 +129,25 @@ void Cartridge::write_save_state() {
     auto t = std::time(nullptr);
     auto tm = *std::localtime(&t);
     std::ostringstream oss;
-    oss << "saves/" << reinterpret_cast<char *>(rom_title) << "_" << std::put_time(&tm, "%d-%m-%Y %H-%M-%S") << ".save";
+    oss << "saves/" << rom_title << "_" << std::put_time(&tm, "%d-%m-%Y %H-%M-%S") << ".save";
     std::string filename = oss.str();
 
     std::ofstream out(filename, std::ios_base::binary);
-    out.write((char *)rom_title, sizeof(rom_title));
-    out.write((char *)ram, sizeof(uint8_t) * (0x7f * 0x2000));
+
+    size_t title_length = rom_title.size();
+    out.write(reinterpret_cast<const char *>(&title_length), sizeof(title_length));
+    out.write(rom_title.c_str(), title_length);
+
+    // Write the RAM data
+    out.write(reinterpret_cast<const char *>(ram), sizeof(uint8_t) * (0x7f * 0x2000));
 
     std::cout << "Saved state to: " << filename << std::endl;
+}
+
+void Cartridge::printInfo() {
+    std::cout << "Rom Title: " << rom_title << std::endl;
+    std::cout << "CGB Game: " << (cgb_game ? "Yes" : "No") << std::endl;
+    std::cout << "MBC: " << +mbc_type << std::endl;
+    std::cout << "ROM Banks: " << rom_banks_count << std::endl;
+    std::cout << "RAM Banks: " << ram_banks_count << std::endl;
 }
