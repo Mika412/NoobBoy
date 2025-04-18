@@ -8,6 +8,8 @@
 #include "interrupt.h"
 #include "joypad.h"
 #include "status.h"
+#include "registers.h"
+#include "mmu.h"
 
 #include <iostream>
 #include <cstdint>

@@ -2,6 +2,7 @@
 #include "apu.h"
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
 #include <stdio.h>
 #include <unistd.h>
 
@@ -13,17 +14,9 @@ APU::APU(Status *status, MMU *mmu) {
 
 void APU::init_audio() {
     SDL_InitSubSystem(SDL_INIT_AUDIO);
-    SDL_AudioSpec audio_spec, obtainedSpec;
-    SDL_zero(audio_spec);
-    audio_spec.freq = audio_freq;
-    audio_spec.format = AUDIO_U8;
-    audio_spec.channels = 2;
-    audio_spec.samples = audio_freq / 60;
-    audio_spec.callback = audio_callback;
-    audio_spec.userdata = this;
-
-    SDL_OpenAudio(&audio_spec, &obtainedSpec);
-    SDL_PauseAudio(0);
+    const SDL_AudioSpec spec = {SDL_AUDIO_U8, 2, audio_freq};
+    SDL_AudioStream *stream = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec, audio_callback, this);
+    SDL_ResumeAudioDevice(SDL_GetAudioStreamDevice(stream));
 }
 
 void APU::frame_sequencer_action(FrameSequencer *sequencer) {
@@ -281,14 +274,18 @@ uint8_t APU::get_next_sample() {
     return ch1 + ch2 + ch3 + ch4;
 }
 
-void audio_callback(void *_sound, uint8_t *_stream, int _length) {
+void audio_callback(void *_sound, SDL_AudioStream *_stream, int _additional_amount, int _length) {
     uint8_t *stream = (uint8_t *)_stream;
     APU *sound = (APU *)_sound;
     int length = _length / sizeof(stream[0]);
-    for (int i = 0; i < length; i += 2) {
+
+    uint8_t *data = SDL_stack_alloc(uint8_t, _length);
+    for (int i = 0; i < _length; i += 2) {
         // TODO: Change to support stereo properly
         uint8_t sample = sound->get_next_sample();
-        stream[i] = sample;
-        stream[i + 1] = sample;
+        data[i] = sample;
+        data[i + 1] = sample;
     }
+    SDL_PutAudioStreamData(_stream, data, _length);
+    SDL_stack_free(data);
 }

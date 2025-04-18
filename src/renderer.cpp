@@ -18,12 +18,14 @@ void Renderer::init() {
                                                this->viewport_width, this->viewport_height);
 }
 
-void Renderer::init_window(int window_width, int window_height) {
+void Renderer::init_window(float window_width, float window_height) {
     SDL_Init(SDL_INIT_VIDEO);
 
-    SDL_CreateWindowAndRenderer(window_width * 2, window_height * 2, 0, &this->window, &this->renderer);
-    SDL_RenderSetLogicalSize(this->renderer, window_width, window_height);
-    SDL_SetWindowResizable(this->window, SDL_TRUE);
+    SDL_CreateWindowAndRenderer("NoobBoy", window_width * 2, window_height * 2, 0, &this->window, &this->renderer);
+    SDL_SetRenderLogicalPresentation(this->renderer, window_width, window_height,
+                                     SDL_LOGICAL_PRESENTATION_INTEGER_SCALE);
+    SDL_SetWindowResizable(this->window, false);
+
     SDL_SetWindowTitle(this->window, mmu->cartridge->rom_title.c_str());
 }
 
@@ -57,7 +59,7 @@ void Renderer::render() {
 
     draw();
 
-    SDL_RenderCopy(renderer, viewport_texture, NULL, &this->viewport_rect);
+    SDL_RenderTexture(renderer, viewport_texture, NULL, &this->viewport_rect);
     SDL_RenderPresent(renderer);
 }
 

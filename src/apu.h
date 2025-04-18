@@ -3,7 +3,7 @@
 #include "mmu.h"
 #include "status.h"
 
-#include <SDL2/SDL.h>
+#include <SDL3/SDL.h>
 #include <vector>
 
 union NRx1 {
@@ -162,4 +162,4 @@ class APU {
     void envelope_action(Envelope *envelope, FrameSequencer *fs);
 };
 
-void audio_callback(void *, uint8_t *, int);
+void audio_callback(void *, SDL_AudioStream *, int, int);

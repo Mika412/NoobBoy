@@ -28,8 +28,8 @@ void Joypad::check(int last_instr_cycles) {
     SDL_Event event;
     SDL_PollEvent(&event);
     switch (event.type) {
-        case SDL_KEYUP:
-            switch (event.key.keysym.sym) {
+        case SDL_EVENT_KEY_UP:
+            switch (event.key.key) {
                 case SDLK_RIGHT:
                     key_release(JOYPAD_RIGHT);
                     break;
@@ -42,10 +42,10 @@ void Joypad::check(int last_instr_cycles) {
                 case SDLK_DOWN:
                     key_release(JOYPAD_DOWN);
                     break;
-                case SDLK_z:
+                case SDLK_Z:
                     key_release(JOYPAD_A);
                     break;
-                case SDLK_x:
+                case SDLK_X:
                     key_release(JOYPAD_B);
                     break;
                 case SDLK_SPACE:
@@ -54,27 +54,27 @@ void Joypad::check(int last_instr_cycles) {
                 case SDLK_RETURN:
                     key_release(JOYPAD_SELECT);
                     break;
-                case SDLK_c:
+                case SDLK_C:
                     status->colorMode = (1 + status->colorMode) % 3;
                     break;
-                case SDLK_p:
+                case SDLK_P:
                     if (status->debug)
                         status->isPaused = !status->isPaused;
                     break;
-                case SDLK_s:
+                case SDLK_S:
                     mmu->save_game_state();
                     break;
-                case SDLK_n:
+                case SDLK_N:
                     if (status->debug)
                         status->doStep = true;
                     break;
-                case SDLK_m:
+                case SDLK_M:
                     status->soundEnabled = !status->soundEnabled;
                     break;
             }
             break;
-        case SDL_KEYDOWN:
-            switch (event.key.keysym.sym) {
+        case SDL_EVENT_KEY_DOWN:
+            switch (event.key.key) {
                 case SDLK_RIGHT:
                     key_press(JOYPAD_RIGHT);
                     break;
@@ -87,10 +87,10 @@ void Joypad::check(int last_instr_cycles) {
                 case SDLK_DOWN:
                     key_press(JOYPAD_DOWN);
                     break;
-                case SDLK_z:
+                case SDLK_Z:
                     key_press(JOYPAD_A);
                     break;
-                case SDLK_x:
+                case SDLK_X:
                     key_press(JOYPAD_B);
                     break;
                 case SDLK_SPACE:
@@ -104,7 +104,7 @@ void Joypad::check(int last_instr_cycles) {
                     break;
             }
             break;
-        case SDL_QUIT:
+        case SDL_EVENT_QUIT:
             this->status->isRunning = false;
             exit(0);
             break;

@@ -1,5 +1,4 @@
 #include "mmu.h"
-#include "ppu.h"
 
 MMU::MMU(Cartridge *cartridge) { this->cartridge = cartridge; }
 

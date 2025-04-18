@@ -9,8 +9,10 @@ void DebugRenderer::init() {
     init_window(window_width, window_height);
 
     // Initialize SDL_ttf
-    if (TTF_Init() == -1)
-        printf("SDL_ttf could not initialize! SDL_ttf Error: %s\n", TTF_GetError());
+    if (!TTF_Init()) {
+        fprintf(stderr, "Couldn't initialize TTF: %s\n", SDL_GetError());
+        SDL_Quit();
+    }
 
     font = TTF_OpenFont("fonts/VT323-Regular.ttf", 18);
 
@@ -30,9 +32,9 @@ void DebugRenderer::draw() {
     draw_tilemap();
     draw_spritemap();
 
-    SDL_RenderCopy(renderer, background_texture, NULL, &background_rect);
-    SDL_RenderCopy(renderer, tilemap_texture, NULL, &tilemap_rect);
-    SDL_RenderCopy(renderer, spritemap_texture, NULL, &spritemap_rect);
+    SDL_RenderTexture(renderer, background_texture, NULL, &background_rect);
+    SDL_RenderTexture(renderer, tilemap_texture, NULL, &tilemap_rect);
+    SDL_RenderTexture(renderer, spritemap_texture, NULL, &spritemap_rect);
 
     draw_background_overflow();
     draw_status();
@@ -116,13 +118,13 @@ void DebugRenderer::draw_text(int x_pos, int y_pos, std::string text) {
     if (!font) {
         return;
     }
-    SDL_Surface *textSurface = TTF_RenderText_Solid(font, text.c_str(), textColor);
+    SDL_Surface *textSurface = TTF_RenderText_Solid(font, text.c_str(), 0, textColor);
     SDL_Texture *textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
     int text_width = textSurface->w;
     int text_height = textSurface->h;
-    SDL_FreeSurface(textSurface);
-    SDL_Rect renderQuad = {x_pos, y_pos, text_width, text_height};
-    SDL_RenderCopy(renderer, textTexture, NULL, &renderQuad);
+    SDL_DestroySurface(textSurface);
+    SDL_FRect renderQuad = {(float)x_pos, (float)y_pos, (float)text_width, (float)text_height};
+    SDL_RenderTexture(renderer, textTexture, NULL, &renderQuad);
     SDL_DestroyTexture(textTexture);
 }
 
@@ -174,13 +176,13 @@ void DebugRenderer::draw_status() {
 }
 
 void DebugRenderer::draw_rectangle(int x, int y, int width, int height, Colour color) {
-    SDL_Rect rect = {x, y, width, height};
+    SDL_FRect rect = {(float)x, (float)y, (float)width, (float)height};
 
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
     SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
     SDL_RenderFillRect(renderer, &rect);
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-    SDL_RenderDrawRect(renderer, &rect);
+    SDL_RenderRect(renderer, &rect);
 }
 
 void DebugRenderer::draw_background_overflow() {

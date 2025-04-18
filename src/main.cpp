@@ -7,7 +7,7 @@ int main(int argc, char *argv[]) {
     int debug_flag = 0;
     int sound_flag = 0;
     int no_bootrom = 0;
-    std::cout << "HAHA" << std::endl;
+
     static struct option long_options[] = {
         {"debug", no_argument, &debug_flag, true},
         {"sound", no_argument, &sound_flag, true},

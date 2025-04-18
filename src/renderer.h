@@ -1,7 +1,6 @@
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
-#include <SDL2/SDL_timer.h>
-#include <SDL2/SDL_ttf.h>
+#include <SDL3/SDL.h>
+#include <SDL3_ttf/SDL_ttf.h>
+
 #include <stdlib.h>
 #include <unistd.h>
 
@@ -39,17 +38,16 @@ class Renderer {
     int viewport_width = 160;
     int viewport_height = 144;
     std::array<uint8_t, 160 * 144 * 4> viewport_pixels;
-    SDL_Rect viewport_rect = {0, 0, viewport_width, viewport_height};
-
-    int window_height = viewport_height;
-    int window_width = viewport_width;
+    SDL_FRect viewport_rect = {0, 0, (float)viewport_width, (float)viewport_height};
+    float window_height = viewport_height;
+    float window_width = viewport_width;
 
     int framerate_time = 1000 / 60;
     std::chrono::steady_clock::time_point startFrame;
     std::chrono::steady_clock::time_point endFrame;
     void check_framerate();
 
-    void init_window(int window_width, int window_height);
+    void init_window(float window_width, float window_height);
     void draw_viewport();
 
    public:
@@ -72,20 +70,21 @@ class DebugRenderer : public Renderer {
     int tilemap_width = 128;
     int tilemap_height = 256;
     std::array<uint8_t, 128 * 256 * 4> tilemap_pixels;
-    SDL_Rect tilemap_rect = {0, viewport_height, tilemap_width, tilemap_height};
+    SDL_FRect tilemap_rect = {0, (float)viewport_height, (float)tilemap_width, (float)tilemap_height};
 
     // Spritemap
     int spritemap_height = 64;
     int spritemap_width = 40;
     std::array<uint8_t, 64 * 40 * 4> spritemap_pixels;
-    SDL_Rect spritemap_rect = {tilemap_width, viewport_height, spritemap_width * 2, spritemap_height * 2};
+    SDL_FRect spritemap_rect = {(float)tilemap_width, (float)viewport_height, (float)spritemap_width * 2,
+                                (float)spritemap_height * 2};
 
     // VRAM
     int background_width = 256;
     int background_height = 256;
     std::array<uint8_t, 256 * 256 * 4> background_pixels;
-    SDL_Rect background_rect = {tilemap_width + spritemap_width * 2, viewport_height, background_width,
-                                background_height};
+    SDL_FRect background_rect = {(float)(tilemap_width + spritemap_width * 2), (float)viewport_height,
+                                 (float)background_width, (float)background_height};
 
     int window_height = viewport_height + background_height;
     int window_width = background_width + tilemap_width + spritemap_width * 2;
