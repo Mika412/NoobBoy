@@ -5,17 +5,17 @@ NoobBoy is a simple gameboy emulator that I'm writing to learn more about the wo
 <img src="screenshots/mario_debug.png" width="800">
 
 ## Usage
-To build the project, `cmake`, `SDL3` and `SDL3 ttf` are required. The SDL3 cmake files are already included, as in some systems cmake can't find the packages. The emulator was tested on Linux and MacOS.
+To build the project, `cmake`, `SDL3` and `SDL3 ttf` are required. The emulator was tested on Linux and MacOS.
 
 ### Building
+To build the **desktop** version, run the following command in your terminal:
+```console
+$ make desktop
 ```
-$ cmake .
-$ make
-```
-    
+ 
 ### Running
 ```
-usage: ./NoobBoy --rom <rom_file> [--bootrom <bootrom_file>] [--load-save <save_file>] [--debug] [--sound] [--no-bootrom]
+usage: ./build/desktop/NoobBoy --rom <rom_file> [--bootrom <bootrom_file>] [--load-save <save_file>] [--debug] [--sound] [--no-bootrom]
 
 arguments:
   --rom                     Standard GameBoy rom

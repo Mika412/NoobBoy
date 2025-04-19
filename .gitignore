@@ -6,8 +6,10 @@ roms
 saves
 .cache
 build.sh
-Makefile
+**/Makefile
+!/Makefile
 .DS_Store
 .vscode
 bootrom/bin
 bootrom/obj
+build
